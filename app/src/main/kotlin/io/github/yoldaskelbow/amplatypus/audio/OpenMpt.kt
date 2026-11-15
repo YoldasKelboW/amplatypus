@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 package io.github.yoldaskelbow.amplatypus.audio
 
-/** JNI bindings to libopenmpt. A handle of 0 means "no module". Not thread-safe; callers serialise access. */
+/**
+ * JNI bindings to the bundled replayers: libopenmpt, and the HivelyTracker replayer for AHX and HVL.
+ * The native side picks the replayer from the file's contents. A handle of 0 means "no module".
+ * Not thread-safe; callers serialise access.
+ */
 object OpenMpt {
     init {
         System.loadLibrary("amplatypus")

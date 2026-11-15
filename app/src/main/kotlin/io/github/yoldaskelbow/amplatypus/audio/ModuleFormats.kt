@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-// The format list is taken from MPTReplayer.m of 4champ,
+// The libopenmpt part of the format list is taken from MPTReplayer.m of 4champ,
 // Copyright (c) Aleksi Sitomaniemi, used under the MIT license.
 package io.github.yoldaskelbow.amplatypus.audio
 
@@ -12,10 +12,12 @@ object ModuleFormats {
         "mt2", "mtm", "nst", "oct", "okt", "oxm", "plm", "ppm", "psm", "pt36", "ptm", "s3m", "sfx", "sfx2",
         "st26", "stk", "stm", "stp", "stx", "symmod", "ult", "umx", "wow", "xm", "xmf",
         "mmd0", "mmd1", "mmd2", "mmd3",
+        // Played by the HivelyTracker replayer.
+        "ahx", "hvl",
     )
 
     /** Bump when [playableExtensions] changes, so stored indexes are rebuilt. */
-    const val VERSION = 1
+    const val VERSION = 2
 
     fun isPlayable(extension: String): Boolean = extension.lowercase() in playableExtensions
 }

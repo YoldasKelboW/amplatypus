@@ -2,7 +2,8 @@
 
 A free, open-source Android player for Amiga and tracker music – MOD, XM, S3M, IT and some fifty related
 formats. It searches the [Modland](https://modland.com) archive (about 179,000 playable modules), downloads
-what you pick and plays it with [libopenmpt](https://lib.openmpt.org/libopenmpt/).
+what you pick and plays it with [libopenmpt](https://lib.openmpt.org/libopenmpt/). AHX and HivelyTracker
+modules are played by the [HivelyTracker](https://github.com/pete-gordon/hivelytracker) replayer.
 
 It is modelled on [4champ](https://github.com/sitomani/4champ), the iOS app by Aleksi Sitomaniemi.
 Logic, data model and flow are ported from 4champ; the user interface is rebuilt from scratch
@@ -37,7 +38,7 @@ in Kotlin with Jetpack Compose and Material 3.
 Test builds are attached to the [releases](https://github.com/YoldasKelboW/amplatypus/releases).
 Android 8.0 or newer.
 
-Not there yet: AHX/HivelyTracker and the exotic Amiga formats played by UADE, an AMP source, tablet layout,
+Not there yet: the exotic Amiga formats played by UADE, an AMP source, tablet layout,
 Android Auto. See `CHANGELOG.md` for what changed and `docs/RUNBOOK.md` (German) for the plan.
 
 ## Music sources

@@ -2,3 +2,7 @@
 	path = third_party/openmpt
 	url = https://github.com/OpenMPT/openmpt.git
 	shallow = true
+[submodule "third_party/hivelytracker"]
+	path = third_party/hivelytracker
+	url = https://github.com/pete-gordon/hivelytracker.git
+	shallow = true

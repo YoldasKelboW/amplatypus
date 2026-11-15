@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.0 – unreleased (Phase 4: special formats)
+
+- AHX and HivelyTracker (HVL) modules play, using the HivelyTracker replayer. Oscilloscopes, level meters,
+  the pattern view and muting work for them too. The Modland index is rebuilt once to pick them up.
+
 ## 0.3.0-pre2 – 2026-11-15
 
 - Pattern view: when a module has more channels than fit on the screen, the row numbers stay in place and

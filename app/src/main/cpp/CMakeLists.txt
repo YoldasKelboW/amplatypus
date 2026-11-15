@@ -32,6 +32,17 @@ target_compile_definitions(openmpt PRIVATE
     LIBOPENMPT_BUILD MPT_WITH_ZLIB MPT_WITH_MINIMP3 MPT_WITH_STBVORBIS)
 target_compile_options(openmpt PRIVATE -fvisibility=hidden -fexceptions -frtti -w)
 
-add_library(amplatypus SHARED engine_jni.cpp)
-target_link_libraries(amplatypus PRIVATE openmpt z log)
+# The HivelyTracker replayer (AHX and HVL). Its "int8" is a plain char, which is unsigned on ARM,
+# and its tables header defines variables, so it needs -fsigned-char and -fcommon.
+set(HIVELY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../../third_party/hivelytracker/Replayer_Windows)
+if(NOT EXISTS ${HIVELY_DIR}/hvl_replay.c)
+    message(FATAL_ERROR "hvl_replay.c not found - is the third_party/hivelytracker submodule checked out?")
+endif()
+add_library(hively STATIC ${HIVELY_DIR}/hvl_replay.c ${HIVELY_DIR}/hvl_tables.c)
+target_include_directories(hively PUBLIC ${HIVELY_DIR})
+target_compile_options(hively PRIVATE -fvisibility=hidden -fsigned-char -fcommon -w)
+
+add_library(amplatypus SHARED engine_jni.cpp engine_openmpt.cpp engine_hively.cpp)
+set_source_files_properties(engine_hively.cpp PROPERTIES COMPILE_OPTIONS "-fsigned-char")
+target_link_libraries(amplatypus PRIVATE openmpt hively z m log)
 target_link_options(amplatypus PRIVATE -Wl,--gc-sections)
