@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.0-pre2 – 2026-11-15
+
+- Pattern view: when a module has more channels than fit on the screen, the row numbers stay in place and
+  the channels can be swiped sideways. A fade at the edge shows that more channels are hidden.
+- Pattern view: the last column is no longer cut off slightly on some modules.
+
 ## 0.3.0-pre1 – 2026-11-15 (Phase 3: library, playlists, radio)
 
 - Radio with two channels: a random pick from the whole Modland archive, or a shuffle of your favourites.

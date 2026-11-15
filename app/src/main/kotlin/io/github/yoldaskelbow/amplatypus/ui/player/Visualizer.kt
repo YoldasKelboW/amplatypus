@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -23,7 +24,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
@@ -32,6 +37,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -210,40 +216,104 @@ fun PatternView(visual: State<ModuleEngine.Visual?>, generation: Int, channels: 
         val count = channels.coerceAtLeast(1)
         // Characters per row: "00" + two spaces, then the cells with two spaces between them.
         fun charsFor(cell: Int) = 4 + count * cell + (count - 1) * 2
-        val available = maxWidth.value - 28f
+        val available = maxWidth.value - 32f
         fun sizeFor(cell: Int) = available / (charsFor(cell) * MONO_ADVANCE)
         // Full cell "C-5 01 A0F", then "C-5 01", then just the note.
         val cell = listOf(10, 6, 3).firstOrNull { sizeFor(it) >= MIN_PATTERN_SP } ?: 3
         val fits = sizeFor(cell) >= MIN_PATTERN_SP
         val fontSize = sizeFor(cell).coerceIn(MIN_PATTERN_SP, MAX_PATTERN_SP)
         val rowHeight = (fontSize * 1.5f).dp
+        // Sizes are worked out in dp so the system font scale cannot push the text past the edge.
+        val density = LocalDensity.current
+        val fontSp = with(density) { fontSize.dp.toSp() }
+        val lineSp = with(density) { rowHeight.toSp() }
 
-        Column(if (fits) Modifier.fillMaxWidth() else Modifier.horizontalScroll(scroll)) {
-            for (offset in -half..half) {
-                val index = row + offset
-                val text = rows.getOrNull(index)
-                val isCurrent = offset == 0
-                Text(
-                    text = if (text == null) " " else "%02X  %s".format(index, text.split('|').joinToString("  ") { it.take(cell) }),
-                    fontFamily = FontFamily.Monospace,
-                    fontSize = fontSize.sp,
-                    lineHeight = (fontSize * 1.5f).sp,
-                    fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Normal,
-                    textAlign = TextAlign.Center,
-                    color = when {
-                        isCurrent -> onHighlight
-                        index % 4 == 0 -> normal
-                        else -> normal.copy(alpha = 0.6f)
-                    },
-                    maxLines = 1,
-                    softWrap = false,
-                    overflow = TextOverflow.Clip,
-                    modifier = Modifier
-                        .then(if (fits) Modifier.fillMaxWidth() else Modifier)
-                        .height(rowHeight)
-                        .background(if (isCurrent) highlight else Color.Transparent)
-                        .padding(horizontal = 8.dp),
-                )
+        @Composable
+        fun Line(text: String, index: Int, isCurrent: Boolean, lineModifier: Modifier) {
+            Text(
+                text = text,
+                fontFamily = FontFamily.Monospace,
+                fontSize = fontSp,
+                lineHeight = lineSp,
+                fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Normal,
+                textAlign = TextAlign.Center,
+                color = when {
+                    isCurrent -> onHighlight
+                    index % 4 == 0 -> normal
+                    else -> normal.copy(alpha = 0.6f)
+                },
+                maxLines = 1,
+                softWrap = false,
+                overflow = TextOverflow.Clip,
+                modifier = Modifier
+                    .height(rowHeight)
+                    .background(if (isCurrent) highlight else Color.Transparent)
+                    .then(lineModifier),
+            )
+        }
+
+        fun cells(index: Int) = rows.getOrNull(index)?.split('|')?.joinToString("  ") { it.take(cell) }
+
+        if (fits) {
+            Column(Modifier.fillMaxWidth()) {
+                for (offset in -half..half) {
+                    val index = row + offset
+                    val text = cells(index)
+                    Line(
+                        text = if (text == null) " " else "%02X  %s".format(index, text),
+                        index = index,
+                        isCurrent = offset == 0,
+                        lineModifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                    )
+                }
+            }
+        } else {
+            // Too many channels for the width: row numbers stay put, the channels scroll sideways.
+            Row(Modifier.fillMaxWidth()) {
+                Column {
+                    for (offset in -half..half) {
+                        val index = row + offset
+                        Line(
+                            text = if (rows.getOrNull(index) == null) "  " else "%02X".format(index),
+                            index = index,
+                            isCurrent = offset == 0,
+                            lineModifier = Modifier.padding(start = 8.dp, end = 6.dp),
+                        )
+                    }
+                }
+                Column(
+                    Modifier
+                        .weight(1f)
+                        .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+                        .drawWithContent {
+                            drawContent()
+                            // Fade the edge where more channels are hidden.
+                            val fade = 28.dp.toPx()
+                            if (scroll.canScrollBackward) {
+                                drawRect(
+                                    Brush.horizontalGradient(listOf(Color.Transparent, Color.Black), 0f, fade),
+                                    size = Size(fade, size.height),
+                                    blendMode = BlendMode.DstIn,
+                                )
+                            }
+                            if (scroll.canScrollForward) {
+                                drawRect(
+                                    Brush.horizontalGradient(listOf(Color.Black, Color.Transparent), size.width - fade, size.width),
+                                    topLeft = Offset(size.width - fade, 0f),
+                                    size = Size(fade, size.height),
+                                    blendMode = BlendMode.DstIn,
+                                )
+                            }
+                        }
+                        .horizontalScroll(scroll),
+                ) {
+                    for (offset in -half..half) {
+                        val index = row + offset
+                        // Pad missing rows to full width so the highlight bar never changes length.
+                        val text = cells(index) ?: " ".repeat(charsFor(cell) - 4)
+                        Line(text = text, index = index, isCurrent = offset == 0, lineModifier = Modifier.padding(horizontal = 6.dp))
+                    }
+                }
             }
         }
     }

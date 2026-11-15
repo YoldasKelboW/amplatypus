@@ -26,8 +26,8 @@ android {
         applicationId = "io.github.yoldaskelbow.amplatypus"
         minSdk = 26
         targetSdk = 36
-        versionCode = 8
-        versionName = "0.3.0-pre1"
+        versionCode = 9
+        versionName = "0.3.0-pre2"
 
         buildConfigField("String", "REPO_URL", "\"https://github.com/YoldasKelboW/amplatypus\"")
     }
