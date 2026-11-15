@@ -1,0 +1,12 @@
+A free, open-source player for Amiga and tracker music (MOD, XM, S3M, IT and many more). It searches the Modland archive of about 179,000 playable modules, downloads what you pick and plays it with libopenmpt.
+
+• Player with one oscilloscope and level meter per channel, the running pattern and the texts inside the module
+• Tap a channel to mute it, hold to hear it alone
+• Background playback with lock-screen and headset controls
+• Library with favourites, playlists, search and sorting; import your own files
+• Radio: random modules from the whole archive, or your favourites
+• Material 3 with dynamic colour and several colour designs
+
+Modelled on the iOS app 4champ by Aleksi Sitomaniemi. No ads, no tracking.
+
+This is an early development version.

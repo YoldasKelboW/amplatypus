@@ -1,0 +1,5 @@
+AMPlatypus ist ein freier, quelloffener Player für Trackermusik. Die App durchsucht große Modul-Archive, lädt Amiga- und Tracker-Module herunter und spielt sie ab.
+
+Vorbild ist die iOS-App 4champ von Aleksi Sitomaniemi. Ohne Werbung, ohne Tracking.
+
+Dies ist eine frühe Entwicklungsversion.

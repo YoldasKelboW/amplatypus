@@ -1,0 +1,4 @@
+[submodule "third_party/openmpt"]
+	path = third_party/openmpt
+	url = https://github.com/OpenMPT/openmpt.git
+	shallow = true

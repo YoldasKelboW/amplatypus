@@ -1,0 +1,140 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+package io.github.yoldaskelbow.amplatypus.source.modland
+
+import io.github.yoldaskelbow.amplatypus.data.IndexDao
+import io.github.yoldaskelbow.amplatypus.data.IndexEntry
+import io.github.yoldaskelbow.amplatypus.net.Endpoints
+import io.github.yoldaskelbow.amplatypus.source.Capability
+import io.github.yoldaskelbow.amplatypus.source.FolderKind
+import io.github.yoldaskelbow.amplatypus.source.ModuleRef
+import io.github.yoldaskelbow.amplatypus.source.MusicSource
+import io.github.yoldaskelbow.amplatypus.source.SearchKind
+import io.github.yoldaskelbow.amplatypus.source.SourceItem
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import java.io.File
+import java.io.IOException
+
+/** Modland, searched and browsed through the local index; only downloads touch the network. */
+class ModlandSource(
+    private val dao: IndexDao,
+    private val http: OkHttpClient,
+) : MusicSource {
+    override val id = ID
+    override val capabilities = setOf(Capability.SEARCH, Capability.BROWSE, Capability.RANDOM)
+
+    override suspend fun search(query: String, kind: SearchKind, page: Int): List<SourceItem> {
+        val offset = page * PAGE_SIZE
+        return when (kind) {
+            SearchKind.COMPOSER ->
+                dao.searchComposers(query.trim(), PAGE_SIZE, offset).map { composerFolder(null, it.name, it.count) }
+            else -> {
+                val match = ModlandIndexParser.ftsQuery(query) ?: return emptyList()
+                dao.searchModules(match, PAGE_SIZE, offset).map { it.toItem() }
+            }
+        }
+    }
+
+    override suspend fun browse(parent: SourceItem.Folder?, page: Int): List<SourceItem> {
+        val offset = page * PAGE_SIZE
+        return when (parent?.kind) {
+            null -> dao.formats(PAGE_SIZE, offset).map {
+                SourceItem.Folder(ID, it.name, it.name, FolderKind.FORMAT, it.count.toString())
+            }
+            FolderKind.FORMAT -> dao.composersOfFormat(parent.key, PAGE_SIZE, offset).map {
+                composerFolder(parent.key, it.name, it.count)
+            }
+            FolderKind.COMPOSER -> {
+                val (format, composer) = splitComposerKey(parent.key)
+                val rows = if (format == null) {
+                    dao.modulesOfComposer(composer, PAGE_SIZE, offset)
+                } else {
+                    dao.modulesOf(format, composer, PAGE_SIZE, offset)
+                }
+                rows.map { it.toItem() }
+            }
+            FolderKind.GROUP -> emptyList()
+        }
+    }
+
+    override suspend fun details(ref: ModuleRef): SourceItem.Module? = dao.byPath(ref.key)?.toItem()
+
+    override suspend fun random(): SourceItem.Module? = dao.random()?.toItem()
+
+    override suspend fun download(ref: ModuleRef, targetDir: File, onProgress: (Float) -> Unit): File =
+        withContext(Dispatchers.IO) {
+            val target = File(targetDir, ref.key)
+            if (target.isFile && target.length() > 0) return@withContext target
+            target.parentFile?.mkdirs()
+            val partial = File(target.path + ".part")
+            var lastError: IOException? = null
+            for (host in Endpoints.MODLAND_HOSTS) {
+                val url = "https://" + host + Endpoints.MODLAND_MODULE_PATH + ModlandIndexParser.encodePath(ref.key)
+                try {
+                    http.newCall(Request.Builder().url(url).build()).execute().use { response ->
+                        if (!response.isSuccessful) throw IOException("HTTP ${response.code}")
+                        val total = response.body.contentLength()
+                        var done = 0L
+                        response.body.byteStream().use { input ->
+                            partial.outputStream().use { output ->
+                                val buffer = ByteArray(32 * 1024)
+                                while (true) {
+                                    val read = input.read(buffer)
+                                    if (read < 0) break
+                                    output.write(buffer, 0, read)
+                                    done += read
+                                    onProgress(if (total > 0) done.toFloat() / total else -1f)
+                                }
+                            }
+                        }
+                    }
+                    if (!partial.renameTo(target)) throw IOException("Could not store ${target.name}")
+                    return@withContext target
+                } catch (e: IOException) {
+                    lastError = e
+                    partial.delete()
+                }
+            }
+            throw lastError ?: IOException("No download host available")
+        }
+
+    private fun composerFolder(format: String?, composer: String, count: Int) = SourceItem.Folder(
+        sourceId = ID,
+        key = (format ?: ANY_FORMAT) + "/" + composer,
+        title = displayComposer(composer),
+        kind = FolderKind.COMPOSER,
+        subtitle = count.toString(),
+    )
+
+    private fun splitComposerKey(key: String): Pair<String?, String> {
+        val slash = key.indexOf('/')
+        val format = key.substring(0, slash)
+        return (if (format == ANY_FORMAT) null else format) to key.substring(slash + 1)
+    }
+
+    private fun IndexEntry.toItem() = SourceItem.Module(
+        ref = ModuleRef(ID, path),
+        title = title,
+        composer = displayComposer(composer),
+        format = ext.uppercase(),
+        sizeBytes = sizeBytes,
+    )
+
+    companion object {
+        const val ID = "modland"
+        const val PAGE_SIZE = 50
+
+        /** Shown for modules without a known author; the same in every language, like the names around it. */
+        const val UNKNOWN_COMPOSER = "Unknown"
+        private const val ANY_FORMAT = "*"
+
+        /** The public address of a module, for sharing. */
+        fun shareUrl(path: String): String =
+            "https://" + Endpoints.MODLAND_HOSTS.first() + Endpoints.MODLAND_MODULE_PATH + ModlandIndexParser.encodePath(path)
+
+        /** Modland files modules without a known author under `- unknown`. */
+        fun displayComposer(raw: String): String = if (raw.trim('-', '_', ' ').equals("unknown", ignoreCase = true)) UNKNOWN_COMPOSER else raw
+    }
+}

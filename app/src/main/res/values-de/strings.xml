@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="nav_search">Suche</string>
+    <string name="nav_library">Bibliothek</string>
+    <string name="nav_radio">Radio</string>
+    <string name="nav_settings">Einstellungen</string>
+
+    <string name="search_hint">Modland durchsuchen</string>
+    <string name="search_clear">Suche löschen</string>
+    <string name="search_modules">Module</string>
+    <string name="search_composers">Komponisten</string>
+    <string name="search_no_results">Nichts gefunden.</string>
+    <string name="browse_formats">Nach Format durchblättern</string>
+    <string name="back">Zurück</string>
+    <plurals name="module_count">
+        <item quantity="one">%d Modul</item>
+        <item quantity="other">%d Module</item>
+    </plurals>
+    <string name="in_library">In deiner Bibliothek</string>
+    <string name="download_failed">Download fehlgeschlagen: %1$s</string>
+
+    <string name="index_downloading">Modland-Index wird geladen …</string>
+    <string name="index_importing">Index wird vorbereitet … %1$d Module</string>
+    <string name="index_failed">Der Modland-Index konnte nicht geladen werden: %1$s</string>
+    <string name="retry">Erneut versuchen</string>
+
+    <string name="library_empty">Abgespielte Module bleiben hier gespeichert, auch ohne Internet.</string>
+    <string name="delete">Löschen</string>
+    <string name="delete_title">Modul löschen?</string>
+    <string name="delete_text">„%1$s“ wird von diesem Gerät entfernt.</string>
+    <string name="cancel">Abbrechen</string>
+
+    <string name="play">Wiedergabe</string>
+    <string name="pause">Pause</string>
+    <string name="next">Weiter</string>
+    <string name="previous">Zurück</string>
+    <string name="now_playing">Läuft gerade</string>
+    <string name="close_player">Player schließen</string>
+    <string name="tab_channels">Kanäle</string>
+    <string name="tab_text">Modul-Text</string>
+    <string name="text_message">Song-Nachricht</string>
+    <string name="text_instruments">Instrumente</string>
+    <string name="text_samples">Samples</string>
+    <string name="text_empty">Dieses Modul enthält keinen Text.</string>
+    <plurals name="channel_count">
+        <item quantity="one">%d Kanal</item>
+        <item quantity="other">%d Kanäle</item>
+    </plurals>
+    <string name="hero_title">%1$s Module, sofort abspielbar</string>
+    <string name="hero_text">Durchsuche das Modland-Archiv oder lass den Zufall entscheiden.</string>
+    <string name="hero_random">Überrasch mich</string>
+
+    <string name="settings_design">Design</string>
+    <string name="settings_language">Sprache</string>
+    <string name="settings_dark_mode">Helligkeit</string>
+    <string name="dark_system">System</string>
+    <string name="dark_light">Hell</string>
+    <string name="dark_dark">Dunkel</string>
+    <string name="design_dynamic">Material You</string>
+    <string name="design_dynamic_text">Übernimmt die Farben deines Hintergrundbilds</string>
+    <string name="design_paula_text">Petrol, die eigene Farbe der App</string>
+    <string name="design_tracker_text">Graublaue Flächen und Bernstein, wie klassische Amiga-Tracker</string>
+    <string name="design_workbench_text">Blau und Orange</string>
+    <string name="design_copper_text">Warmes Orange bis Magenta, wie Copper-Balken</string>
+
+    <string name="radio_archive">Ganzes Archiv</string>
+    <string name="radio_archive_text">Ein Zufallsmodul aus Modland nach dem anderen.</string>
+    <string name="radio_favorites">Deine Favoriten</string>
+    <string name="radio_favorites_text">Mischt die Module, die du mit einem Herz markiert hast.</string>
+    <string name="radio_start">Starten</string>
+    <string name="radio_stop">Stoppen</string>
+    <string name="radio_history">Zuletzt gespielt</string>
+    <string name="radio_no_favorites">Du hast noch keine Favoriten. Markiere zuerst Module mit dem Herz.</string>
+    <string name="radio_failed">Es konnte kein Modul geladen werden. Prüfe deine Verbindung und versuch es erneut.</string>
+    <string name="keep">In der Bibliothek behalten</string>
+    <string name="favorite_add">Zu Favoriten hinzufügen</string>
+    <string name="favorite_remove">Aus Favoriten entfernen</string>
+    <string name="sort">Sortieren</string>
+    <string name="sort_title">Nach Titel</string>
+    <string name="sort_composer">Nach Komponist</string>
+    <string name="sort_recent">Neueste zuerst</string>
+    <string name="library_search">Bibliothek durchsuchen</string>
+    <string name="library_all">Alle</string>
+    <string name="library_favorites">Favoriten</string>
+    <string name="library_no_favorites">Noch keine Favoriten. Tippe auf das Herz neben einem Modul.</string>
+
+    <string name="playlists">Playlists</string>
+    <string name="playlists_empty">Sammle Module in eigenen Playlists.</string>
+    <string name="playlist_new">Neue Playlist</string>
+    <string name="playlist_name">Name</string>
+    <string name="playlist_add">Zu Playlist hinzufügen</string>
+    <string name="playlist_remove">Aus Playlist entfernen</string>
+    <string name="playlist_delete">Playlist löschen</string>
+    <string name="playlist_delete_text">„%1$s“ wird gelöscht. Die Module bleiben in deiner Bibliothek.</string>
+    <string name="playlist_empty">Diese Playlist ist leer. Füge Module aus deiner Bibliothek hinzu.</string>
+    <string name="create">Anlegen</string>
+    <string name="more">Mehr</string>
+    <string name="share">Teilen</string>
+    <string name="import_files">Dateien importieren</string>
+    <plurals name="import_done">
+        <item quantity="one">%d Modul importiert</item>
+        <item quantity="other">%d Module importiert</item>
+    </plurals>
+    <string name="import_done_skipped">%1$d importiert, %2$d übersprungen (Format nicht unterstützt)</string>
+    <string name="scope_hint">Kanal antippen: stumm · halten: solo</string>
+</resources>
