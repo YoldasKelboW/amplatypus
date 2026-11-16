@@ -4,6 +4,12 @@
 
 - AHX and HivelyTracker (HVL) modules play, using the HivelyTracker replayer. Oscilloscopes, level meters,
   the pattern view and muting work for them too. The Modland index is rebuilt once to pick them up.
+- Exotic Amiga formats play through UADE, which runs each format's original replay routine in an emulated
+  Amiga. About a hundred Modland formats are covered, among them PreTracker, SidMon, Future Composer,
+  Delta Music, Sonic Arranger and Digital Sound Studio. These modules have no channel views yet, and
+  many have no known length.
+- Two builds: "free" with only the freely licensed replay routines (five formats), and "full" with all.
+- Not yet: formats that consist of several files, such as TFMX.
 
 ## 0.3.0-pre2 – 2026-11-15
 

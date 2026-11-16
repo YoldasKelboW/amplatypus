@@ -38,6 +38,7 @@
     <string name="now_playing">Now playing</string>
     <string name="close_player">Close player</string>
     <string name="tab_channels">Channels</string>
+    <string name="no_channel_view">This format is played by an emulated Amiga. Channel views are not available for it yet.</string>
     <string name="tab_text">Module text</string>
     <string name="text_message">Song message</string>
     <string name="text_instruments">Instruments</string>

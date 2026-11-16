@@ -3,7 +3,12 @@
 A free, open-source Android player for Amiga and tracker music – MOD, XM, S3M, IT and some fifty related
 formats. It searches the [Modland](https://modland.com) archive (about 179,000 playable modules), downloads
 what you pick and plays it with [libopenmpt](https://lib.openmpt.org/libopenmpt/). AHX and HivelyTracker
-modules are played by the [HivelyTracker](https://github.com/pete-gordon/hivelytracker) replayer.
+modules are played by the [HivelyTracker](https://github.com/pete-gordon/hivelytracker) replayer, and exotic
+Amiga formats (PreTracker, SidMon, Future Composer, Delta Music and about a hundred more) by
+[UADE](https://zakalwe.fi/uade), which runs the original replay routines in an emulated Amiga.
+
+There are two builds. **free** contains only replay routines with a free licence and plays five of the
+exotic formats; **full** contains all of them. See [docs/UADE_LICENSING.md](docs/UADE_LICENSING.md).
 
 It is modelled on [4champ](https://github.com/sitomani/4champ), the iOS app by Aleksi Sitomaniemi.
 Logic, data model and flow are ported from 4champ; the user interface is rebuilt from scratch
@@ -38,7 +43,8 @@ in Kotlin with Jetpack Compose and Material 3.
 Test builds are attached to the [releases](https://github.com/YoldasKelboW/amplatypus/releases).
 Android 8.0 or newer.
 
-Not there yet: the exotic Amiga formats played by UADE, an AMP source, tablet layout,
+Not there yet: channel views for the UADE formats, formats that come as several files (TFMX and others),
+an AMP source, tablet layout,
 Android Auto. See `CHANGELOG.md` for what changed and `docs/RUNBOOK.md` (German) for the plan.
 
 ## Music sources

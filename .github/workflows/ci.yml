@@ -21,15 +21,15 @@ jobs:
           java-version: 21
       - uses: gradle/actions/setup-gradle@v4
       - name: Lint, unit tests and debug APK
-        run: ./gradlew lintDebug testDebugUnitTest assembleDebug --stacktrace
+        run: ./gradlew lintFullDebug testFreeDebugUnitTest testFullDebugUnitTest assembleDebug --stacktrace
       - uses: actions/upload-artifact@v4
         with:
           name: amplatypus-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
+          path: app/build/outputs/apk/*/debug/*.apk
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: reports
           path: |
-            app/build/reports/lint-results-debug.html
+            app/build/reports/lint-results-fullDebug.html
             app/build/reports/tests/

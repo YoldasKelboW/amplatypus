@@ -2,7 +2,8 @@
 package io.github.yoldaskelbow.amplatypus.audio
 
 /**
- * JNI bindings to the bundled replayers: libopenmpt, and the HivelyTracker replayer for AHX and HVL.
+ * JNI bindings to the bundled replayers: libopenmpt, the HivelyTracker replayer for AHX and HVL,
+ * and UADE for the exotic Amiga formats.
  * The native side picks the replayer from the file's contents. A handle of 0 means "no module".
  * Not thread-safe; callers serialise access.
  */
@@ -11,7 +12,8 @@ object OpenMpt {
         System.loadLibrary("amplatypus")
     }
 
-    @JvmStatic external fun nativeLoad(data: ByteArray): Long
+    @JvmStatic external fun nativeLoad(data: ByteArray, path: String): Long
+    @JvmStatic external fun nativeSetupUade(baseDir: String, corePath: String)
     @JvmStatic external fun nativeClose(handle: Long)
     @JvmStatic external fun nativeRead(handle: Long, sampleRate: Int, buffer: FloatArray, frames: Int): Int
     @JvmStatic external fun nativeDuration(handle: Long): Double

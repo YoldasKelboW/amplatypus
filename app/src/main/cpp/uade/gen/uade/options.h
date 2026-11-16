@@ -1,0 +1,9 @@
+#ifndef _UADE_OPTIONS_H_
+#define _UADE_OPTIONS_H_
+#define UADE_CONFIG_USER_MODE (0)
+#define UADE_CONFIG_BASE_DIR "/nonexistent/uade"
+#define UADE_CONFIG_UADE_CORE "/nonexistent/uadecore"
+#define UADE_CONFIG_HAVE_URANDOM
+#define UADE_VERSION "3.05"
+
+#endif /* _UADE_OPTIONS_H_ */

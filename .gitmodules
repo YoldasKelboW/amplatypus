@@ -6,3 +6,15 @@
 	path = third_party/hivelytracker
 	url = https://github.com/pete-gordon/hivelytracker.git
 	shallow = true
+[submodule "third_party/uade"]
+	path = third_party/uade
+	url = https://gitlab.com/uade-music-player/uade.git
+	shallow = true
+[submodule "third_party/bencodetools"]
+	path = third_party/bencodetools
+	url = https://gitlab.com/heikkiorsila/bencodetools.git
+	shallow = true
+[submodule "third_party/libzakalwe"]
+	path = third_party/libzakalwe
+	url = https://gitlab.com/hors/libzakalwe.git
+	shallow = true

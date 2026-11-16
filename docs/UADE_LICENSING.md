@@ -1,8 +1,8 @@
 # UADE licence review
 
 Checked on 2026-11-16 against the UADE source at commit `dc84f94` (2 November 2026),
-<https://gitlab.com/uade-music-player/uade>. UADE is not part of AMPlatypus yet; this note records
-what was found so the decision can be made on facts. It is not legal advice.
+<https://gitlab.com/uade-music-player/uade>. This note records what was found and what was decided.
+It is not legal advice.
 
 ## What UADE consists of
 
@@ -50,4 +50,10 @@ So of the two formats named in the runbook as the goal of this phase, PreTracker
    project on first use. The app then distributes nothing unclear, at the cost of an extra step and a
    network dependency.
 
-No option has been chosen yet.
+## Decision
+
+Option 2, decided on 2026-11-16: the `free` build contains the five LGPL-tagged players that
+`eagleplayer.conf` uses (PreTracker, Fred, SIDMon1.0, MusicAssembler, ManiacsOfNoise) and none of the
+data files under `players/ENV` and `players/S`. The `full` build contains every player UADE ships except
+those for multi-file formats, which the app cannot load yet. Asking Wanted Team and the UADE maintainer
+for a statement (option 3) remains open and would not change the `free` build.

@@ -19,6 +19,7 @@ import androidx.media3.common.util.UnstableApi
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import io.github.yoldaskelbow.amplatypus.audio.ModuleEngine
+import io.github.yoldaskelbow.amplatypus.audio.UadeFiles
 import java.io.File
 
 /**
@@ -181,9 +182,10 @@ class ModulePlayer(
     private fun loadCurrent(positionMs: Long) {
         val path = items[index].mediaId
         engine.pause()
+        UadeFiles.ensureReady(context)
         if (engine.load(File(path))) {
             error = null
-            durationMs = engine.durationMs
+            durationMs = engine.durationMs.takeIf { it > 0 } ?: C.TIME_UNSET
             if (positionMs > 0) engine.seekTo(positionMs)
             playbackState = Player.STATE_READY
             if (playWhenReady) startEngine()

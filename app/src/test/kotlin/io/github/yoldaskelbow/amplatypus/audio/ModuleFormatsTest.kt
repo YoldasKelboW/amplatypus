@@ -20,8 +20,28 @@ class ModuleFormatsTest {
 
     @Test
     fun `formats without a bundled replayer are not playable`() {
-        assertFalse(ModuleFormats.isPlayable("sid"))
-        assertFalse(ModuleFormats.isPlayable("dss"))
+        assertFalse(ModuleFormats.isPlayable("spc"))
+        assertFalse(ModuleFormats.isPlayable("nsf"))
         assertFalse(ModuleFormats.isPlayable(""))
+    }
+
+    @Test
+    fun `PreTracker is played by UADE in every build`() {
+        assertTrue(ModuleFormats.isPlayable("prt"))
+        assertTrue(ModuleFormats.isPlayableOnModland("Pretracker", "prt"))
+    }
+
+    @Test
+    fun `Modland folders of other machines are not taken for Amiga formats`() {
+        // "mus" is one of UADE's extensions, but these folders hold Commodore 64 music.
+        assertFalse(ModuleFormats.isPlayableOnModland("Sidplayer", "mus"))
+        assertFalse(ModuleFormats.isPlayableOnModland("FamiTracker", "ftm"))
+        assertFalse(ModuleFormats.isPlayableOnModland("Playstation Sound Format", "psf"))
+    }
+
+    @Test
+    fun `tracker formats on Modland do not depend on the folder`() {
+        assertTrue(ModuleFormats.isPlayableOnModland("Protracker", "mod"))
+        assertTrue(ModuleFormats.isPlayableOnModland("AHX", "ahx"))
     }
 }

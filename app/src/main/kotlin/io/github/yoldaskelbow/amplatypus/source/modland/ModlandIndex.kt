@@ -89,7 +89,7 @@ class ModlandIndex(
                     val insertFts = sql.compileStatement("INSERT INTO index_fts(rowid, title, composer) VALUES(?,?,?)")
                     reader.lineSequence().forEach { raw ->
                         val line = ModlandIndexParser.parse(raw) ?: return@forEach
-                        if (!ModuleFormats.isPlayable(line.ext)) return@forEach
+                        if (!ModuleFormats.isPlayableOnModland(line.format, line.ext)) return@forEach
                         imported++
                         val id = imported.toLong()
                         insertEntry.bindLong(1, id)

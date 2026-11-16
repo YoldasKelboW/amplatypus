@@ -21,6 +21,8 @@ import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
@@ -137,10 +139,12 @@ fun NowPlayingScreen(player: PlayerConnection, onClose: () -> Unit) {
             info?.let { module ->
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 4.dp)) {
                     if (module.type.isNotBlank()) AssistChip(onClick = {}, label = { Text(module.type, maxLines = 1) })
-                    AssistChip(
-                        onClick = {},
-                        label = { Text(pluralStringResource(R.plurals.channel_count, module.channels, module.channels)) },
-                    )
+                    if (module.channels > 0) {
+                        AssistChip(
+                            onClick = {},
+                            label = { Text(pluralStringResource(R.plurals.channel_count, module.channels, module.channels)) },
+                        )
+                    }
                 }
             }
 
@@ -159,7 +163,17 @@ fun NowPlayingScreen(player: PlayerConnection, onClose: () -> Unit) {
                 modifier = Modifier.fillMaxWidth().weight(1f).padding(top = 12.dp),
             ) {
                 val module = info
-                if (tab == 0) {
+                if (tab == 0 && module?.channels == 0) {
+                    // UADE formats: the replay routine runs inside an emulated Amiga and gives no per-channel data yet.
+                    Box(Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
+                        Text(
+                            stringResource(R.string.no_channel_view),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center,
+                        )
+                    }
+                } else if (tab == 0) {
                     val channels = module?.channels ?: 4
                     val scopeRows = (channels + scopeColumns(channels) - 1) / scopeColumns(channels)
                     Column(Modifier.fillMaxSize().padding(vertical = 12.dp)) {

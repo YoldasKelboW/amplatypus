@@ -30,4 +30,10 @@ OkHttp, Okio – Apache License 2.0, Square, Inc.
 kotlinx.coroutines – Apache License 2.0, JetBrains
 Guava – Apache License 2.0, Google
 
-Planned (not yet included): UADE (GPL/LGPL, mixed – to be reviewed before inclusion).
+UADE – Copyright (c) Heikki Orsila and contributors; emulator core from UAE, GNU GPL; libuade GNU GPL / LGPL /
+  public domain per file; sound core GNU LGPL. The Amiga replay routines in the "full" build have various
+  licences and copyright holders, see docs/UADE_LICENSING.md. The "free" build contains only those marked
+  GNU LGPL (PreTracker, Fred, SIDMon 1.0, Music Assembler, Maniacs of Noise).
+bencodetools – BSD-2-Clause, Copyright (c) 2009-2020 Heikki Orsila; parts Copyright (c) 2002-2005 Bram Cohen
+  and Ross Cohen.
+libzakalwe – BSD-style licence, Copyright (c) Heikki Orsila.

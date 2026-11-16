@@ -42,7 +42,16 @@ add_library(hively STATIC ${HIVELY_DIR}/hvl_replay.c ${HIVELY_DIR}/hvl_tables.c)
 target_include_directories(hively PUBLIC ${HIVELY_DIR})
 target_compile_options(hively PRIVATE -fvisibility=hidden -fsigned-char -fcommon -w)
 
-add_library(amplatypus SHARED engine_jni.cpp engine_openmpt.cpp engine_hively.cpp)
+# UADE: libuade is linked into the app's library, uadecore is a program of its own. Gradle only
+# packages files called lib*.so, so the program gets such a name and is put next to the libraries.
+add_subdirectory(uade)
+set_target_properties(uadecore PROPERTIES
+    OUTPUT_NAME uadecore PREFIX "lib" SUFFIX ".so"
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+
+add_library(amplatypus SHARED engine_jni.cpp engine_openmpt.cpp engine_hively.cpp engine_uade.cpp)
 set_source_files_properties(engine_hively.cpp PROPERTIES COMPILE_OPTIONS "-fsigned-char")
-target_link_libraries(amplatypus PRIVATE openmpt hively z m log)
+target_link_libraries(amplatypus PRIVATE openmpt hively uade z m log)
 target_link_options(amplatypus PRIVATE -Wl,--gc-sections)
+# Nothing links against uadecore, so make sure it is built along with the library.
+add_dependencies(amplatypus uadecore)

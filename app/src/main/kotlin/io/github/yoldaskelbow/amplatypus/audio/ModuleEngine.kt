@@ -78,7 +78,7 @@ class ModuleEngine(private val onEnded: () -> Unit) {
         } catch (_: Exception) {
             return false
         }
-        val newHandle = OpenMpt.nativeLoad(bytes)
+        val newHandle = OpenMpt.nativeLoad(bytes, file.absolutePath)
         synchronized(lock) {
             if (released) {
                 OpenMpt.nativeClose(newHandle)

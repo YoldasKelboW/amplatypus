@@ -25,14 +25,34 @@ static jbyteArray toBytes(JNIEnv *env, const std::string &text) {
 
 extern "C" {
 
-JNIEXPORT jlong JNICALL FN(nativeLoad)(JNIEnv *env, jclass, jbyteArray data) {
+// `path` is where `data` was read from. UADE plays from the file, not from memory.
+JNIEXPORT jlong JNICALL FN(nativeLoad)(JNIEnv *env, jclass, jbyteArray data, jstring path) {
     jsize length = env->GetArrayLength(data);
     jbyte *bytes = env->GetByteArrayElements(data, nullptr);
     if (bytes == nullptr) return 0;
     size_t size = static_cast<size_t>(length);
-    Player *created = isHivelyData(bytes, size) ? createHivelyPlayer(bytes, size) : createOpenMptPlayer(bytes, size);
+    Player *created;
+    if (isHivelyData(bytes, size)) {
+        created = createHivelyPlayer(bytes, size);
+    } else {
+        created = createOpenMptPlayer(bytes, size);
+        if (created == nullptr) {
+            // Whatever the tracker replayers do not know may be one of UADE's Amiga formats.
+            const char *filePath = env->GetStringUTFChars(path, nullptr);
+            created = createUadePlayer(filePath);
+            env->ReleaseStringUTFChars(path, filePath);
+        }
+    }
     env->ReleaseByteArrayElements(data, bytes, JNI_ABORT);
     return reinterpret_cast<jlong>(created);
+}
+
+JNIEXPORT void JNICALL FN(nativeSetupUade)(JNIEnv *env, jclass, jstring baseDir, jstring corePath) {
+    const char *base = env->GetStringUTFChars(baseDir, nullptr);
+    const char *core = env->GetStringUTFChars(corePath, nullptr);
+    setupUade(base, core);
+    env->ReleaseStringUTFChars(baseDir, base);
+    env->ReleaseStringUTFChars(corePath, core);
 }
 
 JNIEXPORT void JNICALL FN(nativeClose)(JNIEnv *, jclass, jlong handle) {

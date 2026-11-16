@@ -37,6 +37,7 @@
     <string name="now_playing">Läuft gerade</string>
     <string name="close_player">Player schließen</string>
     <string name="tab_channels">Kanäle</string>
+    <string name="no_channel_view">Dieses Format spielt ein nachgebildeter Amiga ab. Kanalansichten gibt es dafür noch nicht.</string>
     <string name="tab_text">Modul-Text</string>
     <string name="text_message">Song-Nachricht</string>
     <string name="text_instruments">Instrumente</string>

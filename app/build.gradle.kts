@@ -12,6 +12,75 @@ val releaseAbis = listOf("arm64-v8a", "armeabi-v7a", "x86_64")
 // Optional: -PlocalRelease signs the release build with the debug key so it can be installed for testing.
 val localRelease = providers.gradleProperty("localRelease").isPresent
 
+// ---- UADE player sets ------------------------------------------------------------------------
+// UADE plays each exotic Amiga format with that format's original replay routine, a small Amiga
+// program from third_party/uade/players. Only a few of them carry a free licence
+// (docs/UADE_LICENSING.md), so there are two builds: "free" ships just those, "full" ships all.
+val uadeDir = rootProject.file("third_party/uade")
+val uadeFreePlayers = setOf("PreTracker", "Fred", "ManiacsOfNoise", "MusicAssembler", "SIDMon1.0")
+
+// Left out of every build for now: formats that consist of several files (song plus samples).
+// The app downloads one file per module and cannot fetch the companions yet.
+val uadeMultiFilePlayers = listOf(
+    "TFMX", "SonixMusicDriver", "RichardJoseph", "MusicMaker", "AudioSculpture", "Quartet",
+    "ScottJohnston", "DirkBialluch", "DynamicSynthesizer", "MIDI-Loriciel", "PaulSummers",
+)
+
+// Extensions that stay with the tracker replayers when a file is imported from the device.
+val uadeIgnoredExtensions = setOf("mod", "med", "ahx", "thx", "hvl", "okt", "okta", "digi", "sfx", "dbm")
+
+/** The "player<TAB>prefixes=a,b ..." lines of eagleplayer.conf for the players of one build. */
+fun uadePlayerLines(full: Boolean): List<String> {
+    val conf = File(uadeDir, "eagleplayer.conf")
+    if (!conf.isFile) return emptyList()
+    return conf.readLines().filter { line ->
+        val name = line.substringBefore('\t').trim()
+        name.isNotEmpty() && !name.startsWith("#") && File(uadeDir, "players/$name").isFile &&
+            uadeMultiFilePlayers.none { name.startsWith(it) } && (full || name in uadeFreePlayers)
+    }
+}
+
+fun uadePlayerNames(full: Boolean): String =
+    uadePlayerLines(full).map { it.substringBefore('\t').trim() }.toSortedSet().joinToString(",")
+
+fun uadeExtensions(full: Boolean): String = uadePlayerLines(full)
+    .flatMap { line -> Regex("prefixes=(\\S+)").find(line)?.groupValues?.get(1)?.split(',') ?: emptyList() }
+    .map { it.lowercase() }
+    .filter { it.isNotEmpty() && it !in uadeIgnoredExtensions }
+    .toSortedSet()
+    .joinToString(",")
+
+/** Collects what UADE needs at run time into one assets folder: players, sound core, configuration. */
+abstract class UadeAssetsTask : DefaultTask() {
+    @get:InputDirectory abstract val uade: DirectoryProperty
+    @get:Input abstract val playerLines: ListProperty<String>
+    @get:Input abstract val withVolumes: Property<Boolean>
+    @get:OutputDirectory abstract val output: DirectoryProperty
+
+    @TaskAction
+    fun run() {
+        val source = uade.get().asFile
+        val target = File(output.get().asFile, "uade")
+        target.deleteRecursively()
+        File(target, "players").mkdirs()
+        for (line in playerLines.get()) {
+            val name = line.substringBefore('\t').trim()
+            // One player can serve several formats and then has several lines.
+            File(source, "players/$name").copyTo(File(target, "players/$name"), overwrite = true)
+        }
+        // Settings and data files some players read from the Amiga volumes ENV: and S:. None of the
+        // freely licensed players needs them, and they carry no licence of their own.
+        if (withVolumes.get()) {
+            for (volume in listOf("ENV", "S")) {
+                File(source, "players/$volume").takeIf { it.isDirectory }?.copyRecursively(File(target, "players/$volume"))
+            }
+        }
+        File(target, "eagleplayer.conf").writeText(playerLines.get().joinToString("\n", postfix = "\n"))
+        File(source, "amigasrc/score/score").copyTo(File(target, "score"))
+        File(source, "uaerc").copyTo(File(target, "uaerc"))
+    }
+}
+
 android {
     namespace = "io.github.yoldaskelbow.amplatypus"
     compileSdk {
@@ -30,6 +99,27 @@ android {
         versionName = "0.4.0-dev1"
 
         buildConfigField("String", "REPO_URL", "\"https://github.com/YoldasKelboW/amplatypus\"")
+    }
+
+    flavorDimensions += "players"
+    productFlavors {
+        create("free") {
+            dimension = "players"
+            buildConfigField("String", "UADE_EXTENSIONS", "\"${uadeExtensions(full = false)}\"")
+            buildConfigField("String", "UADE_PLAYERS", "\"${uadePlayerNames(full = false)}\"")
+        }
+        create("full") {
+            dimension = "players"
+            versionNameSuffix = "-full"
+            buildConfigField("String", "UADE_EXTENSIONS", "\"${uadeExtensions(full = true)}\"")
+            buildConfigField("String", "UADE_PLAYERS", "\"${uadePlayerNames(full = true)}\"")
+        }
+    }
+
+    // uadecore is a program, not a library. It is packaged as libuadecore.so so that Android
+    // installs it into the app's native library folder, the only place it may be started from.
+    packaging {
+        jniLibs { useLegacyPackaging = true }
     }
 
     buildTypes {
@@ -82,6 +172,18 @@ android {
     lint {
         warningsAsErrors = false
         abortOnError = true
+    }
+}
+
+androidComponents {
+    onVariants { variant ->
+        val full = variant.productFlavors.any { it.second == "full" }
+        val task = tasks.register<UadeAssetsTask>("uadeAssets${variant.name.replaceFirstChar { it.uppercase() }}") {
+            uade.set(uadeDir)
+            playerLines.set(uadePlayerLines(full))
+            withVolumes.set(full)
+        }
+        variant.sources.assets?.addGeneratedSourceDirectory(task, UadeAssetsTask::output)
     }
 }
 

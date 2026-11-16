@@ -46,3 +46,8 @@ ScopeSet *createOpenMptScopes(const void *data, size_t length, int channels);
 Player *createHivelyPlayer(const void *data, size_t length);
 ScopeSet *createHivelyScopes(const void *data, size_t length);
 bool isHivelyData(const void *data, size_t length);
+
+// UADE needs to know where its data files and the uadecore program are before it can play.
+// `path` is the module file; UADE uses the name's prefix or extension to pick the replay routine.
+void setupUade(const std::string &baseDir, const std::string &corePath);
+Player *createUadePlayer(const std::string &path);

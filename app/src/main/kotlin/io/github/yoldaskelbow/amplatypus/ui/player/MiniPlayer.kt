@@ -47,7 +47,7 @@ fun MiniPlayer(player: PlayerConnection, onOpen: () -> Unit, modifier: Modifier 
     }
     // No need to animate the small meters while the full player covers them.
     val visual = rememberVisual(animate)
-    val channels = remember(nowPlaying.title, nowPlaying.durationMs) { ModuleEngine.current?.moduleInfo()?.channels ?: 4 }
+    val channels = remember(nowPlaying.title, nowPlaying.durationMs) { ModuleEngine.current?.moduleInfo()?.channels?.takeIf { it > 0 } ?: 4 }
 
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
