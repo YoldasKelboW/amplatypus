@@ -17,7 +17,7 @@ what was found so the decision can be made on facts. It is not legal advice.
 
 Each Amiga format is played by its own small Amiga program. These fall into three groups:
 
-- **Players with a licence tag.** Seven binaries carry `$LICENSE: GNU LGPL`: Fred, JochenHippel_UADE,
+- **Players with a licence tag.** Six binaries carry `$LICENSE: GNU LGPL`: Fred, JochenHippel_UADE,
   ManiacsOfNoise, MusicAssembler, PreTracker, SIDMon1.0. Their source is in `amigasrc/players/uade/`.
   These are fine.
 - **Wanted Team players.** 97 source directories, DigitalSoundStudio (DSS) among them.
