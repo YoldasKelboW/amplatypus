@@ -136,6 +136,18 @@ JNIEXPORT void JNICALL FN(nativeSetChannelMute)(JNIEnv *, jclass, jlong handle, 
     if (handle != 0) player(handle)->setChannelMute(channel, mute);
 }
 
+// Speed (ticks per row) in the upper 16 bits, beats per minute in the lower.
+JNIEXPORT jint JNICALL FN(nativeTempo)(JNIEnv *, jclass, jlong handle) {
+    if (handle == 0) return 0;
+    int speed = 0, bpm = 0;
+    player(handle)->tempo(speed, bpm);
+    return ((speed & 0xFFFF) << 16) | (bpm & 0xFFFF);
+}
+
+JNIEXPORT jint JNICALL FN(nativeOrderCount)(JNIEnv *, jclass, jlong handle) {
+    return handle == 0 ? 0 : player(handle)->orderCount();
+}
+
 JNIEXPORT jboolean JNICALL FN(nativeCanMute)(JNIEnv *, jclass, jlong handle) {
     return handle != 0 && player(handle)->canMute();
 }

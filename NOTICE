@@ -34,6 +34,8 @@ UADE – Copyright (c) Heikki Orsila and contributors; emulator core from UAE, G
   public domain per file; sound core GNU LGPL. The Amiga replay routines in the "full" build have various
   licences and copyright holders, see docs/UADE_LICENSING.md. The "free" build contains only those marked
   GNU LGPL (PreTracker, Fred, SIDMon 1.0, Music Assembler, Maniacs of Noise).
+Press Start 2P font – SIL Open Font License 1.1, Copyright 2012 The Press Start 2P Project Authors;
+  used in the tracker-style player view. Licence text: docs/licenses/OFL-PressStart2P.txt.
 bencodetools – BSD-2-Clause, Copyright (c) 2009-2020 Heikki Orsila; parts Copyright (c) 2002-2005 Bram Cohen
   and Ross Cohen.
 libzakalwe – BSD-style licence, Copyright (c) Heikki Orsila.

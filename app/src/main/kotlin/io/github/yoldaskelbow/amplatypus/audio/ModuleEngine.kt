@@ -20,7 +20,7 @@ class ModuleEngine(private val onEnded: () -> Unit) {
     private var released = false
 
     // What the visualiser needs, recorded per rendered chunk and handed out when that chunk is audible.
-    private class Frame(val endFrame: Long, val levels: FloatArray, val position: Long, val waves: FloatArray?)
+    private class Frame(val endFrame: Long, val levels: FloatArray, val position: Long, val waves: FloatArray?, val tempo: Int)
 
     // Per-channel oscilloscopes: only kept alive while the visualiser is on screen.
     private var scopes = 0L
@@ -216,6 +216,8 @@ class ModuleEngine(private val onEnded: () -> Unit) {
                 row = (frame.position and 0xFFFFF).toInt(),
                 waves = frame.waves,
                 playing = playing,
+                speed = frame.tempo ushr 16,
+                bpm = frame.tempo and 0xFFFF,
                 source = frame,
             )
         }
@@ -295,7 +297,7 @@ class ModuleEngine(private val onEnded: () -> Unit) {
                         OpenMpt.nativeOwnScopesRender(handle, waves, SCOPE_POINTS)
                     }
                     writtenFrames += frames
-                    this.frames.addLast(Frame(writtenFrames, levels, OpenMpt.nativePlayPosition(handle), waves))
+                    this.frames.addLast(Frame(writtenFrames, levels, OpenMpt.nativePlayPosition(handle), waves, OpenMpt.nativeTempo(handle)))
                     if (this.frames.size > MAX_PENDING_FRAMES) this.frames.removeFirst()
                 }
             }
@@ -321,6 +323,7 @@ class ModuleEngine(private val onEnded: () -> Unit) {
             samples = names(0),
             instruments = names(1),
             canMute = OpenMpt.nativeCanMute(handle),
+            orders = OpenMpt.nativeOrderCount(handle),
             hasPattern = OpenMpt.nativePattern(handle, 0)?.isNotEmpty() == true,
         )
     }
@@ -343,6 +346,8 @@ class ModuleEngine(private val onEnded: () -> Unit) {
         val canMute: Boolean = true,
         /** The replayer can show the module's patterns. */
         val hasPattern: Boolean = true,
+        /** Song length in orders (positions); 0 if unknown. */
+        val orders: Int = 0,
     )
 
     class Visual(
@@ -354,6 +359,9 @@ class ModuleEngine(private val onEnded: () -> Unit) {
         /** [SCOPE_POINTS] waveform samples per channel, or null while the scopes are off or loading. */
         val waves: FloatArray?,
         val playing: Boolean,
+        /** Ticks per row and beats per minute; 0 where the format has none. */
+        val speed: Int = 0,
+        val bpm: Int = 0,
         internal val source: Any,
     )
 

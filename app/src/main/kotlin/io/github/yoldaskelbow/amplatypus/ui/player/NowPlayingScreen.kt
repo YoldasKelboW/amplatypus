@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilledIconButton
@@ -92,13 +93,17 @@ fun NowPlayingScreen(player: PlayerConnection, onClose: () -> Unit) {
         }
     }
     var tab by rememberSaveable { mutableIntStateOf(0) }
+    // The tracker-style view, opened by tapping the format chip.
+    var showRetro by rememberSaveable { mutableStateOf(false) }
+    val retro = showRetro && hasRetroView(info)
 
     // The oscilloscopes cost CPU and memory, so they only run while this screen shows them.
-    DisposableEffect(info?.generation, tab) {
-        ModuleEngine.current?.setScopesEnabled(tab == 0)
+    DisposableEffect(info?.generation, tab, retro) {
+        ModuleEngine.current?.setScopesEnabled(tab == 0 || retro)
         onDispose { ModuleEngine.current?.setScopesEnabled(false) }
     }
 
+    Box(Modifier.fillMaxSize()) {
     Surface(color = MaterialTheme.colorScheme.surface, modifier = Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize().systemBarsPadding().padding(horizontal = 20.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) {
@@ -138,7 +143,19 @@ fun NowPlayingScreen(player: PlayerConnection, onClose: () -> Unit) {
             )
             info?.let { module ->
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 4.dp)) {
-                    if (module.type.isNotBlank()) AssistChip(onClick = {}, label = { Text(module.type, maxLines = 1) })
+                    if (module.type.isNotBlank()) {
+                        val hasRetro = hasRetroView(module)
+                        AssistChip(
+                            onClick = { if (hasRetro) showRetro = true },
+                            label = { Text(module.type, maxLines = 1) },
+                            // A small hint that this chip opens something.
+                            trailingIcon = if (hasRetro) {
+                                { Icon(painterResource(R.drawable.ic_retro), null, Modifier.size(AssistChipDefaults.IconSize)) }
+                            } else {
+                                null
+                            },
+                        )
+                    }
                     if (module.channels > 0) {
                         AssistChip(
                             onClick = {},
@@ -264,6 +281,12 @@ fun NowPlayingScreen(player: PlayerConnection, onClose: () -> Unit) {
                 }
             }
         }
+    }
+    info?.takeIf { retro }?.let { module ->
+        // Declared after the player's own handler, so Back closes this view first.
+        BackHandler { showRetro = false }
+        RetroTrackerView(module, onClose = { showRetro = false })
+    }
     }
 }
 

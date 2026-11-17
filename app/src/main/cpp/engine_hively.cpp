@@ -176,6 +176,14 @@ public:
         row = tune->ht_NoteNr;
     }
 
+    // A tick is 1/50 s times the speed multiplier, as 125 BPM is in a tracker.
+    void tempo(int &speed, int &bpm) override {
+        speed = tune->ht_Tempo;
+        bpm = 125 * (tune->ht_SpeedMultiplier == 0 ? 1 : tune->ht_SpeedMultiplier);
+    }
+
+    int orderCount() override { return tune->ht_PositionNr; }
+
     std::string patternText(int pattern) override {
         static const char *const NOTES[12] = {"C-", "C#", "D-", "D#", "E-", "F-", "F#", "G-", "G#", "A-", "A#", "B-"};
         std::string text;

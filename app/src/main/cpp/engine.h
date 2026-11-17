@@ -34,6 +34,10 @@ public:
     virtual bool ownScopes() { return false; }
     // `points` samples per channel of what the last read() rendered, channel after channel.
     virtual void scopes(int, float *) {}
+    // Ticks per row and beats per minute right now; 0 where the format has no such idea.
+    virtual void tempo(int &speed, int &bpm) { speed = bpm = 0; }
+    // Length of the song in orders (positions); 0 if unknown.
+    virtual int orderCount() { return 0; }
 };
 
 // The waveform of every channel on its own, rendered in step with a Player.

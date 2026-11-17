@@ -80,6 +80,13 @@ public:
         row = openmpt_module_get_current_row(m);
     }
 
+    void tempo(int &speed, int &bpm) override {
+        speed = openmpt_module_get_current_speed(m);
+        bpm = static_cast<int>(openmpt_module_get_current_tempo2(m) + 0.5);
+    }
+
+    int orderCount() override { return openmpt_module_get_num_orders(m); }
+
     std::string patternText(int pattern) override {
         int32_t rows = openmpt_module_get_pattern_num_rows(m, pattern);
         int32_t channels = openmpt_module_get_num_channels(m);

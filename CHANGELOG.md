@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Tracker view for MOD files: tap the format chip in the player. Grey panels with position, pattern, length,
+  tempo and speed, a quadrascope, and the pattern editor with level bars rising above the playing row, in
+  the style of the Amiga trackers. Uses the free pixel font Press Start 2P.
+
 ## 0.4.0-pre1 – 2026-11-17 (Phase 4: special formats)
 
 - AHX and HivelyTracker (HVL) modules play, using the HivelyTracker replayer. Oscilloscopes, level meters,

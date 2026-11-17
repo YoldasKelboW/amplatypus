@@ -193,7 +193,7 @@ fun scopeColumns(channels: Int): Int = when {
     else -> 8
 }
 
-private const val SCOPE_GAIN = 3f
+internal const val SCOPE_GAIN = 3f
 
 /**
  * The pattern scrolling past the play position, as in a tracker: the current row stays in the middle
