@@ -91,7 +91,7 @@ public:
         int32_t rows = openmpt_module_get_pattern_num_rows(m, pattern);
         int32_t channels = openmpt_module_get_num_channels(m);
         std::string text;
-        text.reserve(static_cast<size_t>(rows) * channels * 11);
+        text.reserve(static_cast<size_t>(rows) * channels * 15);
         for (int32_t r = 0; r < rows; r++) {
             for (int32_t c = 0; c < channels; c++) {
                 if (c > 0) text += '|';
@@ -101,6 +101,10 @@ public:
                 text += ' ';
                 text += take(openmpt_module_format_pattern_row_channel_command(m, pattern, r, c, OPENMPT_MODULE_COMMAND_EFFECT));
                 text += take(openmpt_module_format_pattern_row_channel_command(m, pattern, r, c, OPENMPT_MODULE_COMMAND_PARAMETER));
+                // The volume column comes last, so views that show only the first part need not skip it.
+                text += ' ';
+                text += take(openmpt_module_format_pattern_row_channel_command(m, pattern, r, c, OPENMPT_MODULE_COMMAND_VOLUMEEFFECT));
+                text += take(openmpt_module_format_pattern_row_channel_command(m, pattern, r, c, OPENMPT_MODULE_COMMAND_VOLUME));
             }
             text += '\n';
         }

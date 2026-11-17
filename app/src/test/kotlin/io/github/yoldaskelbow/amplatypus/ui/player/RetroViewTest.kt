@@ -28,4 +28,13 @@ class RetroViewTest {
         assertEquals("0A", lastSampleName(rows, 2, List(12) { "" }))
         assertEquals("", lastSampleName(emptyList(), 5, samples))
     }
+
+    @Test
+    fun `FastTracker cells put the volume column before the effect`() {
+        // One octave lower than libopenmpt, as FastTracker counts.
+        assertEquals("C-4 01 v40 A0F", ftCell("C-5 01 A0F v40"))
+        assertEquals("--- .. ... ...", ftCell("... .. ... ..."))
+        // Cells without volume column (older native output) still work.
+        assertEquals("G#5 1B ... C10", ftCell("G#6 1B C10"))
+    }
 }

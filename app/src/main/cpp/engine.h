@@ -26,7 +26,8 @@ public:
     // Level 0..1 of a channel for what was rendered last.
     virtual float vu(int channel) = 0;
     virtual void playPosition(int &order, int &pattern, int &row) = 0;
-    // Rows separated by '\n', channels by '|', each cell "C-5 01 A0F".
+    // Rows separated by '\n', channels by '|', each cell "C-5 01 A0F", optionally followed by the
+    // volume column (" v40").
     virtual std::string patternText(int pattern) = 0;
     // Whether setChannelMute() works while the song plays.
     virtual bool canMute() { return true; }

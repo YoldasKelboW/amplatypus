@@ -5,6 +5,8 @@
 - Tracker view for MOD files: tap the format chip in the player. Grey panels with position, pattern, length,
   tempo and speed, a quadrascope, and the pattern editor with level bars rising above the playing row, in
   the style of the Amiga trackers. Uses the free pixel font Press Start 2P.
+- Tracker view for XM files in the style of FastTracker 2: blue-green panels, a grid of scopes, and the
+  pattern in yellow on black with the volume column; many channels can be swiped sideways.
 - The tracker view has its own previous, play/pause and next buttons at the bottom. Every tracker view will
   keep them in the same place, drawn in its tracker's style.
 

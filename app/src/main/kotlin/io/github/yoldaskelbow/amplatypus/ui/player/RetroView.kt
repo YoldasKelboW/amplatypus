@@ -55,11 +55,31 @@ import io.github.yoldaskelbow.amplatypus.audio.ModuleEngine
  * no graphics, fonts or logos of the original programs are used.
  */
 
-/** Whether the retro view fits this module: four- to eight-channel MOD files and their relatives. */
-fun hasRetroView(info: ModuleEngine.ModuleInfo?): Boolean {
-    if (info == null || !info.hasPattern || info.channels !in 1..8) return false
+/** The tracker whose look a retro view takes. */
+enum class RetroStyle { PROTRACKER, FASTTRACKER }
+
+/** Which retro view fits this module, if any: MOD files and relatives, and FastTracker 2 XM files. */
+fun retroStyleOf(info: ModuleEngine.ModuleInfo?): RetroStyle? {
+    if (info == null || !info.hasPattern || info.channels < 1) return null
     val type = info.type.lowercase()
-    return ("mod" in type && "mmd" !in type) || "soundtracker" in type || "noisetracker" in type || "startrekker" in type
+    val mod = ("mod" in type && "mmd" !in type) || "soundtracker" in type || "noisetracker" in type || "startrekker" in type
+    return when {
+        mod && info.channels <= 8 -> RetroStyle.PROTRACKER
+        "fasttracker 2" in type && info.channels <= 32 -> RetroStyle.FASTTRACKER
+        else -> null
+    }
+}
+
+fun hasRetroView(info: ModuleEngine.ModuleInfo?): Boolean = retroStyleOf(info) != null
+
+/** Opens the retro view that fits [info]; nothing if there is none. */
+@Composable
+fun RetroView(info: ModuleEngine.ModuleInfo, controls: RetroControls, onClose: () -> Unit, modifier: Modifier = Modifier) {
+    when (retroStyleOf(info)) {
+        RetroStyle.PROTRACKER -> ProTrackerView(info, controls, onClose, modifier)
+        RetroStyle.FASTTRACKER -> FastTrackerView(info, controls, onClose, modifier)
+        null -> Unit
+    }
 }
 
 private object Retro {
@@ -78,17 +98,23 @@ private object Retro {
     val vuTop = Color(0xFFFF8800)
 }
 
-private val pixelFont = FontFamily(Font(R.font.press_start_2p))
+internal val pixelFont = FontFamily(Font(R.font.press_start_2p))
 
 // Press Start 2P is a square 8 x 8 font: every character is one em wide.
-private const val CHAR_ADVANCE = 1.0f
+internal const val CHAR_ADVANCE = 1.0f
 
 /** A raised panel: light top-left edge, dark bottom-right edge. Sunken swaps the edges. */
-private fun Modifier.bevel(sunken: Boolean = false, fill: Color = Retro.face, edge: Dp = 2.dp): Modifier = drawBehind {
+internal fun Modifier.bevel(
+    sunken: Boolean = false,
+    fill: Color = Retro.face,
+    edge: Dp = 2.dp,
+    light: Color = Retro.light,
+    shadow: Color = Retro.shadow,
+): Modifier = drawBehind {
     val e = edge.toPx()
     drawRect(fill)
-    val topLeft = if (sunken) Retro.shadow else Retro.light
-    val bottomRight = if (sunken) Retro.light else Retro.shadow
+    val topLeft = if (sunken) shadow else light
+    val bottomRight = if (sunken) light else shadow
     drawRect(topLeft, Offset.Zero, Size(size.width, e))
     drawRect(topLeft, Offset.Zero, Size(e, size.height))
     drawRect(bottomRight, Offset(0f, size.height - e), Size(size.width, e))
@@ -127,14 +153,24 @@ fun RetroControlBar(
 
 val RETRO_CONTROL_HEIGHT = 48.dp
 
-/** A ProTracker-style button: raised grey, pressed in while held, label in the pixel font. */
+/** A bevelled tracker button: raised, pressed in while held. The colours default to ProTracker's grey. */
 @Composable
-private fun RetroButton(text: String, description: String, enabled: Boolean, onClick: () -> Unit, modifier: Modifier, style: TextStyle) {
+internal fun RetroButton(
+    text: String,
+    description: String,
+    enabled: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier,
+    style: TextStyle,
+    fill: Color = Retro.face,
+    light: Color = Retro.light,
+    shadow: Color = Retro.shadow,
+) {
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
     Box(
         modifier
-            .bevel(sunken = pressed)
+            .bevel(sunken = pressed, fill = fill, light = light, shadow = shadow)
             .clickable(
                 interactionSource = interaction,
                 indication = null,
@@ -145,12 +181,13 @@ private fun RetroButton(text: String, description: String, enabled: Boolean, onC
             ),
         contentAlignment = Alignment.Center,
     ) {
-        Text(text, style = if (enabled) style else style.copy(color = Retro.shadow, shadow = null))
+        Text(text, style = if (enabled) style else style.copy(color = shadow, shadow = null))
     }
 }
 
+/** The view in the style of ProTracker, for MOD files. */
 @Composable
-fun RetroTrackerView(info: ModuleEngine.ModuleInfo, controls: RetroControls, onClose: () -> Unit, modifier: Modifier = Modifier) {
+private fun ProTrackerView(info: ModuleEngine.ModuleInfo, controls: RetroControls, onClose: () -> Unit, modifier: Modifier = Modifier) {
     val visual = rememberVisual(true)
     val position by remember { derivedStateOf { visual.value?.let { Triple(it.order, it.pattern, it.row) } ?: Triple(0, 0, 0) } }
     val tempo by remember { derivedStateOf { visual.value?.let { it.speed to it.bpm } ?: (0 to 0) } }
