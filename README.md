@@ -1,3 +1,5 @@
+<img src="fastlane/metadata/android/en-US/images/icon.png" width="96" align="right" alt="App icon: a pixel-art platypus wearing headphones">
+
 # AMPlatypus (working title)
 
 A free, open-source Android player for Amiga and tracker music – MOD, XM, S3M, IT and some fifty related
@@ -15,9 +17,10 @@ Logic, data model and flow are ported from 4champ; the user interface is rebuilt
 in Kotlin with Jetpack Compose and Material 3.
 
 <p>
-  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/1_player.png" width="250" alt="Player with one oscilloscope and level meter per channel and the running pattern">
-  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/2_search.png" width="250" alt="Start page with search, a random-module button and browsing by format">
-  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/3_radio.png" width="250" alt="Radio with two channels and the recently played list">
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/1_player.png" width="200" alt="Player with one oscilloscope and level meter per channel and the running pattern">
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/4_tracker_view.png" width="200" alt="Tracker view of a MOD file in the style of ProTracker, with level bars rising over the playing row">
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/2_search.png" width="200" alt="Start page with search, a random-module button and browsing by format">
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/3_radio.png" width="200" alt="Radio with two channels and the recently played list">
 </p>
 
 > **Early test version.** It works day to day on the developer's phone, but expect rough edges.
@@ -30,7 +33,11 @@ in Kotlin with Jetpack Compose and Material 3.
   index is stored on the device, so searching needs no network.
 - **Player** with one oscilloscope and one level meter per channel, the pattern scrolling past the play
   position, and the texts musicians left in the module (song message, instrument and sample names).
-  Tap a channel's oscilloscope to mute it, hold it to hear that channel alone.
+  Tap a channel's oscilloscope to mute it, hold it to hear that channel alone. Shuffle and repeat
+  (all or one) sit beside the playback controls.
+- **Tracker views**: tap the format name in the player to switch to a full-screen view in the style of
+  the tracker the module was made with – ProTracker for MOD files, FastTracker 2 for XM files – with
+  pattern, oscilloscopes, level bars and playback buttons. More trackers will follow.
 - **Background playback** with notification, lock-screen and headset controls.
 - **Library** with favourites, playlists, search and sorting; import of your own module files.
 - **Radio**: an endless random pick from the whole archive, or a shuffle of your favourites.
@@ -76,6 +83,8 @@ CI runs lint, unit tests and the debug build on every push.
 - [4champ](https://github.com/sitomani/4champ) © Aleksi Sitomaniemi – the app this one is modelled on.
 - [Modland](https://modland.com) – the archive maintained by Coma (Daniel Johansson).
 - [Amiga Music Preservation](https://amp.dascene.net) – the collection and the people maintaining it.
+- [Press Start 2P](https://fonts.google.com/specimen/Press+Start+2P) by CodeMan38 – the pixel font of the
+  tracker views (SIL Open Font License).
 - This app is developed with the help of an AI coding assistant (Claude Code). See `NOTICE`.
 
 ## License
