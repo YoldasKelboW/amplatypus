@@ -7,6 +7,9 @@
 #include "engine.h"
 
 #include <cstdlib>
+#include <cstring>
+#include <dirent.h>
+#include <strings.h>
 #include <mutex>
 #include <vector>
 
@@ -91,6 +94,38 @@ private:
     std::vector<int16_t> scratch;
 };
 
+// A replay routine that loads a second file (TFMX samples, Richard Joseph instruments) asks for it by
+// full path, often with the case changed ("song.INS" for "song.ins"). UADE's own loader handles that
+// by listing every folder from "/" down, and Android does not let apps list /data. A full path is
+// therefore looked up here, ignoring case only in the last part, inside the folder the app owns.
+// Everything else (players, "ENV:" and "S:" files) goes to UADE's loader.
+struct uade_file *loadByFullPath(const char *name) {
+    struct uade_file *file = uade_file_load(name);
+    if (file != nullptr) return file;
+    const char *slash = strrchr(name, '/');
+    if (slash == nullptr || slash[1] == 0) return nullptr;
+    std::string dir(name, static_cast<size_t>(slash - name));
+    DIR *listing = opendir(dir.empty() ? "/" : dir.c_str());
+    if (listing == nullptr) return nullptr;
+    std::string match;
+    while (struct dirent *entry = readdir(listing)) {
+        if (strcasecmp(entry->d_name, slash + 1) == 0) {
+            match = dir + "/" + entry->d_name;
+            break;
+        }
+    }
+    closedir(listing);
+    return match.empty() ? nullptr : uade_file_load(match.c_str());
+}
+
+struct uade_file *loadAmigaFile(const char *name, const char *playerdir, void *, struct uade_state *state) {
+    if (name != nullptr && name[0] == '/') {
+        struct uade_file *file = loadByFullPath(name);
+        if (file != nullptr) return file;
+    }
+    return uade_load_amiga_file(name, playerdir, state);
+}
+
 } // namespace
 
 void setupUade(const std::string &base, const std::string &core) {
@@ -118,6 +153,7 @@ Player *createUadePlayer(const std::string &path) {
     uade_state *state = uade_new_state(config);
     free(config);
     if (state == nullptr) return nullptr;
+    uade_set_amiga_loader(loadAmigaFile, nullptr, state);
 
     // The file is played from its path, not from memory: several replay routines load the module
     // themselves, as a program, through the emulated AmigaDOS.
