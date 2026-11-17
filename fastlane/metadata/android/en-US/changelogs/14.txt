@@ -1,0 +1,1 @@
+New formats: AHX and HivelyTracker, and exotic Amiga formats such as PreTracker, SidMon 1 and Fred, played in an emulated Amiga (UADE). Level meters and oscilloscopes for all of them. The mini player now stays visible while you type a search. A "full" build with about a hundred more Amiga formats is on GitHub.

@@ -1,0 +1,1 @@
+Neue Formate: AHX und HivelyTracker sowie exotische Amiga-Formate wie PreTracker, SidMon 1 und Fred, abgespielt von einem nachgebildeten Amiga (UADE). Pegel und Oszilloskope für alle. Der Mini-Player bleibt beim Tippen einer Suche sichtbar. Eine „full“-Version mit rund hundert weiteren Amiga-Formaten gibt es auf GitHub.

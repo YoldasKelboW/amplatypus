@@ -1,19 +1,21 @@
 # Changelog
 
-## 0.4.0 – unreleased (Phase 4: special formats)
+## 0.4.0-pre1 – 2026-11-17 (Phase 4: special formats)
 
 - AHX and HivelyTracker (HVL) modules play, using the HivelyTracker replayer. Oscilloscopes, level meters,
-  the pattern view and muting work for them too. The Modland index is rebuilt once to pick them up.
+  the pattern view and muting work for them too.
 - Exotic Amiga formats play through UADE, which runs each format's original replay routine in an emulated
   Amiga. About a hundred Modland formats are covered, among them PreTracker, SidMon, Future Composer,
   Delta Music, Sonic Arranger and Digital Sound Studio. Many of them have no known length.
+- Two-file formats play: TFMX (mdat/smpl), Richard Joseph (sng/ins) and Audio Sculpture (adsc/as). Only the
+  song is listed; its sample file is downloaded with it and deleted with it.
 - Level meters and oscilloscopes for the UADE formats, taken from the four emulated Paula channels. Their
   channels cannot be muted, and there is no pattern view for them.
+- Two builds: "free" with only the freely licensed replay routines (five UADE formats), and "full" with all.
+- The Modland index is rebuilt once after the update to pick up the new formats (about a minute).
 - The mini player stays in view while the keyboard is open: the bottom bar steps aside and the mini player
   sits on top of the keyboard.
-- Two builds: "free" with only the freely licensed replay routines (five formats), and "full" with all.
-- Two-file formats play: TFMX (mdat/smpl), Richard Joseph (sng/ins) and Audio Sculpture (adsc/as). Only the song
-  is listed; its sample file is downloaded with it and deleted with it.
+- A song of unknown length shows "–:––" instead of "0:00".
 - Not yet: formats that need a whole folder of instruments (IFF-SMUS, Sonix and a few others).
 
 ## 0.3.0-pre2 – 2026-11-15
