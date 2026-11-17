@@ -103,5 +103,6 @@
         <item quantity="other">%d Module importiert</item>
     </plurals>
     <string name="import_done_skipped">%1$d importiert, %2$d übersprungen (Format nicht unterstützt)</string>
+    <string name="scope_hint_no_mute">Dieses Format spielt ein nachgebildeter Amiga ab, Kanäle lassen sich hier nicht stummschalten.</string>
     <string name="scope_hint">Kanal antippen: stumm · halten: solo</string>
 </resources>

@@ -6,8 +6,9 @@
   the pattern view and muting work for them too. The Modland index is rebuilt once to pick them up.
 - Exotic Amiga formats play through UADE, which runs each format's original replay routine in an emulated
   Amiga. About a hundred Modland formats are covered, among them PreTracker, SidMon, Future Composer,
-  Delta Music, Sonic Arranger and Digital Sound Studio. These modules have no channel views yet, and
-  many have no known length.
+  Delta Music, Sonic Arranger and Digital Sound Studio. Many of them have no known length.
+- Level meters and oscilloscopes for the UADE formats, taken from the four emulated Paula channels. Their
+  channels cannot be muted, and there is no pattern view for them.
 - Two builds: "free" with only the freely licensed replay routines (five formats), and "full" with all.
 - Two-file formats play: TFMX (mdat/smpl), Richard Joseph (sng/ins) and Audio Sculpture (adsc/as). Only the song
   is listed; its sample file is downloaded with it and deleted with it.

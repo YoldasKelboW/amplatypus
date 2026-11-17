@@ -136,6 +136,26 @@ JNIEXPORT void JNICALL FN(nativeSetChannelMute)(JNIEnv *, jclass, jlong handle, 
     if (handle != 0) player(handle)->setChannelMute(channel, mute);
 }
 
+JNIEXPORT jboolean JNICALL FN(nativeCanMute)(JNIEnv *, jclass, jlong handle) {
+    return handle != 0 && player(handle)->canMute();
+}
+
+JNIEXPORT jboolean JNICALL FN(nativeOwnScopes)(JNIEnv *, jclass, jlong handle) {
+    return handle != 0 && player(handle)->ownScopes();
+}
+
+// The channel waveforms of the last nativeRead(), for players with ownScopes().
+JNIEXPORT void JNICALL FN(nativeOwnScopesRender)(JNIEnv *env, jclass, jlong handle, jfloatArray out, jint points) {
+    if (handle == 0 || points <= 0) return;
+    Player *p = player(handle);
+    std::vector<float> wave(static_cast<size_t>(p->channelCount()) * static_cast<size_t>(points), 0.0f);
+    if (wave.empty()) return;
+    p->scopes(points, wave.data());
+    jsize capacity = env->GetArrayLength(out);
+    jsize count = static_cast<jsize>(wave.size());
+    env->SetFloatArrayRegion(out, 0, count < capacity ? count : capacity, wave.data());
+}
+
 JNIEXPORT jlong JNICALL FN(nativeScopesCreate)(JNIEnv *env, jclass, jbyteArray data, jint channels) {
     jsize length = env->GetArrayLength(data);
     jbyte *bytes = env->GetByteArrayElements(data, nullptr);

@@ -197,7 +197,7 @@ fun NowPlayingScreen(player: PlayerConnection, onClose: () -> Unit) {
                                 .padding(horizontal = 12.dp),
                         )
                         Text(
-                            stringResource(R.string.scope_hint),
+                            stringResource(if (module?.canMute == false) R.string.scope_hint_no_mute else R.string.scope_hint),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                             modifier = Modifier.padding(start = 14.dp, top = 4.dp),
@@ -208,12 +208,15 @@ fun NowPlayingScreen(player: PlayerConnection, onClose: () -> Unit) {
                             modifier = Modifier.fillMaxWidth().weight(1f).padding(start = 12.dp, end = 12.dp, top = 6.dp, bottom = 12.dp),
                             segments = 12,
                         )
-                        PatternView(
-                            visual = visual,
-                            generation = module?.generation ?: 0,
-                            channels = channels,
-                            modifier = Modifier.fillMaxWidth(),
-                        )
+                        // Replay routines in an emulated Amiga (UADE) have no pattern to show.
+                        if (module?.hasPattern != false) {
+                            PatternView(
+                                visual = visual,
+                                generation = module?.generation ?: 0,
+                                channels = channels,
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        }
                     }
                 } else {
                     ModuleText(module)

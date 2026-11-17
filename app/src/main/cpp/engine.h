@@ -28,6 +28,12 @@ public:
     virtual void playPosition(int &order, int &pattern, int &row) = 0;
     // Rows separated by '\n', channels by '|', each cell "C-5 01 A0F".
     virtual std::string patternText(int pattern) = 0;
+    // Whether setChannelMute() works while the song plays.
+    virtual bool canMute() { return true; }
+    // Some replayers deliver the channel waveforms themselves instead of through a ScopeSet.
+    virtual bool ownScopes() { return false; }
+    // `points` samples per channel of what the last read() rendered, channel after channel.
+    virtual void scopes(int, float *) {}
 };
 
 // The waveform of every channel on its own, rendered in step with a Player.

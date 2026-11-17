@@ -6,11 +6,18 @@
 // or hangs cannot take the app down.
 #include "engine.h"
 
+#include <algorithm>
+#include <array>
 #include <cstdlib>
 #include <cstring>
+#include <deque>
 #include <dirent.h>
-#include <strings.h>
+#include <fcntl.h>
 #include <mutex>
+#include <strings.h>
+#include <string>
+#include <thread>
+#include <unistd.h>
 #include <vector>
 
 extern "C" {
@@ -23,14 +30,99 @@ const int RATE = 48000;
 // Many of these tunes loop for ever; without a length they are stopped here.
 const char *const MAX_SECONDS = "600";
 
+// Paula's output per channel is sample (-128..127) times volume (0..64).
+const float CHANNEL_FULL_SCALE = 128.0f * 64.0f;
+// How far the channel data may run ahead of the audio before the oldest is dropped.
+const size_t MAX_CHANNEL_BACKLOG = 4096;
+
 std::mutex setupLock;
 std::string baseDir;
 std::string corePath;
 
+// What UADE's "write audio" stream says about the four Paula channels. The emulator writes it to a
+// pipe: a header, then 12-byte frames. A frame either carries the current output of all four
+// channels, or an event; the PET_OUTPUT event for the right channel marks the end of one output
+// sample, so counting those keeps the channel data in step with the audio.
+class ChannelTap {
+public:
+    explicit ChannelTap(int fd) : fd(fd), worker([this] { run(); }) {}
+
+    // The emulator must have closed its end of the pipe before this runs, or it waits for ever.
+    ~ChannelTap() {
+        worker.join();
+        close(fd);
+    }
+
+    /** Takes up to `count` samples (four channel values each) that belong to the audio just read. */
+    void take(size_t count, std::vector<std::array<int16_t, 4>> &out) {
+        std::lock_guard<std::mutex> guard(lock);
+        if (queue.size() > count + MAX_CHANNEL_BACKLOG) {
+            queue.erase(queue.begin(), queue.begin() + static_cast<long>(queue.size() - count - MAX_CHANNEL_BACKLOG));
+        }
+        size_t n = count < queue.size() ? count : queue.size();
+        out.assign(queue.begin(), queue.begin() + static_cast<long>(n));
+        queue.erase(queue.begin(), queue.begin() + static_cast<long>(n));
+    }
+
+    void clear() {
+        std::lock_guard<std::mutex> guard(lock);
+        queue.clear();
+    }
+
+private:
+    void run() {
+        static const size_t HEADER = 16;
+        static const size_t FRAME = 12;
+        std::vector<uint8_t> buffer;
+        uint8_t chunk[16 * 1024];
+        size_t skip = HEADER;
+        std::array<int16_t, 4> current{};
+        while (true) {
+            ssize_t got = ::read(fd, chunk, sizeof(chunk));
+            if (got <= 0) return;
+            buffer.insert(buffer.end(), chunk, chunk + got);
+            size_t at = 0;
+            if (skip > 0) {
+                size_t n = skip < buffer.size() ? skip : buffer.size();
+                skip -= n;
+                at = n;
+            }
+            std::vector<std::array<int16_t, 4>> samples;
+            while (buffer.size() - at >= FRAME) {
+                const uint8_t *f = &buffer[at];
+                at += FRAME;
+                if (f[0] == 0) {
+                    for (int c = 0; c < 4; c++) current[c] = static_cast<int16_t>((f[4 + c * 2] << 8) | f[5 + c * 2]);
+                } else if (f[5] == 8 /* PET_OUTPUT */ && f[4] == 1 /* right channel */) {
+                    samples.push_back(current);
+                }
+            }
+            buffer.erase(buffer.begin(), buffer.begin() + static_cast<long>(at));
+            if (!samples.empty()) {
+                std::lock_guard<std::mutex> guard(lock);
+                queue.insert(queue.end(), samples.begin(), samples.end());
+                // Nobody reads while playback is paused; keep the memory bounded.
+                if (queue.size() > 4 * RATE) queue.erase(queue.begin(), queue.end() - RATE);
+            }
+        }
+    }
+
+    int fd;
+    std::mutex lock;
+    std::deque<std::array<int16_t, 4>> queue;
+    std::thread worker;
+};
+
 class UadePlayer : public Player {
 public:
-    explicit UadePlayer(uade_state *state) : state(state) {}
-    ~UadePlayer() override { uade_cleanup_state(state); }
+    UadePlayer(uade_state *state, int tapFd) : state(state) {
+        if (tapFd >= 0) tap = new ChannelTap(tapFd);
+    }
+    ~UadePlayer() override {
+        // Stops the emulator, which closes the pipe the tap is reading.
+        uade_cleanup_state(state);
+        delete tap;
+    }
 
     size_t read(int, size_t frames, float *out) override {
         if (failed) return 0;
@@ -43,6 +135,7 @@ public:
         }
         size_t samples = static_cast<size_t>(bytes) / UADE_BYTES_PER_SAMPLE;
         for (size_t i = 0; i < samples; i++) out[i] = scratch[i] / 32768.0f;
+        if (tap != nullptr) tap->take(samples / UADE_CHANNELS, lastBlock);
         return samples / UADE_CHANNELS;
     }
 
@@ -66,12 +159,15 @@ public:
         if (failed) return;
         if (seconds < 0.0) seconds = 0.0;
         uade_seek(UADE_SEEK_SONG_RELATIVE, seconds, 0, state);
+        if (tap != nullptr) tap->clear();
     }
 
     void setStereoSeparation(int) override {}
-    // Per-channel data is not wired up yet, so no meters, scopes or pattern for these formats.
-    int channelCount() override { return 0; }
+    // The four Paula channels, when the channel data could be tapped. UADE fixes its mute mask when a
+    // song starts, so channels cannot be muted while it plays.
+    int channelCount() override { return tap != nullptr ? 4 : 0; }
     void setChannelMute(int, bool) override {}
+    bool canMute() override { return false; }
 
     std::string metadata(const std::string &key) override {
         if (failed) return {};
@@ -84,7 +180,26 @@ public:
     }
 
     std::string names(int) override { return {}; }
-    float vu(int) override { return 0.0f; }
+    float vu(int channel) override {
+        if (channel < 0 || channel >= 4) return 0.0f;
+        int peak = 0;
+        for (const auto &sample : lastBlock) peak = std::max(peak, std::abs(static_cast<int>(sample[channel])));
+        return std::min(1.0f, peak / CHANNEL_FULL_SCALE);
+    }
+
+    bool ownScopes() override { return tap != nullptr; }
+
+    void scopes(int points, float *out) override {
+        size_t n = lastBlock.size();
+        size_t step = n / static_cast<size_t>(points);
+        if (step < 1) step = 1;
+        for (int c = 0; c < 4; c++) {
+            for (int i = 0; i < points; i++) {
+                size_t index = static_cast<size_t>(i) * step;
+                out[c * points + i] = index < n ? lastBlock[index][c] / CHANNEL_FULL_SCALE : 0.0f;
+            }
+        }
+    }
     void playPosition(int &order, int &pattern, int &row) override { order = pattern = row = 0; }
     std::string patternText(int) override { return {}; }
 
@@ -92,6 +207,9 @@ private:
     uade_state *state;
     bool failed = false;
     std::vector<int16_t> scratch;
+    ChannelTap *tap = nullptr;
+    // Channel data that belongs to the audio of the last read().
+    std::vector<std::array<int16_t, 4>> lastBlock;
 };
 
 // A replay routine that loads a second file (TFMX samples, Richard Joseph instruments) asks for it by
@@ -149,10 +267,22 @@ Player *createUadePlayer(const std::string &path) {
     uade_config_set_option(config, UC_UADECORE_FILE, core.c_str());
     uade_config_set_option(config, UC_FREQUENCY, "48000");
     uade_config_set_option(config, UC_TIMEOUT_VALUE, MAX_SECONDS);
+    // The emulator writes what every Paula channel plays into this pipe ("write audio"), which
+    // gives the meters and oscilloscopes. Only the write end is handed to the emulator process.
+    int tapFds[2] = {-1, -1};
+    if (pipe(tapFds) == 0) {
+        fcntl(tapFds[0], F_SETFD, FD_CLOEXEC);
+        uade_config_set_option(config, UC_WRITE_AUDIO_FD, std::to_string(tapFds[1]).c_str());
+    }
     // UADE's default filter and panning give the sound of an Amiga 500 on a hi-fi.
     uade_state *state = uade_new_state(config);
     free(config);
-    if (state == nullptr) return nullptr;
+    // The emulator has its copy of the write end now (or failed to start); this process needs none.
+    if (tapFds[1] >= 0) close(tapFds[1]);
+    if (state == nullptr) {
+        if (tapFds[0] >= 0) close(tapFds[0]);
+        return nullptr;
+    }
     uade_set_amiga_loader(loadAmigaFile, nullptr, state);
 
     // The file is played from its path, not from memory: several replay routines load the module
@@ -160,7 +290,8 @@ Player *createUadePlayer(const std::string &path) {
     // 1 = playing, 0 = not a format UADE knows, negative = error.
     if (uade_play(path.c_str(), -1, state) <= 0) {
         uade_cleanup_state(state);
+        if (tapFds[0] >= 0) close(tapFds[0]);
         return nullptr;
     }
-    return new UadePlayer(state);
+    return new UadePlayer(state, tapFds[0]);
 }

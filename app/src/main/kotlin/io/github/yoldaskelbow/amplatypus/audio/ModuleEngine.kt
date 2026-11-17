@@ -24,6 +24,8 @@ class ModuleEngine(private val onEnded: () -> Unit) {
 
     // Per-channel oscilloscopes: only kept alive while the visualiser is on screen.
     private var scopes = 0L
+    // The replayer delivers the channel waveforms itself (UADE); no extra copies of the module needed.
+    private var ownScopes = false
     private var scopesWanted = false
     private var scopesLoading = false
 
@@ -92,6 +94,7 @@ class ModuleEngine(private val onEnded: () -> Unit) {
             closeScopes()
             this.file = if (newHandle != 0L) file else null
             info = if (newHandle != 0L) readInfo(newHandle) else null
+            ownScopes = newHandle != 0L && OpenMpt.nativeOwnScopes(newHandle)
             muted = BooleanArray(info?.channels ?: 0)
             lastVisual = null
             discardBuffered()
@@ -118,7 +121,7 @@ class ModuleEngine(private val onEnded: () -> Unit) {
         val channels: Int
         val wantedGeneration: Int
         synchronized(lock) {
-            if (!scopesWanted || scopesLoading || scopes != 0L || released) return
+            if (!scopesWanted || scopesLoading || scopes != 0L || ownScopes || released) return
             source = file ?: return
             channels = info?.channels ?: return
             if (channels !in 1..MAX_SCOPE_CHANNELS || source.length() * channels > MAX_SCOPE_BYTES) return
@@ -169,7 +172,7 @@ class ModuleEngine(private val onEnded: () -> Unit) {
 
     /** Mutes or unmutes one channel. Returns the new state of all channels. */
     fun toggleMute(channel: Int): BooleanArray = synchronized(lock) {
-        if (channel in muted.indices) setMuted(channel, !muted[channel])
+        if (channel in muted.indices && info?.canMute == true) setMuted(channel, !muted[channel])
         muted.copyOf()
     }
 
@@ -178,7 +181,7 @@ class ModuleEngine(private val onEnded: () -> Unit) {
      * Returns the new state of all channels.
      */
     fun toggleSolo(channel: Int): BooleanArray = synchronized(lock) {
-        if (channel in muted.indices) {
+        if (channel in muted.indices && info?.canMute == true) {
             val alreadySolo = muted.indices.all { muted[it] == (it != channel) }
             for (index in muted.indices) setMuted(index, !alreadySolo && index != channel)
         }
@@ -287,6 +290,9 @@ class ModuleEngine(private val onEnded: () -> Unit) {
                     if (scopes != 0L) {
                         waves = FloatArray(levels.size * SCOPE_POINTS)
                         OpenMpt.nativeScopesRender(scopes, SAMPLE_RATE, frames, waves, SCOPE_POINTS)
+                    } else if (ownScopes && scopesWanted) {
+                        waves = FloatArray(levels.size * SCOPE_POINTS)
+                        OpenMpt.nativeOwnScopesRender(handle, waves, SCOPE_POINTS)
                     }
                     writtenFrames += frames
                     this.frames.addLast(Frame(writtenFrames, levels, OpenMpt.nativePlayPosition(handle), waves))
@@ -314,6 +320,8 @@ class ModuleEngine(private val onEnded: () -> Unit) {
             message = meta("message_raw").trimEnd(),
             samples = names(0),
             instruments = names(1),
+            canMute = OpenMpt.nativeCanMute(handle),
+            hasPattern = OpenMpt.nativePattern(handle, 0)?.isNotEmpty() == true,
         )
     }
 
@@ -331,6 +339,10 @@ class ModuleEngine(private val onEnded: () -> Unit) {
         val message: String,
         val samples: List<String>,
         val instruments: List<String>,
+        /** Channels can be muted while the module plays. */
+        val canMute: Boolean = true,
+        /** The replayer can show the module's patterns. */
+        val hasPattern: Boolean = true,
     )
 
     class Visual(

@@ -28,6 +28,10 @@ object OpenMpt {
     @JvmStatic external fun nativePlayPosition(handle: Long): Long
     @JvmStatic external fun nativePattern(handle: Long, pattern: Int): ByteArray?
 
+    @JvmStatic external fun nativeCanMute(handle: Long): Boolean
+    @JvmStatic external fun nativeOwnScopes(handle: Long): Boolean
+    @JvmStatic external fun nativeOwnScopesRender(handle: Long, out: FloatArray, points: Int)
+
     @JvmStatic external fun nativeScopesCreate(data: ByteArray, channels: Int): Long
     @JvmStatic external fun nativeScopesClose(handle: Long)
     @JvmStatic external fun nativeScopesSeek(handle: Long, seconds: Double)

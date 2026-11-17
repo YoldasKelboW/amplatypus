@@ -108,5 +108,6 @@
         <item quantity="other">%d modules imported</item>
     </plurals>
     <string name="import_done_skipped">%1$d imported, %2$d skipped (format not supported)</string>
+    <string name="scope_hint_no_mute">This format is played by an emulated Amiga, so channels cannot be muted.</string>
     <string name="scope_hint">Tap a channel to mute it, hold to hear it alone</string>
 </resources>
