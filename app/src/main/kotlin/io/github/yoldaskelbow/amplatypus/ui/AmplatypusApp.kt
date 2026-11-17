@@ -21,6 +21,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
+import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteType
+import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffoldDefaults
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.isImeVisible
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -53,6 +60,14 @@ enum class TopLevelDestination(
     Settings(R.string.nav_settings, R.drawable.ic_settings),
 }
 
+/** The navigation suite types that sit at the bottom of the screen. */
+private val BOTTOM_BARS = setOf(
+    NavigationSuiteType.NavigationBar,
+    NavigationSuiteType.ShortNavigationBarCompact,
+    NavigationSuiteType.ShortNavigationBarMedium,
+)
+
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun AmplatypusApp() {
     var current by rememberSaveable { mutableStateOf(TopLevelDestination.Search) }
@@ -60,7 +75,16 @@ fun AmplatypusApp() {
 
     var showPlayer by rememberSaveable { mutableStateOf(false) }
     // Picks bottom bar (phone), rail (tablet) or drawer depending on the window size.
+    val adaptiveType = NavigationSuiteScaffoldDefaults.calculateFromAdaptiveInfo(currentWindowAdaptiveInfo())
+    // While the keyboard is up, a bottom bar would only sit hidden under it; dropping it lets the
+    // mini player ride on top of the keyboard, so you can see what plays while you search.
+    val keyboardOpen = WindowInsets.isImeVisible
     NavigationSuiteScaffold(
+        layoutType = if (keyboardOpen && adaptiveType in BOTTOM_BARS) {
+            NavigationSuiteType.None
+        } else {
+            adaptiveType
+        },
         navigationSuiteItems = {
             TopLevelDestination.entries.forEach { destination ->
                 item(
@@ -72,7 +96,7 @@ fun AmplatypusApp() {
             }
         },
     ) {
-        Column(Modifier.fillMaxSize()) {
+        Column(Modifier.fillMaxSize().imePadding()) {
             Box(Modifier.weight(1f)) {
                 when (current) {
                     TopLevelDestination.Search -> SearchScreen()

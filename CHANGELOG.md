@@ -9,6 +9,8 @@
   Delta Music, Sonic Arranger and Digital Sound Studio. Many of them have no known length.
 - Level meters and oscilloscopes for the UADE formats, taken from the four emulated Paula channels. Their
   channels cannot be muted, and there is no pattern view for them.
+- The mini player stays in view while the keyboard is open: the bottom bar steps aside and the mini player
+  sits on top of the keyboard.
 - Two builds: "free" with only the freely licensed replay routines (five formats), and "full" with all.
 - Two-file formats play: TFMX (mdat/smpl), Richard Joseph (sng/ins) and Audio Sculpture (adsc/as). Only the song
   is listed; its sample file is downloaded with it and deleted with it.
