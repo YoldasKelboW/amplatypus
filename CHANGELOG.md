@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- New app icon: a pixel platypus with headphones. Fits every launcher shape and has a one-colour version for
+  themed icons on Android 13 and newer.
 - Tracker view for MOD files: tap the format chip in the player. Grey panels with position, pattern, length,
   tempo and speed, a quadrascope, and the pattern editor with level bars rising above the playing row, in
   the style of the Amiga trackers. Uses the free pixel font Press Start 2P.
