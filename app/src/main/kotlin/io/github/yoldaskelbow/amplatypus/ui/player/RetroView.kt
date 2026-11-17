@@ -4,6 +4,8 @@ package io.github.yoldaskelbow.amplatypus.ui.player
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -93,8 +95,62 @@ private fun Modifier.bevel(sunken: Boolean = false, fill: Color = Retro.face, ed
     drawRect(bottomRight, Offset(size.width - e, 0f), Size(e, size.height))
 }
 
+/** What the control bar of every tracker view operates. */
+class RetroControls(
+    val isPlaying: Boolean,
+    val hasNext: Boolean,
+    val onPrevious: () -> Unit,
+    val onPlayPause: () -> Unit,
+    val onNext: () -> Unit,
+)
+
+enum class RetroControl { PREVIOUS, PLAY_PAUSE, NEXT }
+
+/**
+ * The control bar of the tracker views. Every view has it at the bottom, with the same three buttons in
+ * the same order and size, so they are always where the thumb expects them; only [button] differs and
+ * draws each one in the style of its tracker.
+ */
 @Composable
-fun RetroTrackerView(info: ModuleEngine.ModuleInfo, onClose: () -> Unit, modifier: Modifier = Modifier) {
+fun RetroControlBar(
+    controls: RetroControls,
+    modifier: Modifier = Modifier,
+    button: @Composable (control: RetroControl, enabled: Boolean, onClick: () -> Unit, modifier: Modifier) -> Unit,
+) {
+    Row(modifier.fillMaxWidth().height(RETRO_CONTROL_HEIGHT), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+        val slot = Modifier.weight(1f).fillMaxHeight()
+        button(RetroControl.PREVIOUS, true, controls.onPrevious, slot)
+        button(RetroControl.PLAY_PAUSE, true, controls.onPlayPause, slot)
+        button(RetroControl.NEXT, controls.hasNext, controls.onNext, slot)
+    }
+}
+
+val RETRO_CONTROL_HEIGHT = 48.dp
+
+/** A ProTracker-style button: raised grey, pressed in while held, label in the pixel font. */
+@Composable
+private fun RetroButton(text: String, description: String, enabled: Boolean, onClick: () -> Unit, modifier: Modifier, style: TextStyle) {
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    Box(
+        modifier
+            .bevel(sunken = pressed)
+            .clickable(
+                interactionSource = interaction,
+                indication = null,
+                enabled = enabled,
+                role = Role.Button,
+                onClickLabel = description,
+                onClick = onClick,
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(text, style = if (enabled) style else style.copy(color = Retro.shadow, shadow = null))
+    }
+}
+
+@Composable
+fun RetroTrackerView(info: ModuleEngine.ModuleInfo, controls: RetroControls, onClose: () -> Unit, modifier: Modifier = Modifier) {
     val visual = rememberVisual(true)
     val position by remember { derivedStateOf { visual.value?.let { Triple(it.order, it.pattern, it.row) } ?: Triple(0, 0, 0) } }
     val tempo by remember { derivedStateOf { visual.value?.let { it.speed to it.bpm } ?: (0 to 0) } }
@@ -141,6 +197,21 @@ fun RetroTrackerView(info: ModuleEngine.ModuleInfo, onClose: () -> Unit, modifie
         NameLine("SAMPLE:", sample, label, value)
 
         RetroPattern(visual, rows, row, info.channels, Modifier.fillMaxWidth().weight(1f))
+
+        val buttonLabel = label.copy(fontSize = 12.sp)
+        RetroControlBar(controls) { control, enabled, onClick, slot ->
+            when (control) {
+                RetroControl.PREVIOUS ->
+                    RetroButton("PREV", stringResource(R.string.previous), enabled, onClick, slot, buttonLabel)
+                RetroControl.PLAY_PAUSE -> if (controls.isPlaying) {
+                    RetroButton("PAUSE", stringResource(R.string.pause), enabled, onClick, slot, buttonLabel)
+                } else {
+                    RetroButton("PLAY", stringResource(R.string.play), enabled, onClick, slot, buttonLabel)
+                }
+                RetroControl.NEXT ->
+                    RetroButton("NEXT", stringResource(R.string.next), enabled, onClick, slot, buttonLabel)
+            }
+        }
     }
 }
 

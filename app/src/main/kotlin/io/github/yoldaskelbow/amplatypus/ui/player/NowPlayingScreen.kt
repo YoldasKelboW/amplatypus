@@ -285,7 +285,17 @@ fun NowPlayingScreen(player: PlayerConnection, onClose: () -> Unit) {
     info?.takeIf { retro }?.let { module ->
         // Declared after the player's own handler, so Back closes this view first.
         BackHandler { showRetro = false }
-        RetroTrackerView(module, onClose = { showRetro = false })
+        RetroTrackerView(
+            module,
+            controls = RetroControls(
+                isPlaying = nowPlaying.isPlaying,
+                hasNext = nowPlaying.hasNext,
+                onPrevious = player::previous,
+                onPlayPause = player::togglePlayPause,
+                onNext = player::next,
+            ),
+            onClose = { showRetro = false },
+        )
     }
     }
 }
