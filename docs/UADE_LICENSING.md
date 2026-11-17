@@ -32,7 +32,7 @@ So of the two formats named in the runbook as the goal of this phase, PreTracker
 
 - **F-Droid** accepts only free software. A build that contains the Wanted Team players or the
   unlabelled ones would not be accepted.
-- **Google Play, GitHub, IzzyOnDroid** have no free-software rule, but shipping the unlabelled players
+- **Google Play and GitHub** have no free-software rule, but shipping the unlabelled players
   still means distributing other people's code without a stated permission. UADE has done so for about
   twenty years without known objection; that is a practical observation, not a right.
 - The players are loaded as data by the emulator and are not linked into the app, so they do not affect
@@ -43,7 +43,7 @@ So of the two formats named in the runbook as the goal of this phase, PreTracker
 1. **Free players only.** Ship the UADE core with the LGPL-tagged players. Acceptable everywhere,
    but covers only a handful of formats (PreTracker, Fred, SIDMon 1, Music Assembler, Hippel, MoN).
 2. **Two builds.** A free build as in option 1 for F-Droid, and a full build with all players for
-   GitHub and IzzyOnDroid. This is what the runbook anticipated.
+   GitHub. This is what the runbook anticipated.
 3. **Ask first.** Write to Wanted Team and to the UADE maintainer for a statement on redistribution,
    then decide between 1 and 2.
 4. **Players as a download.** Ship the core only and let the user fetch the player set from the UADE

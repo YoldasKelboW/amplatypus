@@ -55,8 +55,8 @@ Modules in formats outside these lists are reported as unsupported and skipped b
 - UI is Material 3 throughout: dynamic colour on Android 12+, a fallback scheme below, adaptive navigation
   (bar / rail / drawer) via `NavigationSuiteScaffold`, edge-to-edge, predictive back.
   The iOS look of 4champ is deliberately not imitated.
-- Only official Jetpack libraries and other free dependencies; no Play Services. One build serves F-Droid,
-  IzzyOnDroid and Google Play.
+- Only official Jetpack libraries and other free dependencies; no Play Services. One build serves F-Droid
+  and Google Play.
 - `compileSdk` is 37.2 because current AndroidX releases require it; `targetSdk` stays 36, `minSdk` 26.
 
 ## 4. Visualiser requirement

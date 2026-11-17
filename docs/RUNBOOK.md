@@ -6,7 +6,7 @@ Stand: 12.11.2026 · Auftraggeber: Kelbo
 
 ## Ziel
 
-Eine eigenständige, quelloffene Android-App, die große Modul-Archive durchsucht und Amiga-Module (MOD, AHX, DSS, PreTracker usw.) abspielt. Vorbild ist die iOS-App [4champ](https://github.com/sitomani/4champ) von Aleksi Sitomaniemi. Veröffentlicht wird auf GitHub, IzzyOnDroid, F-Droid und später Google Play.
+Eine eigenständige, quelloffene Android-App, die große Modul-Archive durchsucht und Amiga-Module (MOD, AHX, DSS, PreTracker usw.) abspielt. Vorbild ist die iOS-App [4champ](https://github.com/sitomani/4champ) von Aleksi Sitomaniemi. Veröffentlicht wird auf GitHub, F-Droid und später Google Play (IzzyOnDroid fällt weg, siehe Phase 6).
 
 - **Arbeitstitel:** Paula (nach dem Amiga-Soundchip). Kein „4champ“ und kein „AMP“ im Namen.
 - **Paketname:** `io.github.<github-name>.paula` (Kelbo trägt den echten GitHub-Namen ein). Nach dem ersten Release nie mehr ändern.
@@ -114,10 +114,14 @@ Weitere Quellen (z. B. The Mod Archive) sind später möglich. Dort vergibt der 
 - **Fertig, wenn:** sich Store-Screenshots machen lassen, die Kelbo gefallen.
 
 ### Phase 6: Veröffentlichung
-Reihenfolge: GitHub Releases → IzzyOnDroid → F-Droid → Google Play.
+Reihenfolge: GitHub Releases → F-Droid → Google Play.
 
-- **IzzyOnDroid:** freie Lizenz, signierte APK aus getaggtem GitHub-Release (nicht debuggable), höchstens etwa 30 MB, keine Tracker.
-- **F-Droid:** Build komplett aus dem Quellcode mit freien Werkzeugen, keine proprietären Bibliotheken, eigene App-ID, aktive Wartung. Meist erst nach rund 3 Monaten aktiver Entwicklung. Antrag als Merge-Request in `fdroiddata` auf GitLab. Mit AMP-Quelle ist das Anti-Feature „NonFreeNet“ zu erwarten (Hinweis, kein Ausschluss).
+- **IzzyOnDroid: fällt weg** (Stand 18.11.2026). Die Aufnahmeregeln lehnen Apps ab, deren Code ganz oder teilweise von KI erzeugt wurde („Vibe-coded apps will be rejected“, https://izzyondroid.org/docs/general/AppInclusionPolicy/). Das trifft dieses Projekt; wir umgehen die Regel nicht.
+- **F-Droid:** Build komplett aus dem Quellcode mit freien Werkzeugen, keine proprietären Bibliotheken, eigene App-ID, aktive Wartung. Antrag als Merge-Request in `fdroiddata` auf GitLab. Nur die **free**-Variante; „full“ bleibt auf GitHub.
+  - KI-Code: F-Droid hat keine Regel dazu (Inclusion Policy, Stand 11/2026). Im Forum wird ein Filter oder Anti-Feature für KI-Apps diskutiert, beschlossen ist nichts. Wir legen die KI-Hilfe offen (README, NOTICE) und rechnen damit, dass ein späteres Etikett die App trifft.
+  - Anti-Features nach heutigem Stand: keine. Module werden erst auf Wunsch geladen und stecken nicht in der App; Modland ist ein offenes Dateiarchiv, kein proprietärer Dienst. Mit AMP-Quelle eventuell „NonFreeNet“ (Hinweis, kein Ausschluss).
+  - Signatur: Ist der Build reproduzierbar, liefert F-Droid die APK mit Kelbos eigener Signatur aus; dann passen GitHub- und F-Droid-Version zueinander. Sonst signiert F-Droid selbst, und ein Wechsel zwischen beiden heißt neu installieren.
+  - Vor dem Antrag: endgültiger Name und App-ID, Release-Schlüssel, getaggte Version ohne „pre“.
 - **Google Play:** Konto für einmalig 25 USD mit Ausweis. Neue persönliche Konten brauchen einen geschlossenen Test mit mindestens 12 Testern über 14 Tage am Stück. Upload als AAB, `targetSdk 36`, 16-KB-kompatible native Bibliotheken, Datenschutzerklärung als Link, Formular zur Datensicherheit, Fragebogen zur Altersfreigabe.
 - **Google-Entwicklerverifizierung:** ab 2027 weltweit auch außerhalb des Play Store. Mit Play-Konto lassen sich Paketname und Schlüssel auch für die GitHub-APK registrieren. F-Droid lehnt die Verifizierung ab; die Entscheidung dazu trifft Kelbo 2027.
 

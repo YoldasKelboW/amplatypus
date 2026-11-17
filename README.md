@@ -66,7 +66,7 @@ Sources sit behind one interface (`MusicSource`), so the app does not depend on 
 ## Principles
 
 - No ads, no tracking, no Google Play Services, no Firebase. Only free dependencies from
-  Maven Central and Google Maven, so the same build can ship on F-Droid, IzzyOnDroid and Google Play.
+  Maven Central and Google Maven, so the same build can ship on F-Droid and Google Play.
 - Be gentle with every server: identifying User-Agent, caching, back-off, no bulk downloads.
 - Native replayers (libopenmpt, HivelyTracker, UADE) are built from source, never shipped as binaries.
 
