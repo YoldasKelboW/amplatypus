@@ -238,7 +238,8 @@ fun NowPlayingScreen(player: PlayerConnection, onClose: () -> Unit) {
             )
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text(formatTime(positionMs), style = MaterialTheme.typography.labelMedium)
-                Text(formatTime(duration), style = MaterialTheme.typography.labelMedium)
+                // Many Amiga formats have no known length; the replay routine only says when it is done.
+                Text(if (duration > 0) formatTime(duration) else "–:––", style = MaterialTheme.typography.labelMedium)
             }
             Row(
                 verticalAlignment = Alignment.CenterVertically,
