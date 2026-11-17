@@ -1,0 +1,1 @@
+Tracker-Ansichten: Ein Tipp auf das Format-Kästchen im Player schaltet bei MOD-Dateien in eine Ansicht im Stil von ProTracker, bei XM-Dateien im Stil von FastTracker 2. Zufallswiedergabe und Wiederholen im Player. Neues App-Icon.

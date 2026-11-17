@@ -1,7 +1,9 @@
 # Changelog
 
-## Unreleased
+## 0.4.0-pre2 – 2026-11-18
 
+- Shuffle and repeat in the player: plain icons beside the main buttons. Shuffle mixes the queue and keeps
+  the playing module; repeat switches between off, the whole queue and the playing module.
 - New app icon: a pixel platypus with headphones. Fits every launcher shape and has a one-colour version for
   themed icons on Android 13 and newer.
 - Tracker view for MOD files: tap the format chip in the player. Grey panels with position, pattern, length,

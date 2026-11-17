@@ -47,6 +47,10 @@ class ModulePlayer(
     private var error: PlaybackException? = null
     private var hasFocus = false
     private var pausedByFocusLoss = false
+    private var repeatMode = Player.REPEAT_MODE_OFF
+    // Shuffle reorders the queue itself and keeps the order it had before, to go back to.
+    private var shuffled = false
+    private var unshuffled: List<MediaItem> = emptyList()
 
     private val focusListener = AudioManager.OnAudioFocusChangeListener { change ->
         handler.post { onFocusChange(change) }
@@ -81,6 +85,8 @@ class ModulePlayer(
             .setPlayWhenReady(playWhenReady, PLAY_WHEN_READY_CHANGE_REASON_USER_REQUEST)
             .setAudioAttributes(AUDIO_ATTRIBUTES)
             .setPlayerError(error)
+            .setRepeatMode(repeatMode)
+            .setShuffleModeEnabled(shuffled)
         if (items.isEmpty()) {
             return builder
                 .setPlaybackState(if (playbackState == Player.STATE_ENDED) Player.STATE_ENDED else Player.STATE_IDLE)
@@ -105,6 +111,10 @@ class ModulePlayer(
     override fun handleSetMediaItems(mediaItems: MutableList<MediaItem>, startIndex: Int, startPositionMs: Long): ListenableFuture<*> {
         items = mediaItems.toList()
         index = if (startIndex == C.INDEX_UNSET) 0 else startIndex.coerceIn(0, maxOf(0, items.lastIndex))
+        if (shuffled) {
+            unshuffled = items
+            shuffleKeepingCurrent()
+        }
         if (items.isEmpty()) {
             engine.unload()
             playbackState = Player.STATE_IDLE
@@ -112,6 +122,35 @@ class ModulePlayer(
             loadCurrent(startPositionMs)
         }
         return Futures.immediateVoidFuture()
+    }
+
+    override fun handleSetRepeatMode(repeatMode: Int): ListenableFuture<*> {
+        this.repeatMode = repeatMode
+        return Futures.immediateVoidFuture()
+    }
+
+    override fun handleSetShuffleModeEnabled(shuffleModeEnabled: Boolean): ListenableFuture<*> {
+        if (shuffleModeEnabled == shuffled) return Futures.immediateVoidFuture()
+        shuffled = shuffleModeEnabled
+        if (shuffled) {
+            unshuffled = items
+            shuffleKeepingCurrent()
+        } else if (items.isNotEmpty()) {
+            // Back to the order the queue had, staying on the module that plays now.
+            val current = items[index]
+            val added = items.filter { it !in unshuffled }
+            items = unshuffled.filter { it in items } + added
+            index = items.indexOf(current).coerceAtLeast(0)
+        }
+        return Futures.immediateVoidFuture()
+    }
+
+    /** Puts the playing module first and the rest in random order. */
+    private fun shuffleKeepingCurrent() {
+        if (items.isEmpty()) return
+        val current = items[index]
+        items = listOf(current) + (items.toMutableList().apply { removeAt(index) }).shuffled()
+        index = 0
     }
 
     override fun handleAddMediaItems(index: Int, mediaItems: MutableList<MediaItem>): ListenableFuture<*> {
@@ -232,8 +271,13 @@ class ModulePlayer(
 
     private fun onTrackEnded() {
         if (playbackState != Player.STATE_READY) return
-        if (index < items.lastIndex) {
+        if (repeatMode == Player.REPEAT_MODE_ONE) {
+            loadCurrent(0)
+        } else if (index < items.lastIndex) {
             index++
+            loadCurrent(0)
+        } else if (repeatMode == Player.REPEAT_MODE_ALL && items.isNotEmpty()) {
+            index = 0
             loadCurrent(0)
         } else {
             playbackState = Player.STATE_ENDED
@@ -291,6 +335,8 @@ class ModulePlayer(
                 Player.COMMAND_GET_TIMELINE,
                 Player.COMMAND_GET_METADATA,
                 Player.COMMAND_GET_AUDIO_ATTRIBUTES,
+                Player.COMMAND_SET_REPEAT_MODE,
+                Player.COMMAND_SET_SHUFFLE_MODE,
             )
             .build()
     }

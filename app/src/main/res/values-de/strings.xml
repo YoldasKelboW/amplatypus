@@ -39,6 +39,11 @@
     <string name="tab_channels">Kanäle</string>
     <string name="no_channel_view">Dieses Format spielt ein nachgebildeter Amiga ab. Kanalansichten gibt es dafür noch nicht.</string>
     <string name="retro_close">Tracker-Ansicht schließen</string>
+    <string name="shuffle_on">Zufallswiedergabe an</string>
+    <string name="shuffle_off">Zufallswiedergabe aus</string>
+    <string name="repeat_all">Alle wiederholen</string>
+    <string name="repeat_one">Dieses Modul wiederholen</string>
+    <string name="repeat_off">Wiederholen aus</string>
     <string name="tab_text">Modul-Text</string>
     <string name="text_message">Song-Nachricht</string>
     <string name="text_instruments">Instrumente</string>

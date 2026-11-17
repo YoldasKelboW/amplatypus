@@ -1,0 +1,1 @@
+Tracker views: tap the format chip in the player to switch to a ProTracker-style view for MOD files or a FastTracker 2-style view for XM files. Shuffle and repeat in the player. New app icon.

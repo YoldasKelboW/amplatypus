@@ -25,6 +25,9 @@ data class NowPlaying(
     val localPath: String = "",
     val index: Int = 0,
     val count: Int = 0,
+    val shuffle: Boolean = false,
+    /** One of Player.REPEAT_MODE_OFF, _ALL and _ONE. */
+    val repeatMode: Int = Player.REPEAT_MODE_OFF,
 ) {
     val isActive: Boolean get() = title.isNotEmpty()
 }
@@ -64,6 +67,16 @@ class PlayerConnection(private val context: Context) {
     fun next() = withController { it.seekToNextMediaItem() }
     fun previous() = withController { it.seekToPrevious() }
     fun seekTo(positionMs: Long) = withController { it.seekTo(positionMs) }
+    fun toggleShuffle() = withController { it.shuffleModeEnabled = !it.shuffleModeEnabled }
+
+    /** Off, then the whole queue, then the playing module, then off again. */
+    fun cycleRepeat() = withController { c ->
+        c.repeatMode = when (c.repeatMode) {
+            Player.REPEAT_MODE_OFF -> Player.REPEAT_MODE_ALL
+            Player.REPEAT_MODE_ALL -> Player.REPEAT_MODE_ONE
+            else -> Player.REPEAT_MODE_OFF
+        }
+    }
 
     private fun withController(action: (MediaController) -> Unit) {
         controller?.let { return action(it) }
@@ -104,6 +117,8 @@ class PlayerConnection(private val context: Context) {
             localPath = player.currentMediaItem?.mediaId.orEmpty(),
             index = player.currentMediaItemIndex,
             count = player.mediaItemCount,
+            shuffle = player.shuffleModeEnabled,
+            repeatMode = player.repeatMode,
         )
     }
 

@@ -55,6 +55,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.yoldaskelbow.amplatypus.AmplatypusApplication
+import androidx.media3.common.Player
 import io.github.yoldaskelbow.amplatypus.R
 import io.github.yoldaskelbow.amplatypus.audio.ModuleEngine
 import io.github.yoldaskelbow.amplatypus.playback.PlayerConnection
@@ -263,9 +264,19 @@ fun NowPlayingScreen(player: PlayerConnection, onClose: () -> Unit) {
             }
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(24.dp, Alignment.CenterHorizontally),
+                horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
                 modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 16.dp),
             ) {
+                // Shuffle and repeat flank the main buttons as plain icons, lit while they are on.
+                val on = MaterialTheme.colorScheme.primary
+                val off = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f)
+                IconButton(onClick = player::toggleShuffle) {
+                    Icon(
+                        painterResource(R.drawable.ic_shuffle),
+                        stringResource(if (nowPlaying.shuffle) R.string.shuffle_on else R.string.shuffle_off),
+                        tint = if (nowPlaying.shuffle) on else off,
+                    )
+                }
                 FilledTonalIconButton(onClick = player::previous, modifier = Modifier.size(52.dp)) {
                     Icon(painterResource(R.drawable.ic_skip_previous), stringResource(R.string.previous))
                 }
@@ -278,6 +289,18 @@ fun NowPlayingScreen(player: PlayerConnection, onClose: () -> Unit) {
                 }
                 FilledTonalIconButton(onClick = player::next, enabled = nowPlaying.hasNext, modifier = Modifier.size(52.dp)) {
                     Icon(painterResource(R.drawable.ic_skip_next), stringResource(R.string.next))
+                }
+                IconButton(onClick = player::cycleRepeat) {
+                    val (icon, label) = when (nowPlaying.repeatMode) {
+                        Player.REPEAT_MODE_ONE -> R.drawable.ic_repeat_one to R.string.repeat_one
+                        Player.REPEAT_MODE_ALL -> R.drawable.ic_repeat to R.string.repeat_all
+                        else -> R.drawable.ic_repeat to R.string.repeat_off
+                    }
+                    Icon(
+                        painterResource(icon),
+                        stringResource(label),
+                        tint = if (nowPlaying.repeatMode == Player.REPEAT_MODE_OFF) off else on,
+                    )
                 }
             }
         }
