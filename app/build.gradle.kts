@@ -19,10 +19,10 @@ val localRelease = providers.gradleProperty("localRelease").isPresent
 val uadeDir = rootProject.file("third_party/uade")
 val uadeFreePlayers = setOf("PreTracker", "Fred", "ManiacsOfNoise", "MusicAssembler", "SIDMon1.0")
 
-// Left out of every build for now: formats that consist of several files (song plus samples).
-// The app downloads one file per module and cannot fetch the companions yet.
+// Left out of every build for now: formats whose songs need a whole set of instrument files.
+// Two-file formats (TFMX, Richard Joseph, Audio Sculpture) are handled, see ModlandCompanions.kt.
 val uadeMultiFilePlayers = listOf(
-    "TFMX", "SonixMusicDriver", "RichardJoseph", "MusicMaker", "AudioSculpture", "Quartet",
+    "SonixMusicDriver", "MusicMaker", "Quartet",
     "ScottJohnston", "DirkBialluch", "DynamicSynthesizer", "MIDI-Loriciel", "PaulSummers",
 )
 
@@ -95,8 +95,8 @@ android {
         applicationId = "io.github.yoldaskelbow.amplatypus"
         minSdk = 26
         targetSdk = 36
-        versionCode = 11
-        versionName = "0.4.0-dev2"
+        versionCode = 12
+        versionName = "0.4.0-dev3"
 
         buildConfigField("String", "REPO_URL", "\"https://github.com/YoldasKelboW/amplatypus\"")
     }

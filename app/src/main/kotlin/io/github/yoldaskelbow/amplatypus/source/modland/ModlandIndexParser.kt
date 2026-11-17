@@ -24,6 +24,11 @@ object ModlandIndexParser {
         val parts = path.split('/')
         if (parts.size < 3 || parts.any { it.isEmpty() }) return null
         val file = parts.last()
+        // Amiga-style names put the type in front: "mdat.apidya" is the TFMX song "apidya".
+        val prefix = file.substringBefore('.').lowercase()
+        if (prefix in AMIGA_PREFIXES && file.length > prefix.length + 1) {
+            return Line(path, parts[0], parts[1], file.substring(prefix.length + 1), prefix, size)
+        }
         val dot = file.lastIndexOf('.')
         if (dot <= 0 || dot == file.length - 1) return null
         return Line(
@@ -35,6 +40,9 @@ object ModlandIndexParser {
             sizeBytes = size,
         )
     }
+
+    /** Type prefixes Modland uses in file names instead of an extension (TFMX songs and samples). */
+    private val AMIGA_PREFIXES = setOf("mdat", "smpl")
 
     /**
      * Turns what the user typed into an FTS4 prefix query: `purple mot` becomes `purple* mot*`.

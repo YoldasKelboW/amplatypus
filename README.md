@@ -43,7 +43,7 @@ in Kotlin with Jetpack Compose and Material 3.
 Test builds are attached to the [releases](https://github.com/YoldasKelboW/amplatypus/releases).
 Android 8.0 or newer.
 
-Not there yet: channel views for the UADE formats, formats that come as several files (TFMX and others),
+Not there yet: channel views for the UADE formats, formats that need a whole folder of instruments (IFF-SMUS),
 an AMP source, tablet layout,
 Android Auto. See `CHANGELOG.md` for what changed and `docs/RUNBOOK.md` (German) for the plan.
 

@@ -9,7 +9,9 @@
   Delta Music, Sonic Arranger and Digital Sound Studio. These modules have no channel views yet, and
   many have no known length.
 - Two builds: "free" with only the freely licensed replay routines (five formats), and "full" with all.
-- Not yet: formats that consist of several files, such as TFMX.
+- Two-file formats play: TFMX (mdat/smpl), Richard Joseph (sng/ins) and Audio Sculpture (adsc/as). Only the song
+  is listed; its sample file is downloaded with it and deleted with it.
+- Not yet: formats that need a whole folder of instruments (IFF-SMUS, Sonix and a few others).
 
 ## 0.3.0-pre2 – 2026-11-15
 

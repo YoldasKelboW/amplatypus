@@ -34,6 +34,9 @@ interface MusicSource {
      * and returns the playable file. [onProgress] receives 0.0–1.0, or -1 if the size is unknown.
      */
     suspend fun download(ref: ModuleRef, targetDir: File, onProgress: (Float) -> Unit = {}): File
+
+    /** Files stored next to [file] that belong to it (samples of two-file formats). Deleted with it. */
+    fun companionFiles(ref: ModuleRef, file: File): List<File> = emptyList()
 }
 
 enum class Capability { SEARCH, BROWSE, RANDOM, LATEST, TEXT_SEARCH }

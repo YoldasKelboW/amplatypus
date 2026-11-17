@@ -66,39 +66,64 @@ class ModlandSource(
     override suspend fun download(ref: ModuleRef, targetDir: File, onProgress: (Float) -> Unit): File =
         withContext(Dispatchers.IO) {
             val target = File(targetDir, ref.key)
-            if (target.isFile && target.length() > 0) return@withContext target
-            target.parentFile?.mkdirs()
-            val partial = File(target.path + ".part")
-            var lastError: IOException? = null
-            for (host in Endpoints.MODLAND_HOSTS) {
-                val url = "https://" + host + Endpoints.MODLAND_MODULE_PATH + ModlandIndexParser.encodePath(ref.key)
+            // The companions go first, so a song file on disk always has its samples next to it.
+            for (companion in ModlandCompanions.companionsOf(ref.key)) {
                 try {
-                    http.newCall(Request.Builder().url(url).build()).execute().use { response ->
-                        if (!response.isSuccessful) throw IOException("HTTP ${response.code}")
-                        val total = response.body.contentLength()
-                        var done = 0L
-                        response.body.byteStream().use { input ->
-                            partial.outputStream().use { output ->
-                                val buffer = ByteArray(32 * 1024)
-                                while (true) {
-                                    val read = input.read(buffer)
-                                    if (read < 0) break
-                                    output.write(buffer, 0, read)
-                                    done += read
-                                    onProgress(if (total > 0) done.toFloat() / total else -1f)
-                                }
+                    fetch(companion.path, File(targetDir, companion.path)) {}
+                } catch (e: IOException) {
+                    if (companion.required) throw e
+                }
+            }
+            fetch(ref.key, target, onProgress)
+        }
+
+    override fun companionFiles(ref: ModuleRef, file: File): List<File> {
+        val root = file.path.removeSuffix(ref.key)
+        return ModlandCompanions.companionsOf(ref.key).map { File(root + it.path) }
+    }
+
+    /** Downloads one Modland file to [target], trying the mirrors in turn. Does nothing if it is there. */
+    private fun fetch(path: String, target: File, onProgress: (Float) -> Unit): File {
+        if (target.isFile && target.length() > 0) return target
+        target.parentFile?.mkdirs()
+        val partial = File(target.path + ".part")
+        var lastError: IOException? = null
+        for (host in Endpoints.MODLAND_HOSTS) {
+            val url = "https://" + host + Endpoints.MODLAND_MODULE_PATH + ModlandIndexParser.encodePath(path)
+            try {
+                http.newCall(Request.Builder().url(url).build()).execute().use { response ->
+                    // A file that is not there is not there on the mirrors either.
+                    if (response.code == 404) throw MissingFile(path)
+                    if (!response.isSuccessful) throw IOException("HTTP ${response.code}")
+                    val total = response.body.contentLength()
+                    var done = 0L
+                    response.body.byteStream().use { input ->
+                        partial.outputStream().use { output ->
+                            val buffer = ByteArray(32 * 1024)
+                            while (true) {
+                                val read = input.read(buffer)
+                                if (read < 0) break
+                                output.write(buffer, 0, read)
+                                done += read
+                                onProgress(if (total > 0) done.toFloat() / total else -1f)
                             }
                         }
                     }
-                    if (!partial.renameTo(target)) throw IOException("Could not store ${target.name}")
-                    return@withContext target
-                } catch (e: IOException) {
-                    lastError = e
-                    partial.delete()
                 }
+                if (!partial.renameTo(target)) throw IOException("Could not store ${target.name}")
+                return target
+            } catch (e: MissingFile) {
+                partial.delete()
+                throw e
+            } catch (e: IOException) {
+                lastError = e
+                partial.delete()
             }
-            throw lastError ?: IOException("No download host available")
         }
+        throw lastError ?: IOException("No download host available")
+    }
+
+    private class MissingFile(path: String) : IOException("Not on Modland: $path")
 
     private fun composerFolder(format: String?, composer: String, count: Int) = SourceItem.Folder(
         sourceId = ID,

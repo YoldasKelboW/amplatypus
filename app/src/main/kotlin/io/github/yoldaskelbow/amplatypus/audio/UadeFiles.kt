@@ -7,7 +7,7 @@ import java.io.File
 
 /**
  * UADE reads its players, sound core and configuration from real files, so they are copied out of
- * the APK's assets once per app version. The emulator itself (uadecore) is installed by Android
+ * the APK's assets once per installation. The emulator itself (uadecore) is installed by Android
  * into the native library folder as libuadecore.so.
  */
 object UadeFiles {
@@ -20,7 +20,11 @@ object UadeFiles {
     fun ensureReady(context: Context) {
         if (ready) return
         try {
-            val target = File(context.filesDir, "uade-${BuildConfig.VERSION_CODE}-${BuildConfig.FLAVOR}")
+            // Keyed to the installation, not the version number, so a reinstall with the same version
+            // (test builds) still brings its own player set.
+            @Suppress("DEPRECATION")
+            val installed = context.packageManager.getPackageInfo(context.packageName, 0).lastUpdateTime
+            val target = File(context.filesDir, "uade-${BuildConfig.FLAVOR}-$installed")
             if (!File(target, MARKER).isFile) {
                 target.deleteRecursively()
                 copy(context, ASSET_ROOT, target)

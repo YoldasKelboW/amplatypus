@@ -29,8 +29,8 @@ object ModuleFormats {
      *
      * UADE's extensions cannot be used to filter Modland: many of them also belong to formats of other
      * machines there ("mus" is Commodore 64 Sidplayer, "psf" is PlayStation, "ftm" is FamiTracker).
-     * The folder says what a file really is. Left out are formats that come as several files, those the
-     * tracker replayers already play, and those whose sample files did not play in a test with UADE 3.05.
+     * The folder says what a file really is. Left out are formats whose songs need more than one companion
+     * file, those the tracker replayers already play, and those whose sample files did not play in a test with UADE 3.05.
      */
     private val uadeModlandPlayers: Map<String, String> = mapOf(
         "AM Composer" to "AM-Composer", "AProSys" to "AProSys", "Actionamics" to "ActionAmics",
@@ -75,6 +75,9 @@ object ModuleFormats {
         "Special FX ST" to "Special-FX_ST", "Speedy A1 System" to "SpeedyA1System", "Speedy System" to "SpeedySystem",
         "Steve Barrett" to "SteveBarrett", "SunTronic" to "SUN-Tronic", "SynTracker" to "SynTracker",
         "Synthesis" to "Synth", "TCB Tracker" to "TCB_Tracker",
+        // Two-file formats; see ModlandCompanions.
+        "TFMX" to "TFMX", "TFMX ST" to "TFMX_ST", "Richard Joseph" to "RichardJoseph_Player",
+        "Audio Sculpture" to "AudioSculpture",
         "The Musical Enlightenment" to "TheMusicalEnlightenment", "Tomy Tracker" to "TomyTracker",
         "Voodoo Supreme Synthesizer" to "VoodooSupremeSynthesizer", "Wally Beben" to "WallyBeben",
     )

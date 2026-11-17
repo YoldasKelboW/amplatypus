@@ -90,6 +90,8 @@ class ModlandIndex(
                     reader.lineSequence().forEach { raw ->
                         val line = ModlandIndexParser.parse(raw) ?: return@forEach
                         if (!ModuleFormats.isPlayableOnModland(line.format, line.ext)) return@forEach
+                        // Sample files of two-file formats are fetched with their song, not listed.
+                        if (ModlandCompanions.isCompanion(line.format, line.path)) return@forEach
                         imported++
                         val id = imported.toLong()
                         insertEntry.bindLong(1, id)

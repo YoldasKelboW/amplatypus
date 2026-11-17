@@ -23,6 +23,14 @@ class ModlandIndexParserTest {
     }
 
     @Test
+    fun readsAmigaStylePrefixes() {
+        val line = ModlandIndexParser.parse("43090\tTFMX/Chris Huelsbeck/mdat.apidya (end)")!!
+        assertEquals("TFMX", line.format)
+        assertEquals("apidya (end)", line.title)
+        assertEquals("mdat", line.ext)
+    }
+
+    @Test
     fun keepsSubFoldersOutOfTheTitle() {
         val line = ModlandIndexParser.parse("4905\tAd Lib/EdLib D00/Drax/coop-Metal/breaking wind.d00")!!
         assertEquals("Ad Lib", line.format)

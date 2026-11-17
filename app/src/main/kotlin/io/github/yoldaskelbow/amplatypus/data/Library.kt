@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 package io.github.yoldaskelbow.amplatypus.data
 
+import io.github.yoldaskelbow.amplatypus.source.ModuleRef
 import io.github.yoldaskelbow.amplatypus.source.MusicSource
 import io.github.yoldaskelbow.amplatypus.source.SourceItem
 import kotlinx.coroutines.Dispatchers
@@ -68,7 +69,11 @@ class Library(
     }
 
     suspend fun delete(module: LibraryModule) {
-        withContext(Dispatchers.IO) { File(module.localPath).delete() }
+        withContext(Dispatchers.IO) {
+            val file = File(module.localPath)
+            sources[module.sourceId]?.companionFiles(ModuleRef(module.sourceId, module.sourceKey), file)?.forEach { it.delete() }
+            file.delete()
+        }
         playlistDao.removeEverywhere(module.id)
         dao.delete(module.id)
     }
