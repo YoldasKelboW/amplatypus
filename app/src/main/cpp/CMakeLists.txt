@@ -6,6 +6,11 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_C_STANDARD 17)
 
+# Reproducible builds: source paths end up in the libraries (assert messages, __FILE__), so the
+# checkout folder is cut off. Otherwise a build in another folder, as on F-Droid's server, differs.
+get_filename_component(REPO_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/../../../.. ABSOLUTE)
+add_compile_options(-ffile-prefix-map=${REPO_ROOT}/=)
+
 # libopenmpt is built from the git submodule. The list of source files is read from
 # upstream's own Android.mk so it stays correct when the submodule is updated.
 set(OPENMPT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../../third_party/openmpt)
