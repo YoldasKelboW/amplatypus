@@ -1,0 +1,1 @@
+First stable release: search and play Amiga and tracker music from Modland and Amiga Music Preservation, with oscilloscopes, level meters, the running pattern and tracker views in the style of ProTracker and FastTracker 2. Radio, library, playlists and favourites.

@@ -9,8 +9,6 @@ AMPlatypus ist ein freier, quelloffener Player für Amiga- und Trackermusik (MOD
 • Radio: Zufallsmodule aus Modland oder AMP, ähnlich klingende Module oder deine Favoriten
 • Material 3 mit dynamischen Farben und mehreren Farbdesigns
 
-Vorbild ist die iOS-App 4champ von Aleksi Sitomaniemi. Ohne Werbung, ohne Tracking. Ein unabhängiges Projekt, nicht verbunden mit Amiga Music Preservation (AMP) oder Modland.
+Vorbild ist die iOS-App 4champ von Aleksi Sitomaniemi. Ohne Werbung, ohne Tracking. Entwickelt mit Hilfe eines KI-Programmierassistenten. Ein unabhängiges Projekt, nicht verbunden mit Amiga Music Preservation (AMP) oder Modland.
 
 Diese Version enthält nur die UADE-Abspielroutinen mit freier Lizenz. Eine „full“-Version mit rund hundert weiteren Amiga-Formaten gibt es auf der GitHub-Seite des Projekts.
-
-Dies ist eine frühe Entwicklungsversion.

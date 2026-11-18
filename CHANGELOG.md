@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.0 – unreleased
+
+- First release signed with the project's own key. Test builds (0.x) must be uninstalled first.
+- Builds are reproducible, so F-Droid can publish the same, developer-signed APK.
+
 ## 0.5.0-pre1 – 2026-11-18
 
 - Amiga Music Preservation (AMP) as a second archive, with the permission of the AMP staff: switch between

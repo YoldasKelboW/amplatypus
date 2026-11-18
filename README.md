@@ -26,8 +26,8 @@ Modland or 4champ.
   <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/3_radio.png" width="200" alt="Radio with two channels and the recently played list">
 </p>
 
-> **Early test version.** It works day to day on the developer's phone, but expect rough edges.
-> Test builds are signed with a debug key, so the first proper release will need a fresh install.
+> **Coming from a 0.x test build?** Those were signed with a debug key. Version 1.0.0 is the first release
+> signed with the project's own key, so uninstall the test build first (this removes its library and playlists).
 
 ## What it does
 
@@ -50,8 +50,12 @@ Modland or 4champ.
 
 ## Download
 
-Test builds are attached to the [releases](https://github.com/YoldasKelboW/amplatypus/releases).
-Android 8.0 or newer.
+APKs are attached to the [releases](https://github.com/YoldasKelboW/amplatypus/releases): **full** with
+all replay routines, **free** with only the freely licensed ones. Android 8.0 or newer. An F-Droid release
+of the free build is being prepared ([docs/FDROID.md](docs/FDROID.md)).
+
+The certificate the releases are signed with has this SHA-256 fingerprint:
+`FINGERPRINT_PENDING`
 
 Not there yet: muting channels of the UADE formats, formats that need a whole folder of instruments (IFF-SMUS),
 Android Auto. See `CHANGELOG.md` for what changed and `docs/RUNBOOK.md` (German) for the plan.

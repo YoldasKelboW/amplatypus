@@ -1,0 +1,1 @@
+Erste stabile Version: Amiga- und Trackermusik aus Modland und Amiga Music Preservation suchen und abspielen, mit Oszilloskopen, Pegeln, mitlaufendem Pattern und Tracker-Ansichten im Stil von ProTracker und FastTracker 2. Radio, Bibliothek, Playlists und Favoriten.

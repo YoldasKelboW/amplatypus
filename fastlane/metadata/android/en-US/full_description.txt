@@ -9,8 +9,6 @@ A free, open-source player for Amiga and tracker music (MOD, XM, S3M, IT, AHX an
 • Radio: random modules from Modland or AMP, modules that sound alike, or your favourites
 • Material 3 with dynamic colour and several colour designs
 
-Modelled on the iOS app 4champ by Aleksi Sitomaniemi. No ads, no tracking. An independent project, not affiliated with Amiga Music Preservation (AMP) or Modland.
+Modelled on the iOS app 4champ by Aleksi Sitomaniemi. No ads, no tracking. Developed with the help of an AI coding assistant. An independent project, not affiliated with Amiga Music Preservation (AMP) or Modland.
 
 This build contains only the UADE replay routines that have a free licence. A "full" build with about a hundred more Amiga formats is available from the project's GitHub page.
-
-This is an early development version.
