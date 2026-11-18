@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 package io.github.yoldaskelbow.amplatypus.source.modland
 
+import io.github.yoldaskelbow.amplatypus.audio.FormatFilter
+import io.github.yoldaskelbow.amplatypus.audio.ModuleFormats
 import io.github.yoldaskelbow.amplatypus.data.IndexDao
 import io.github.yoldaskelbow.amplatypus.data.IndexEntry
 import io.github.yoldaskelbow.amplatypus.net.Endpoints
@@ -23,7 +25,10 @@ class ModlandSource(
     private val http: OkHttpClient,
     /** Instrument files of the folder formats, see [ModlandIndex.folderFiles]. */
     private val folderFiles: () -> List<String> = { emptyList() },
+    /** The format groups the user wants to see. */
+    private val filter: () -> FormatFilter = { FormatFilter() },
 ) : MusicSource {
+    private val trackerExts = ModuleFormats.trackerExtensions.toList()
     override val id = ID
     override val capabilities = setOf(Capability.SEARCH, Capability.BROWSE, Capability.RANDOM)
 
@@ -34,7 +39,7 @@ class ModlandSource(
                 dao.searchComposers(query.trim(), PAGE_SIZE, offset).map { composerFolder(null, it.name, it.count) }
             else -> {
                 val match = ModlandIndexParser.ftsQuery(query) ?: return emptyList()
-                dao.searchModules(match, PAGE_SIZE, offset).map { it.toItem() }
+                filter().let { f -> dao.searchModules(match, PAGE_SIZE, offset, f.shownExtensions(), f.amiga, trackerExts) }.map { it.toItem() }
             }
         }
     }
@@ -42,7 +47,7 @@ class ModlandSource(
     override suspend fun browse(parent: SourceItem.Folder?, page: Int): List<SourceItem> {
         val offset = page * PAGE_SIZE
         return when (parent?.kind) {
-            null -> dao.formats(PAGE_SIZE, offset).map {
+            null -> filter().let { f -> dao.formats(PAGE_SIZE, offset, f.shownExtensions(), f.amiga, trackerExts) }.map {
                 SourceItem.Folder(ID, it.name, it.name, FolderKind.FORMAT, it.count.toString())
             }
             FolderKind.FORMAT -> dao.composersOfFormat(parent.key, PAGE_SIZE, offset).map {
@@ -51,9 +56,9 @@ class ModlandSource(
             FolderKind.COMPOSER -> {
                 val (format, composer) = splitComposerKey(parent.key)
                 val rows = if (format == null) {
-                    dao.modulesOfComposer(composer, PAGE_SIZE, offset)
+                    filter().let { f -> dao.modulesOfComposer(composer, PAGE_SIZE, offset, f.shownExtensions(), f.amiga, trackerExts) }
                 } else {
-                    dao.modulesOf(format, composer, PAGE_SIZE, offset)
+                    filter().let { f -> dao.modulesOf(format, composer, PAGE_SIZE, offset, f.shownExtensions(), f.amiga, trackerExts) }
                 }
                 rows.map { it.toItem() }
             }
@@ -63,7 +68,12 @@ class ModlandSource(
 
     override suspend fun details(ref: ModuleRef): SourceItem.Module? = dao.byPath(ref.key)?.toItem()
 
-    override suspend fun random(): SourceItem.Module? = dao.random()?.toItem()
+    override suspend fun random(): SourceItem.Module? {
+        val f = filter()
+        // The random start can fall behind the last shown module; then try again from another place.
+        repeat(RANDOM_TRIES) { dao.random(f.shownExtensions(), f.amiga, trackerExts)?.let { return it.toItem() } }
+        return null
+    }
 
     override suspend fun download(ref: ModuleRef, targetDir: File, onProgress: (Float) -> Unit): File =
         withContext(Dispatchers.IO) {
@@ -155,6 +165,7 @@ class ModlandSource(
     companion object {
         const val ID = "modland"
         const val PAGE_SIZE = 50
+        private const val RANDOM_TRIES = 5
 
         /** Shown for modules without a known author; the same in every language, like the names around it. */
         const val UNKNOWN_COMPOSER = "Unknown"

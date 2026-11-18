@@ -5,6 +5,8 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.yoldaskelbow.amplatypus.AmplatypusApplication
+import io.github.yoldaskelbow.amplatypus.audio.FormatFilter
+import io.github.yoldaskelbow.amplatypus.audio.FormatGroup
 import io.github.yoldaskelbow.amplatypus.source.SearchKind
 import io.github.yoldaskelbow.amplatypus.source.SourceItem
 import io.github.yoldaskelbow.amplatypus.source.amp.AmpSource
@@ -15,6 +17,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -56,6 +59,9 @@ class SearchViewModel(app: Application) : AndroidViewModel(app) {
     }) { lists -> lists.flatMap { it }.toSet() }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptySet())
 
+    /** Which format groups are shown; changing it reloads what is on screen. */
+    val formatFilter: StateFlow<FormatFilter> = container.settings.formatFilter
+
     private var loadJob: Job? = null
     private var page = 0
 
@@ -65,7 +71,12 @@ class SearchViewModel(app: Application) : AndroidViewModel(app) {
             // Show content as soon as the index is usable.
             indexState.collect { if (it is ModlandIndex.State.Ready) reload(debounce = false) }
         }
+        viewModelScope.launch {
+            formatFilter.drop(1).collect { reload(debounce = false) }
+        }
     }
+
+    fun setFormatShown(group: FormatGroup, shown: Boolean) = container.settings.setFormatShown(group, shown)
 
     fun retryIndex() = viewModelScope.launch { container.modlandIndex.refreshIfNeeded(force = true) }
 

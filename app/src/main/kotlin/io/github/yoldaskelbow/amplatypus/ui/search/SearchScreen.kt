@@ -46,6 +46,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import io.github.yoldaskelbow.amplatypus.audio.FormatGroup
+import io.github.yoldaskelbow.amplatypus.audio.FormatFilter
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.semantics.Role
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.AlertDialog
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalUriHandler
@@ -112,8 +122,25 @@ fun SearchScreen(viewModel: SearchViewModel = viewModel()) {
                 )
             }
 
-            if (folder == null && viewModel.ampAvailable) {
-                SourceSwitch(state.sourceId, viewModel::setSource)
+            if (folder == null) {
+                val filter by viewModel.formatFilter.collectAsStateWithLifecycle()
+                var filtering by remember { mutableStateOf(false) }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(start = 16.dp, end = 4.dp, bottom = 8.dp),
+                ) {
+                    Box(Modifier.weight(1f)) {
+                        if (viewModel.ampAvailable) SourceSwitch(state.sourceId, viewModel::setSource)
+                    }
+                    IconButton(onClick = { filtering = true }) {
+                        Icon(
+                            painterResource(R.drawable.ic_filter),
+                            stringResource(if (filter.showsAll) R.string.filter_formats else R.string.filter_formats_active),
+                            tint = if (filter.showsAll) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                }
+                if (filtering) FormatFilterDialog(filter, viewModel::setFormatShown) { filtering = false }
             }
 
             if (state.query.isNotBlank()) {
@@ -228,10 +255,41 @@ private fun Results(state: SearchUiState, libraryKeys: Set<String>, viewModel: S
     }
 }
 
+/** Show or hide whole groups of formats: in search, browsing, random picks and the radio. */
+@Composable
+private fun FormatFilterDialog(filter: FormatFilter, onChange: (FormatGroup, Boolean) -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.done)) } },
+        title = { Text(stringResource(R.string.filter_formats)) },
+        text = {
+            Column {
+                Text(stringResource(R.string.filter_text), style = MaterialTheme.typography.bodyMedium)
+                listOf(
+                    Triple(FormatGroup.TRACKER, R.string.filter_tracker, R.string.filter_tracker_text),
+                    Triple(FormatGroup.HIVELY, R.string.filter_hively, R.string.filter_hively_text),
+                    Triple(FormatGroup.AMIGA, R.string.filter_amiga, R.string.filter_amiga_text),
+                ).forEach { (group, title, text) ->
+                    val shown = filter.shows(group)
+                    // The last shown group cannot be switched off.
+                    val enabled = !shown || filter.with(group, false) != filter
+                    ListItem(
+                        headlineContent = { Text(stringResource(title)) },
+                        supportingContent = { Text(stringResource(text)) },
+                        leadingContent = { Checkbox(checked = shown, onCheckedChange = null, enabled = enabled) },
+                        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                        modifier = Modifier.toggleable(value = shown, enabled = enabled, role = Role.Checkbox) { onChange(group, it) },
+                    )
+                }
+            }
+        },
+    )
+}
+
 /** Modland or AMP, side by side under the search field. */
 @Composable
 private fun SourceSwitch(selected: String, onSelect: (String) -> Unit) {
-    SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 8.dp)) {
+    SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
         listOf(ModlandSource.ID to R.string.source_modland, AmpSource.ID to R.string.source_amp).forEachIndexed { index, (id, label) ->
             SegmentedButton(
                 selected = selected == id,

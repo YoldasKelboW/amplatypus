@@ -3,6 +3,7 @@ package io.github.yoldaskelbow.amplatypus
 
 import android.app.Application
 import androidx.room.Room
+import io.github.yoldaskelbow.amplatypus.audio.ModuleFormats
 import io.github.yoldaskelbow.amplatypus.data.AppDatabase
 import io.github.yoldaskelbow.amplatypus.data.Library
 import io.github.yoldaskelbow.amplatypus.data.Settings
@@ -26,14 +27,18 @@ class AppContainer(app: Application) {
         .fallbackToDestructiveMigration(true)
         .build()
 
+    val settings = Settings(app)
     val modlandIndex = ModlandIndex(app, db, http)
-    val modland: MusicSource = ModlandSource(db.indexDao(), http, modlandIndex::folderFiles)
+    val modland: MusicSource = ModlandSource(db.indexDao(), http, modlandIndex::folderFiles) { settings.formatFilter.value }
     /** Amiga Music Preservation; `null` in builds where the source is switched off. */
-    val amp: AmpSource? = if (BuildConfig.AMP_SOURCE_ENABLED) AmpSource(http) else null
+    val amp: AmpSource? = if (BuildConfig.AMP_SOURCE_ENABLED) {
+        AmpSource(http) { ext -> ModuleFormats.isPlayable(ext) && settings.formatFilter.value.shows(ModuleFormats.groupOf(ext)) }
+    } else {
+        null
+    }
     val sources: Map<String, MusicSource> = listOfNotNull(modland, amp).associateBy { it.id }
     val library = Library(db.libraryDao(), db.playlistDao(), sources, File(app.filesDir, "modules"))
     val player = PlayerConnection(app)
-    val settings = Settings(app)
     val radio = Radio(MainScope(), library, modland, amp, player)
 }
 

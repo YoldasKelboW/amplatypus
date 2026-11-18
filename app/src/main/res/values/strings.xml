@@ -8,6 +8,16 @@
 
     <string name="search_hint">Search Modland</string>
     <string name="search_hint_amp">Search AMP</string>
+    <string name="done">Done</string>
+    <string name="filter_formats">Formats</string>
+    <string name="filter_formats_active">Formats, some hidden</string>
+    <string name="filter_text">Choose what search, browsing, random picks and the radio offer.</string>
+    <string name="filter_tracker">Tracker modules</string>
+    <string name="filter_tracker_text">MOD, XM, S3M, IT, MED and about 50 more</string>
+    <string name="filter_hively">AHX and HivelyTracker</string>
+    <string name="filter_hively_text">Synthesised Amiga chip music</string>
+    <string name="filter_amiga">Exotic Amiga formats</string>
+    <string name="filter_amiga_text">PreTracker, TFMX, SidMon, Future Composer and many more, played in an emulated Amiga</string>
     <string name="search_clear">Clear search</string>
     <string name="search_modules">Modules</string>
     <string name="search_composers">Composers</string>

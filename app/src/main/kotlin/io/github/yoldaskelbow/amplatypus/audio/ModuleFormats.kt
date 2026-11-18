@@ -95,4 +95,47 @@ object ModuleFormats {
     /** For Modland: [format] is the top folder of the file's path. */
     fun isPlayableOnModland(format: String, extension: String): Boolean =
         extension.lowercase() in trackerExtensions || format in uadeModlandFolders
+
+    /** The group a file belongs to by its extension (or Amiga-style prefix), for the format filter. */
+    fun groupOf(extension: String): FormatGroup = when (extension.lowercase()) {
+        in hivelyExtensions -> FormatGroup.HIVELY
+        in trackerExtensions -> FormatGroup.TRACKER
+        else -> FormatGroup.AMIGA
+    }
+
+    val hivelyExtensions: Set<String> = setOf("ahx", "hvl")
+
+    /** Extensions of the tracker group (libopenmpt), without AHX and HVL. */
+    val trackerOnlyExtensions: Set<String> = trackerExtensions - hivelyExtensions
+}
+
+/** Format groups the user can show or hide. */
+enum class FormatGroup { TRACKER, HIVELY, AMIGA }
+
+/** Which [FormatGroup]s are shown. At least one always is. */
+data class FormatFilter(val tracker: Boolean = true, val hively: Boolean = true, val amiga: Boolean = true) {
+    val showsAll get() = tracker && hively && amiga
+
+    fun shows(group: FormatGroup) = when (group) {
+        FormatGroup.TRACKER -> tracker
+        FormatGroup.HIVELY -> hively
+        FormatGroup.AMIGA -> amiga
+    }
+
+    fun with(group: FormatGroup, shown: Boolean): FormatFilter {
+        val next = when (group) {
+            FormatGroup.TRACKER -> copy(tracker = shown)
+            FormatGroup.HIVELY -> copy(hively = shown)
+            FormatGroup.AMIGA -> copy(amiga = shown)
+        }
+        return if (next.tracker || next.hively || next.amiga) next else this
+    }
+
+    /** Extensions the database query lets through by name; [amiga] covers all other extensions. */
+    fun shownExtensions(): List<String> = buildList {
+        if (tracker) addAll(ModuleFormats.trackerOnlyExtensions)
+        if (hively) addAll(ModuleFormats.hivelyExtensions)
+        // Room needs a non-empty list for IN (...).
+        if (isEmpty()) add("")
+    }
 }

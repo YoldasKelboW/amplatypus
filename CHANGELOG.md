@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Format filter: the filter button next to Modland/AMP shows or hides whole groups - tracker modules,
+  AHX/HivelyTracker, exotic Amiga formats - in search, browsing, random picks and the radio.
 - New formats: IFF-SMUS (Sonix, about 750 songs; the song's instrument folder is downloaded with it)
   in the full build, and DeliTracker custom modules (about 750, they bring their own replay routine) in
   both builds.

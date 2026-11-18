@@ -96,9 +96,9 @@ interface IndexDao {
 
     @Query(
         "SELECT index_entry.* FROM index_entry JOIN index_fts ON index_fts.rowid = index_entry.id " +
-            "WHERE index_fts MATCH :match ORDER BY index_entry.title COLLATE NOCASE LIMIT :limit OFFSET :offset",
+            "WHERE index_fts MATCH :match AND (index_entry.ext IN (:shown) OR (:amiga AND index_entry.ext NOT IN (:trackerExts))) ORDER BY index_entry.title COLLATE NOCASE LIMIT :limit OFFSET :offset",
     )
-    suspend fun searchModules(match: String, limit: Int, offset: Int): List<IndexEntry>
+    suspend fun searchModules(match: String, limit: Int, offset: Int, shown: List<String>, amiga: Boolean, trackerExts: List<String>): List<IndexEntry>
 
     @Query(
         "SELECT composer AS name, COUNT(*) AS count FROM index_entry WHERE composer LIKE '%' || :text || '%' " +
@@ -106,8 +106,8 @@ interface IndexDao {
     )
     suspend fun searchComposers(text: String, limit: Int, offset: Int): List<NameCount>
 
-    @Query("SELECT format AS name, COUNT(*) AS count FROM index_entry GROUP BY format ORDER BY format COLLATE NOCASE LIMIT :limit OFFSET :offset")
-    suspend fun formats(limit: Int, offset: Int): List<NameCount>
+    @Query("SELECT format AS name, COUNT(*) AS count FROM index_entry WHERE (index_entry.ext IN (:shown) OR (:amiga AND index_entry.ext NOT IN (:trackerExts))) GROUP BY format ORDER BY format COLLATE NOCASE LIMIT :limit OFFSET :offset")
+    suspend fun formats(limit: Int, offset: Int, shown: List<String>, amiga: Boolean, trackerExts: List<String>): List<NameCount>
 
     @Query(
         "SELECT composer AS name, COUNT(*) AS count FROM index_entry WHERE format = :format " +
@@ -115,17 +115,17 @@ interface IndexDao {
     )
     suspend fun composersOfFormat(format: String, limit: Int, offset: Int): List<NameCount>
 
-    @Query("SELECT * FROM index_entry WHERE format = :format AND composer = :composer ORDER BY title COLLATE NOCASE LIMIT :limit OFFSET :offset")
-    suspend fun modulesOf(format: String, composer: String, limit: Int, offset: Int): List<IndexEntry>
+    @Query("SELECT * FROM index_entry WHERE format = :format AND composer = :composer AND (index_entry.ext IN (:shown) OR (:amiga AND index_entry.ext NOT IN (:trackerExts))) ORDER BY title COLLATE NOCASE LIMIT :limit OFFSET :offset")
+    suspend fun modulesOf(format: String, composer: String, limit: Int, offset: Int, shown: List<String>, amiga: Boolean, trackerExts: List<String>): List<IndexEntry>
 
-    @Query("SELECT * FROM index_entry WHERE composer = :composer ORDER BY title COLLATE NOCASE LIMIT :limit OFFSET :offset")
-    suspend fun modulesOfComposer(composer: String, limit: Int, offset: Int): List<IndexEntry>
+    @Query("SELECT * FROM index_entry WHERE composer = :composer AND (index_entry.ext IN (:shown) OR (:amiga AND index_entry.ext NOT IN (:trackerExts))) ORDER BY title COLLATE NOCASE LIMIT :limit OFFSET :offset")
+    suspend fun modulesOfComposer(composer: String, limit: Int, offset: Int, shown: List<String>, amiga: Boolean, trackerExts: List<String>): List<IndexEntry>
 
     @Query("SELECT * FROM index_entry WHERE path = :path LIMIT 1")
     suspend fun byPath(path: String): IndexEntry?
 
-    @Query("SELECT * FROM index_entry WHERE id >= (ABS(RANDOM()) % (SELECT MAX(id) FROM index_entry)) LIMIT 1")
-    suspend fun random(): IndexEntry?
+    @Query("SELECT * FROM index_entry WHERE id >= (ABS(RANDOM()) % (SELECT MAX(id) FROM index_entry)) AND (index_entry.ext IN (:shown) OR (:amiga AND index_entry.ext NOT IN (:trackerExts))) LIMIT 1")
+    suspend fun random(shown: List<String>, amiga: Boolean, trackerExts: List<String>): IndexEntry?
 }
 
 @Dao
