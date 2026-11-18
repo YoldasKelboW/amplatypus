@@ -364,6 +364,10 @@ fun NowPlayingScreen(player: PlayerConnection, onClose: () -> Unit) {
                 onPrevious = player::previous,
                 onPlayPause = player::togglePlayPause,
                 onNext = player::next,
+                title = nowPlaying.title,
+                composer = nowPlaying.composer,
+                positionMs = positionMs,
+                durationMs = nowPlaying.durationMs,
             ),
             onClose = { showRetro = false },
         )

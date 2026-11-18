@@ -60,11 +60,14 @@ import io.github.yoldaskelbow.amplatypus.audio.ModuleEngine
  */
 
 /** The tracker whose look a retro view takes. */
-enum class RetroStyle { PROTRACKER, FASTTRACKER, IMPULSE, SCREAM, HIVELY, OCTAMED }
+enum class RetroStyle { PROTRACKER, FASTTRACKER, IMPULSE, SCREAM, HIVELY, OCTAMED, DELITRACKER }
 
-/** Which retro view fits this module, if any: MOD, XM, IT, S3M, AHX, HVL and MED. */
+/** Which retro view fits this module, if any: MOD, XM, IT, S3M, AHX, HVL, MED, and the UADE formats. */
 fun retroStyleOf(info: ModuleEngine.ModuleInfo?): RetroStyle? {
-    if (info == null || !info.hasPattern || info.channels < 1) return null
+    if (info == null) return null
+    // Replay routines in an emulated Amiga (UADE) have no pattern: they get a player window instead.
+    if (!info.hasPattern) return RetroStyle.DELITRACKER
+    if (info.channels < 1) return null
     val type = info.type.lowercase()
     val mod = ("mod" in type && "mmd" !in type) || "soundtracker" in type || "noisetracker" in type || "startrekker" in type
     return when {
@@ -90,6 +93,7 @@ fun RetroView(info: ModuleEngine.ModuleInfo, controls: RetroControls, onClose: (
         RetroStyle.SCREAM -> ClassicTrackerView(info, ScreamTheme, controls, onClose, modifier)
         RetroStyle.HIVELY -> ClassicTrackerView(info, HivelyTheme, controls, onClose, modifier)
         RetroStyle.OCTAMED -> ClassicTrackerView(info, OctaMedTheme, controls, onClose, modifier)
+        RetroStyle.DELITRACKER -> DeliTrackerView(info, controls, onClose, modifier)
         null -> Unit
     }
 }
@@ -149,6 +153,11 @@ class RetroControls(
     val onPrevious: () -> Unit,
     val onPlayPause: () -> Unit,
     val onNext: () -> Unit,
+    /** What the player shows about the playing module, for views that have no pattern to fill. */
+    val title: String = "",
+    val composer: String = "",
+    val positionMs: Long = 0,
+    val durationMs: Long = 0,
 )
 
 enum class RetroControl { PREVIOUS, PLAY_PAUSE, NEXT }

@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- The exotic Amiga formats played by UADE get a view of their own too: a player window in the grey of
+  the Amiga Workbench, as DeliTracker and EaglePlayer had, with module, author, replay routine, time,
+  and a large scope and level bar for each of the four Paula channels.
+
 ## 1.1.0 – 2026-11-18
 
 - Four more tracker views, opened like the others from the format chip in the player: Impulse Tracker
