@@ -39,4 +39,20 @@ class ModlandCompanionsTest {
         // The same extension in another folder is not a companion.
         assertFalse(ModlandCompanions.isCompanion("Ad Lib", "Ad Lib/Someone/song.ins"))
     }
+
+    @Test
+    fun `IFF-SMUS songs bring their instrument folder`() {
+        val files = listOf(
+            "IFF-SMUS/Allister Brimble/ACE II/Instruments/hihat.instr",
+            "IFF-SMUS/Allister Brimble/ACE II/Instruments/hihat.ss",
+            "IFF-SMUS/Allister Brimble/creation3/instruments/Bass1.MS6.instr",
+        )
+        val companions = ModlandCompanions.folderCompanionsOf("IFF-SMUS/Allister Brimble/ACE II/ACE II.smus", files)
+        assertEquals(files.take(2), companions.map { it.path })
+        assertTrue(companions.none { it.required })
+        assertTrue(ModlandCompanions.isCompanion("IFF-SMUS", files[0]))
+        assertFalse(ModlandCompanions.isCompanion("IFF-SMUS", "IFF-SMUS/Allister Brimble/ACE II/ACE II.smus"))
+        // Other formats have no instrument folder.
+        assertTrue(ModlandCompanions.folderCompanionsOf("Protracker/4-Mat/1978.mod", files).isEmpty())
+    }
 }

@@ -39,6 +39,7 @@ object ModuleFormats {
         "BP SoundMon 2" to "SoundMon2.0", "BP SoundMon 3" to "SoundMon2.2",
         "Beathoven Synthesizer" to "BeathovenSynthesizer", "Ben Daglish" to "BenDaglish",
         "Ben Daglish SID" to "BenDaglish-SID", "Core Design" to "CoreDesign", "CustomMade" to "CustomMade",
+        "Delitracker Custom" to "custom", "IFF-SMUS" to "SonixMusicDriver",
         "Darius Zendeh" to "DariusZendeh", "Dave Lowe" to "DaveLowe", "Dave Lowe New" to "DaveLoweNew",
         "David Hanney" to "DavidHanney", "David Whittaker" to "DavidWhittaker",
         "Delta Music" to "DeltaMusic1.3", "Delta Music 2" to "DeltaMusic2.0", "Delta Packer" to "Tronic",

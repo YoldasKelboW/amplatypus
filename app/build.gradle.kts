@@ -19,12 +19,17 @@ val localRelease = providers.gradleProperty("localRelease").isPresent
 val uadeDir = rootProject.file("third_party/uade")
 val uadeFreePlayers = setOf("PreTracker", "Fred", "ManiacsOfNoise", "MusicAssembler", "SIDMon1.0")
 
-// Left out of every build for now: formats whose songs need a whole set of instrument files.
+// Left out of every build for now: formats whose songs need a whole set of instrument files
+// (IFF-SMUS / Sonix is handled: its instrument folder is fetched with the song).
 // Two-file formats (TFMX, Richard Joseph, Audio Sculpture) are handled, see ModlandCompanions.kt.
 val uadeMultiFilePlayers = listOf(
-    "SonixMusicDriver", "MusicMaker", "Quartet",
+    "MusicMaker", "Quartet",
     "ScottJohnston", "DirkBialluch", "DynamicSynthesizer", "MIDI-Loriciel", "PaulSummers",
 )
+
+// Not a file but a mode of UADE: a DeliTracker "custom" module carries its own replay routine, so the
+// app ships nothing for it and it belongs in both builds.
+val uadeBuiltInPlayers = setOf("custom")
 
 // Extensions that stay with the tracker replayers when a file is imported from the device.
 val uadeIgnoredExtensions = setOf("mod", "med", "ahx", "thx", "hvl", "okt", "okta", "digi", "sfx", "dbm")
@@ -35,8 +40,9 @@ fun uadePlayerLines(full: Boolean): List<String> {
     if (!conf.isFile) return emptyList()
     return conf.readLines().filter { line ->
         val name = line.substringBefore('\t').trim()
-        name.isNotEmpty() && !name.startsWith("#") && File(uadeDir, "players/$name").isFile &&
-            uadeMultiFilePlayers.none { name.startsWith(it) } && (full || name in uadeFreePlayers)
+        val builtIn = name in uadeBuiltInPlayers
+        name.isNotEmpty() && !name.startsWith("#") && (builtIn || File(uadeDir, "players/$name").isFile) &&
+            uadeMultiFilePlayers.none { name.startsWith(it) } && (full || builtIn || name in uadeFreePlayers)
     }
 }
 
@@ -66,7 +72,7 @@ abstract class UadeAssetsTask : DefaultTask() {
         for (line in playerLines.get()) {
             val name = line.substringBefore('\t').trim()
             // One player can serve several formats and then has several lines.
-            File(source, "players/$name").copyTo(File(target, "players/$name"), overwrite = true)
+            File(source, "players/$name").takeIf { it.isFile }?.copyTo(File(target, "players/$name"), overwrite = true)
         }
         // Settings and data files some players read from the Amiga volumes ENV: and S:. None of the
         // freely licensed players needs them, and they carry no licence of their own.

@@ -21,7 +21,7 @@ import java.util.zip.ZipInputStream
  * the formats the app can play, and stored in the database. Directories are never listed live.
  */
 class ModlandIndex(
-    context: Context,
+    private val context: Context,
     private val db: AppDatabase,
     private val http: OkHttpClient,
 ) {
@@ -79,6 +79,7 @@ class ModlandIndex(
                 zip.nextEntry ?: throw IOException("Index archive is empty")
                 val reader = zip.bufferedReader(Charsets.ISO_8859_1)
                 var imported = 0
+                val folderFiles = ArrayList<String>()
                 db.withTransaction {
                     val sql = db.openHelper.writableDatabase
                     sql.execSQL("DELETE FROM index_fts")
@@ -91,6 +92,10 @@ class ModlandIndex(
                         val line = ModlandIndexParser.parse(raw) ?: return@forEach
                         if (!ModuleFormats.isPlayableOnModland(line.format, line.ext)) return@forEach
                         // Sample files of two-file formats are fetched with their song, not listed.
+                        if (ModlandCompanions.isFolderFile(line.format, line.path)) {
+                            folderFiles += line.path
+                            return@forEach
+                        }
                         if (ModlandCompanions.isCompanion(line.format, line.path)) return@forEach
                         imported++
                         val id = imported.toLong()
@@ -110,12 +115,35 @@ class ModlandIndex(
                     }
                 }
                 if (imported == 0) throw IOException("Index contained no playable modules")
+                saveFolderFiles(folderFiles)
                 return imported
             }
         }
     }
 
+    @Volatile private var folderFilesCache: List<String>? = null
+
+    /**
+     * Instrument files of the folder formats (IFF-SMUS), which are not in the database: they are only
+     * needed when their song is downloaded, so they are kept in a plain list next to it.
+     */
+    fun folderFiles(): List<String> = folderFilesCache ?: run {
+        val file = java.io.File(context.filesDir, FOLDER_FILES)
+        val list = if (file.isFile) file.readLines(Charsets.UTF_8).filter { it.isNotEmpty() } else emptyList()
+        folderFilesCache = list
+        list
+    }
+
+    private fun saveFolderFiles(paths: List<String>) {
+        val file = java.io.File(context.filesDir, FOLDER_FILES)
+        val partial = java.io.File(context.filesDir, "$FOLDER_FILES.part")
+        partial.writeText(paths.joinToString("\n"), Charsets.UTF_8)
+        partial.renameTo(file)
+        folderFilesCache = paths
+    }
+
     private companion object {
+        const val FOLDER_FILES = "modland_folder_files.txt"
         const val KEY_UPDATED = "updated_at"
         const val KEY_FORMATS = "formats_version"
         const val MAX_AGE_MS = 7L * 24 * 60 * 60 * 1000

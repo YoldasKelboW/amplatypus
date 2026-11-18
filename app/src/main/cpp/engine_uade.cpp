@@ -15,6 +15,7 @@
 #include <fcntl.h>
 #include <mutex>
 #include <strings.h>
+#include <sys/stat.h>
 #include <string>
 #include <thread>
 #include <unistd.h>
@@ -218,34 +219,88 @@ private:
     std::vector<std::array<int16_t, 4>> takenBlock;
 };
 
-// A replay routine that loads a second file (TFMX samples, Richard Joseph instruments) asks for it by
-// full path, often with the case changed ("song.INS" for "song.ins"). UADE's own loader handles that
-// by listing every folder from "/" down, and Android does not let apps list /data. A full path is
-// therefore looked up here, ignoring case only in the last part, inside the folder the app owns.
-// Everything else (players, "ENV:" and "S:" files) goes to UADE's loader.
+// A replay routine that loads a second file (TFMX samples, Richard Joseph instruments, Sonix
+// instrument folders) asks for it by full path, often with the case changed ("song.INS" for
+// "song.ins", "instruments/" for "Instruments/"). UADE's own loader handles that by listing every
+// folder from "/" down, and Android does not let apps list /data. A full path is therefore resolved
+// here part by part: a part that exists as written is taken as it is, otherwise the folder above it
+// (inside the app's own files) is searched ignoring case. Everything else (players, "ENV:" and "S:"
+// files) goes to UADE's loader.
+static std::string findIgnoringCase(const char *name) {
+    std::string resolved;
+    const char *part = name;
+    while (*part == '/') part++;
+    while (*part != 0) {
+        const char *end = strchr(part, '/');
+        std::string piece = end == nullptr ? std::string(part) : std::string(part, static_cast<size_t>(end - part));
+        std::string exact = resolved + "/" + piece;
+        struct stat info {};
+        if (stat(exact.c_str(), &info) == 0) {
+            resolved = exact;
+        } else {
+            DIR *listing = opendir(resolved.empty() ? "/" : resolved.c_str());
+            if (listing == nullptr) return {};
+            std::string match;
+            while (struct dirent *entry = readdir(listing)) {
+                if (strcasecmp(entry->d_name, piece.c_str()) == 0) {
+                    match = resolved + "/" + entry->d_name;
+                    break;
+                }
+            }
+            closedir(listing);
+            if (match.empty()) return {};
+            resolved = match;
+        }
+        if (end == nullptr) break;
+        part = end + 1;
+        while (*part == '/') part++;
+    }
+    return resolved;
+}
+
 struct uade_file *loadByFullPath(const char *name) {
     struct uade_file *file = uade_file_load(name);
     if (file != nullptr) return file;
-    const char *slash = strrchr(name, '/');
-    if (slash == nullptr || slash[1] == 0) return nullptr;
-    std::string dir(name, static_cast<size_t>(slash - name));
-    DIR *listing = opendir(dir.empty() ? "/" : dir.c_str());
-    if (listing == nullptr) return nullptr;
-    std::string match;
-    while (struct dirent *entry = readdir(listing)) {
-        if (strcasecmp(entry->d_name, slash + 1) == 0) {
-            match = dir + "/" + entry->d_name;
-            break;
-        }
-    }
-    closedir(listing);
+    std::string match = findIgnoringCase(name);
     return match.empty() ? nullptr : uade_file_load(match.c_str());
+}
+
+// Some replay routines keep file names in small buffers: Sonix (IFF-SMUS) has 128 characters for
+// "<song folder>/Instruments/<name>", and the app's folders are longer than that. The song is
+// therefore played through a short link next to the app's files ("<files>/m" -> the song's folder),
+// which keeps every path the routine builds short. Only one song plays at a time.
+std::string shortPathFor(const std::string &path, const std::string &base) {
+    size_t slash = path.rfind('/');
+    size_t baseSlash = base.rfind('/');
+    if (slash == std::string::npos || baseSlash == std::string::npos) return path;
+    std::string link = base.substr(0, baseSlash) + "/m";
+    unlink(link.c_str());
+    if (symlink(path.substr(0, slash).c_str(), link.c_str()) != 0) return path;
+    return link + path.substr(slash);
 }
 
 struct uade_file *loadAmigaFile(const char *name, const char *playerdir, void *, struct uade_state *state) {
     if (name != nullptr && name[0] == '/') {
         struct uade_file *file = loadByFullPath(name);
         if (file != nullptr) return file;
+    } else if (name != nullptr && name[0] != 0) {
+        // A relative name ("Instruments/bass.instr") or the "Instruments:" volume means a file next to
+        // the module. UADE would look for it relative to the emulator's working folder instead.
+        const struct uade_song_info *info = uade_get_song_info(state);
+        const char *song = info != nullptr ? info->modulefname : nullptr;
+        const char *slash = song != nullptr ? strrchr(song, '/') : nullptr;
+        if (slash != nullptr) {
+            std::string dir(song, static_cast<size_t>(slash - song));
+            std::string relative(name);
+            if (strncasecmp(name, "Instruments:", 12) == 0) relative = "Instruments/" + relative.substr(12);
+            if (relative.find(':') == std::string::npos) {
+                std::string match = findIgnoringCase((dir + "/" + relative).c_str());
+                if (!match.empty()) {
+                    struct uade_file *file = uade_file_load(match.c_str());
+                    if (file != nullptr) return file;
+                }
+            }
+        }
     }
     return uade_load_amiga_file(name, playerdir, state);
 }
@@ -294,7 +349,7 @@ Player *createUadePlayer(const std::string &path) {
     // The file is played from its path, not from memory: several replay routines load the module
     // themselves, as a program, through the emulated AmigaDOS.
     // 1 = playing, 0 = not a format UADE knows, negative = error.
-    if (uade_play(path.c_str(), -1, state) <= 0) {
+    if (uade_play(shortPathFor(path, base).c_str(), -1, state) <= 0) {
         uade_cleanup_state(state);
         if (tapFds[0] >= 0) close(tapFds[0]);
         return nullptr;

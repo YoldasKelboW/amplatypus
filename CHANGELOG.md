@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- New formats: IFF-SMUS (Sonix, about 750 songs; the song's instrument folder is downloaded with it)
+  in the full build, and DeliTracker custom modules (about 750, they bring their own replay routine) in
+  both builds.
+- UADE: files a replay routine loads next to the song are found regardless of the case of their
+  folder names, and songs are played through a short path, since some routines only keep short names.
 - The exotic Amiga formats played by UADE get a view of their own too: a player window in the grey of
   the Amiga Workbench, as DeliTracker and EaglePlayer had, with module, author, replay routine, time,
   and a large scope and level bar for each of the four Paula channels.

@@ -27,7 +27,7 @@ class AppContainer(app: Application) {
         .build()
 
     val modlandIndex = ModlandIndex(app, db, http)
-    val modland: MusicSource = ModlandSource(db.indexDao(), http)
+    val modland: MusicSource = ModlandSource(db.indexDao(), http, modlandIndex::folderFiles)
     /** Amiga Music Preservation; `null` in builds where the source is switched off. */
     val amp: AmpSource? = if (BuildConfig.AMP_SOURCE_ENABLED) AmpSource(http) else null
     val sources: Map<String, MusicSource> = listOfNotNull(modland, amp).associateBy { it.id }

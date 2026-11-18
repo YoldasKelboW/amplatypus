@@ -21,6 +21,8 @@ import java.io.IOException
 class ModlandSource(
     private val dao: IndexDao,
     private val http: OkHttpClient,
+    /** Instrument files of the folder formats, see [ModlandIndex.folderFiles]. */
+    private val folderFiles: () -> List<String> = { emptyList() },
 ) : MusicSource {
     override val id = ID
     override val capabilities = setOf(Capability.SEARCH, Capability.BROWSE, Capability.RANDOM)
@@ -67,7 +69,7 @@ class ModlandSource(
         withContext(Dispatchers.IO) {
             val target = File(targetDir, ref.key)
             // The companions go first, so a song file on disk always has its samples next to it.
-            for (companion in ModlandCompanions.companionsOf(ref.key)) {
+            for (companion in companionsOf(ref.key)) {
                 try {
                     fetch(companion.path, File(targetDir, companion.path)) {}
                 } catch (e: IOException) {
@@ -79,8 +81,11 @@ class ModlandSource(
 
     override fun companionFiles(ref: ModuleRef, file: File): List<File> {
         val root = file.path.removeSuffix(ref.key)
-        return ModlandCompanions.companionsOf(ref.key).map { File(root + it.path) }
+        return companionsOf(ref.key).map { File(root + it.path) }
     }
+
+    private fun companionsOf(path: String) =
+        ModlandCompanions.companionsOf(path) + ModlandCompanions.folderCompanionsOf(path, folderFiles())
 
     /** Downloads one Modland file to [target], trying the mirrors in turn. Does nothing if it is there. */
     private fun fetch(path: String, target: File, onProgress: (Float) -> Unit): File {
