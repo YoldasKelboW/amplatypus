@@ -58,8 +58,8 @@ private object Wb {
 @Composable
 internal fun DeliTrackerView(info: ModuleEngine.ModuleInfo, controls: RetroControls, onClose: () -> Unit, modifier: Modifier = Modifier) {
     val visual = rememberVisual(true)
-    val label = TextStyle(fontFamily = pixelFont, fontSize = 9.sp, color = Wb.text)
-    val value = TextStyle(fontFamily = pixelFont, fontSize = 10.sp, color = Wb.value)
+    val label = TextStyle(fontFamily = pixelFont, fontFeatureSettings = NO_LIGATURES, fontSize = 9.sp, color = Wb.text)
+    val value = TextStyle(fontFamily = pixelFont, fontFeatureSettings = NO_LIGATURES, fontSize = 10.sp, color = Wb.value)
     val title = info.title.ifBlank { controls.title }
     val length = if (controls.durationMs > 0) formatTime(controls.durationMs) else "--:--"
 
@@ -139,7 +139,7 @@ private fun PaulaChannels(visual: State<ModuleEngine.Visual?>, channels: Int, mo
             val gap = 4.dp.toPx()
             val rowHeight = (size.height - gap * (count - 1)) / count
             val charPx = 10.dp.toPx()
-            val style = TextStyle(fontFamily = pixelFont, fontSize = (charPx / density / fontScale).sp)
+            val style = TextStyle(fontFamily = pixelFont, fontFeatureSettings = NO_LIGATURES, fontSize = (charPx / density / fontScale).sp)
             val labelWidth = charPx * 2 + 6.dp.toPx()
             val barWidth = 14.dp.toPx()
             val scopeLeft = labelWidth
@@ -161,7 +161,7 @@ private fun PaulaChannels(visual: State<ModuleEngine.Visual?>, channels: Int, mo
                 path.rewind()
                 for (i in 0 until points) {
                     val sample = if (waves != null && waves.size >= (channel + 1) * points) {
-                        (waves[channel * points + i] * SCOPE_GAIN).coerceIn(-1f, 1f)
+                        (waves[channel * points + i] * BIG_SCOPE_GAIN).coerceIn(-1f, 1f)
                     } else {
                         0f
                     }
@@ -179,3 +179,6 @@ private fun PaulaChannels(visual: State<ModuleEngine.Visual?>, channels: Int, mo
         }
     }
 }
+
+/** These scopes are large, so they need less enlarging than the small ones before the waves clip. */
+private const val BIG_SCOPE_GAIN = 1.2f

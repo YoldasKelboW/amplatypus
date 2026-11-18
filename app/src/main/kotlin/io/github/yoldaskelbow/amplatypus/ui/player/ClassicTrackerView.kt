@@ -237,8 +237,8 @@ internal fun ClassicTrackerView(
     val instrument = remember(rows, row, names) {
         lastSampleName(rows, row, names, cellRadix = theme.cellRadix, decimal = theme.decimalInstruments)
     }
-    val label = TextStyle(fontFamily = pixelFont, fontSize = 9.sp, color = theme.label)
-    val value = TextStyle(fontFamily = pixelFont, fontSize = 10.sp, color = theme.value)
+    val label = TextStyle(fontFamily = pixelFont, fontFeatureSettings = NO_LIGATURES, fontSize = 9.sp, color = theme.label)
+    val value = TextStyle(fontFamily = pixelFont, fontFeatureSettings = NO_LIGATURES, fontSize = 10.sp, color = theme.value)
     fun Modifier.panel(sunken: Boolean = false) =
         bevel(sunken = sunken, fill = if (sunken) theme.screen else theme.face, light = theme.light, shadow = theme.shadow)
 
@@ -411,7 +411,7 @@ private fun ThemedPattern(
             stepPx = cellWidth + gap
             if (first + visibleChannels > count) first = (count - visibleChannels).coerceAtLeast(0)
             val channelWidth = (size.width - numberWidth - gap * visibleChannels) / visibleChannels
-            val style = TextStyle(fontFamily = pixelFont, fontSize = (charPx / density / fontScale).sp)
+            val style = TextStyle(fontFamily = pixelFont, fontFeatureSettings = NO_LIGATURES, fontSize = (charPx / density / fontScale).sp)
             val lineHeight = charPx * 1.45f
             val headerHeight = lineHeight * 1.3f
             val textTop = (lineHeight - charPx) / 2

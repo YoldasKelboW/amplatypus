@@ -78,8 +78,8 @@ internal fun FastTrackerView(info: ModuleEngine.ModuleInfo, controls: RetroContr
     val rows = remember(info.generation, pattern) { ModuleEngine.current?.patternRows(pattern) ?: emptyList() }
     val names = info.instruments.ifEmpty { info.samples }
     val instrument = remember(rows, row) { lastSampleName(rows, row, names) }
-    val label = TextStyle(fontFamily = pixelFont, fontSize = 10.sp, color = Ft.label)
-    val value = TextStyle(fontFamily = pixelFont, fontSize = 11.sp, color = Ft.value)
+    val label = TextStyle(fontFamily = pixelFont, fontFeatureSettings = NO_LIGATURES, fontSize = 10.sp, color = Ft.label)
+    val value = TextStyle(fontFamily = pixelFont, fontFeatureSettings = NO_LIGATURES, fontSize = 11.sp, color = Ft.value)
 
     fun Modifier.panel(sunken: Boolean = false) =
         bevel(sunken = sunken, fill = if (sunken) Ft.screen else Ft.face, light = Ft.light, shadow = Ft.shadow)
@@ -238,7 +238,7 @@ private fun FtPattern(visual: State<ModuleEngine.Visual?>, rows: List<String>, r
             stepPx = cellWidth + gap
             if (first + visibleChannels > count) first = (count - visibleChannels).coerceAtLeast(0)
             val channelWidth = (size.width - numberWidth - gap * visibleChannels) / visibleChannels
-            val style = TextStyle(fontFamily = pixelFont, fontSize = (charPx / density / fontScale).sp)
+            val style = TextStyle(fontFamily = pixelFont, fontFeatureSettings = NO_LIGATURES, fontSize = (charPx / density / fontScale).sp)
             val lineHeight = charPx * 1.45f
             val headerHeight = lineHeight * 1.3f
             val textTop = (lineHeight - charPx) / 2

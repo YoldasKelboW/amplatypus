@@ -116,6 +116,9 @@ private object Retro {
 
 internal val pixelFont = FontFamily(Font(R.font.press_start_2p))
 
+/** Tracker screens show every letter on its own; the font's "fi" and "fl" ligatures are switched off. */
+internal const val NO_LIGATURES = "liga 0, clig 0"
+
 /**
  * Draws one line of [text] in [color]. The measurer caches layouts without regard to colour, so a cell
  * that appears in several rows would keep the colour it was first drawn in; the colour is therefore
@@ -225,8 +228,8 @@ private fun ProTrackerView(info: ModuleEngine.ModuleInfo, controls: RetroControl
     val rows = remember(info.generation, pattern) { ModuleEngine.current?.patternRows(pattern) ?: emptyList() }
     val sample = remember(rows, row) { lastSampleName(rows, row, info.samples) }
     // Labels are pressed into the panel: light letters with a dark edge below.
-    val label = TextStyle(fontFamily = pixelFont, fontSize = 10.sp, color = Retro.label, shadow = Shadow(Retro.shadow, Offset(2f, 2f), 0f))
-    val value = TextStyle(fontFamily = pixelFont, fontSize = 11.sp, color = Retro.value)
+    val label = TextStyle(fontFamily = pixelFont, fontFeatureSettings = NO_LIGATURES, fontSize = 10.sp, color = Retro.label, shadow = Shadow(Retro.shadow, Offset(2f, 2f), 0f))
+    val value = TextStyle(fontFamily = pixelFont, fontFeatureSettings = NO_LIGATURES, fontSize = 11.sp, color = Retro.value)
 
     RetroLayout(
         modifier = modifier,
@@ -380,7 +383,7 @@ private fun RetroPattern(visual: State<ModuleEngine.Visual?>, rows: List<String>
             // Width in characters: two for the row number, eight per channel ("G#31B972").
             val columnsWidth = size.width - gap * count - pad * 2 * (count + 1)
             val charPx = (columnsWidth / ((2 + 8 * count) * CHAR_ADVANCE)).coerceAtMost(14.dp.toPx())
-            val style = TextStyle(fontFamily = pixelFont, fontSize = (charPx / density / fontScale).sp)
+            val style = TextStyle(fontFamily = pixelFont, fontFeatureSettings = NO_LIGATURES, fontSize = (charPx / density / fontScale).sp)
             val lineHeight = charPx * 1.45f
             val numberWidth = 2 * charPx * CHAR_ADVANCE + pad * 2
             val channelWidth = (size.width - numberWidth - gap * count) / count
