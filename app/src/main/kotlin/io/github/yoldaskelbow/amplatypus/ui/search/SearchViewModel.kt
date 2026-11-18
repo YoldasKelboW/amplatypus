@@ -7,12 +7,14 @@ import androidx.lifecycle.viewModelScope
 import io.github.yoldaskelbow.amplatypus.AmplatypusApplication
 import io.github.yoldaskelbow.amplatypus.source.SearchKind
 import io.github.yoldaskelbow.amplatypus.source.SourceItem
+import io.github.yoldaskelbow.amplatypus.source.amp.AmpSource
 import io.github.yoldaskelbow.amplatypus.source.modland.ModlandIndex
 import io.github.yoldaskelbow.amplatypus.source.modland.ModlandSource
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -20,6 +22,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class SearchUiState(
+    /** The archive being searched: [ModlandSource.ID] or [AmpSource.ID]. */
+    val sourceId: String = ModlandSource.ID,
     val query: String = "",
     val kind: SearchKind = SearchKind.MODULE,
     /** Folders opened so far; empty means the top level. */
@@ -30,19 +34,26 @@ data class SearchUiState(
     /** Download progress (0–1, or -1 if unknown) by module key. */
     val downloads: Map<String, Float> = emptyMap(),
     val error: String? = null,
+    /** The last load failed, e.g. without a connection (AMP is searched online). */
+    val offline: Boolean = false,
 )
 
 class SearchViewModel(app: Application) : AndroidViewModel(app) {
     private val container = (app as AmplatypusApplication).container
-    private val source = container.modland
+    private val source get() = container.sources[_state.value.sourceId] ?: container.modland
+
+    /** Whether the AMP source exists in this build. */
+    val ampAvailable: Boolean = container.amp != null
 
     private val _state = MutableStateFlow(SearchUiState())
     val state: StateFlow<SearchUiState> = _state
 
     val indexState: StateFlow<ModlandIndex.State> = container.modlandIndex.state
 
-    val libraryKeys: StateFlow<Set<String>> = container.library.keysOf(ModlandSource.ID)
-        .map { it.toSet() }
+    /** Library keys per source, as "source/key", to mark modules already on the device. */
+    val libraryKeys: StateFlow<Set<String>> = combine(container.sources.keys.map { id ->
+        container.library.keysOf(id).map { keys -> keys.map { "$id/$it" } }
+    }) { lists -> lists.flatMap { it }.toSet() }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptySet())
 
     private var loadJob: Job? = null
@@ -61,6 +72,13 @@ class SearchViewModel(app: Application) : AndroidViewModel(app) {
     fun setQuery(query: String) {
         _state.update { it.copy(query = query, path = if (query.isBlank()) it.path else emptyList()) }
         reload(debounce = true)
+    }
+
+    /** Switches between Modland and AMP; the query is kept, the opened folders are not. */
+    fun setSource(sourceId: String) {
+        if (sourceId == _state.value.sourceId || sourceId !in container.sources) return
+        _state.update { it.copy(sourceId = sourceId, path = emptyList(), items = emptyList()) }
+        reload(debounce = false)
     }
 
     fun setKind(kind: SearchKind) {
@@ -88,7 +106,7 @@ class SearchViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun play(module: SourceItem.Module) {
-        val key = module.ref.key
+        val key = module.ref.sourceId + "/" + module.ref.key
         if (key in _state.value.downloads) return
         viewModelScope.launch {
             _state.update { it.copy(downloads = it.downloads + (key to -1f), error = null) }
@@ -105,7 +123,7 @@ class SearchViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    /** Plays a random module from the index. */
+    /** Plays a random module from the archive being searched. */
     fun playRandom() {
         viewModelScope.launch { source.random()?.let(::play) }
     }
@@ -121,6 +139,8 @@ class SearchViewModel(app: Application) : AndroidViewModel(app) {
             if (debounce) delay(300)
             _state.update { it.copy(loading = true) }
             val snapshot = _state.value
+            val source = this@SearchViewModel.source
+            var failed = false
             val result = try {
                 if (snapshot.query.isBlank()) {
                     source.browse(snapshot.path.lastOrNull(), targetPage)
@@ -129,14 +149,22 @@ class SearchViewModel(app: Application) : AndroidViewModel(app) {
                 }
             } catch (e: Exception) {
                 if (e is kotlinx.coroutines.CancellationException) throw e
+                failed = true
                 emptyList()
             }
             page = targetPage
+            // AMP leaves formats this build cannot play out of a page, so a short page is not the end there.
+            val end = when {
+                source is AmpSource && snapshot.query.isNotBlank() && snapshot.kind == SearchKind.MODULE -> source.lastPageWasLast
+                source is AmpSource -> true
+                else -> result.size < ModlandSource.PAGE_SIZE
+            }
             _state.update {
                 it.copy(
                     items = if (append) it.items + result else result,
                     loading = false,
-                    endReached = result.size < ModlandSource.PAGE_SIZE,
+                    endReached = end || failed,
+                    offline = failed && !append,
                 )
             }
         }

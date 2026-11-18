@@ -127,9 +127,8 @@ android {
             buildConfigField("boolean", "AMP_SOURCE_ENABLED", "true")
         }
         release {
-            // An AMP source stays off in release builds until the permission is
-            // documented in docs/PERMISSIONS.md.
-            buildConfigField("boolean", "AMP_SOURCE_ENABLED", "false")
+            // AMP is used with the staff's permission, documented in docs/PERMISSIONS.md.
+            buildConfigField("boolean", "AMP_SOURCE_ENABLED", "true")
             if (localRelease) {
                 // For trying the optimised build on your own device: debug key, one ABI.
                 signingConfig = signingConfigs.getByName("debug")
@@ -206,4 +205,6 @@ dependencies {
     implementation(libs.coroutines.android)
 
     testImplementation(libs.junit)
+    // Android's own org.json is only a stub in unit tests; this is the same API for the JVM.
+    testImplementation(libs.json)
 }

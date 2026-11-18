@@ -71,8 +71,9 @@ class Library(
     suspend fun delete(module: LibraryModule) {
         withContext(Dispatchers.IO) {
             val file = File(module.localPath)
-            sources[module.sourceId]?.companionFiles(ModuleRef(module.sourceId, module.sourceKey), file)?.forEach { it.delete() }
+            // The file first: a companion can be the folder that held it.
             file.delete()
+            sources[module.sourceId]?.companionFiles(ModuleRef(module.sourceId, module.sourceKey), file)?.forEach { it.delete() }
         }
         playlistDao.removeEverywhere(module.id)
         dao.delete(module.id)

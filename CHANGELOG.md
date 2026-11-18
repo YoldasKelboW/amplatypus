@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+- Amiga Music Preservation (AMP) as a second archive, with the permission of the AMP staff: switch between
+  Modland and AMP under the search field. Search modules and composers, open a composer's modules, see
+  what is new on AMP, play a random module. Searched online; the app keeps to AMP's request limits.
+- Radio: a random-module channel for AMP, and "Sounds alike", where each module sounds like the one before
+  by AMP's sound analysis. Start it from an AMP module with the radio button in the player.
+- Landscape and tablets: the player shows details and buttons on the left and channels or text on the
+  right; on a phone held sideways the navigation moves to a rail at the side.
+- TalkBack announces each channel oscilloscope with its state and offers muting and solo as actions.
+- Builds are reproducible: building in another folder gives the same APK, byte for byte.
+
 ## 0.4.0-pre2 – 2026-11-18
 
 - Shuffle and repeat in the player: plain icons beside the main buttons. Shuffle mixes the queue and keeps

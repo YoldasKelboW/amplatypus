@@ -30,6 +30,9 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SearchBarDefaults
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
@@ -45,6 +48,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -58,7 +62,10 @@ import io.github.yoldaskelbow.amplatypus.R
 import io.github.yoldaskelbow.amplatypus.source.FolderKind
 import io.github.yoldaskelbow.amplatypus.source.SearchKind
 import io.github.yoldaskelbow.amplatypus.source.SourceItem
+import io.github.yoldaskelbow.amplatypus.net.Endpoints
+import io.github.yoldaskelbow.amplatypus.source.amp.AmpSource
 import io.github.yoldaskelbow.amplatypus.source.modland.ModlandIndex
+import io.github.yoldaskelbow.amplatypus.source.modland.ModlandSource
 import io.github.yoldaskelbow.amplatypus.ui.FormatBadge
 import io.github.yoldaskelbow.amplatypus.ui.formatSize
 
@@ -89,6 +96,7 @@ fun SearchScreen(viewModel: SearchViewModel = viewModel()) {
                 SearchField(
                     query = state.query,
                     onQueryChange = viewModel::setQuery,
+                    amp = state.sourceId == AmpSource.ID,
                     modifier = Modifier
                         .windowInsetsPadding(WindowInsets.statusBars)
                         .padding(horizontal = 16.dp, vertical = 8.dp),
@@ -102,6 +110,10 @@ fun SearchScreen(viewModel: SearchViewModel = viewModel()) {
                         }
                     },
                 )
+            }
+
+            if (folder == null && viewModel.ampAvailable) {
+                SourceSwitch(state.sourceId, viewModel::setSource)
             }
 
             if (state.query.isNotBlank()) {
@@ -122,7 +134,8 @@ fun SearchScreen(viewModel: SearchViewModel = viewModel()) {
                 }
             }
 
-            when (val index = indexState) {
+            // AMP is searched online and needs no index.
+            if (state.sourceId == AmpSource.ID) Results(state, libraryKeys, viewModel) else when (val index = indexState) {
                 is ModlandIndex.State.Ready -> Results(state, libraryKeys, viewModel)
                 is ModlandIndex.State.Failed -> IndexMessage(stringResource(R.string.index_failed, index.message)) {
                     Button(onClick = { viewModel.retryIndex() }) { Text(stringResource(R.string.retry)) }
@@ -139,12 +152,29 @@ fun SearchScreen(viewModel: SearchViewModel = viewModel()) {
 
 @Composable
 private fun Results(state: SearchUiState, libraryKeys: Set<String>, viewModel: SearchViewModel) {
+    val amp = state.sourceId == AmpSource.ID
     if (state.items.isEmpty() && !state.loading) {
-        if (state.query.isNotBlank()) IndexMessage(stringResource(R.string.search_no_results)) {}
+        when {
+            state.offline -> IndexMessage(stringResource(R.string.amp_offline)) {
+                Button(onClick = { viewModel.setQuery(state.query) }) { Text(stringResource(R.string.retry)) }
+            }
+            state.query.isNotBlank() -> IndexMessage(stringResource(R.string.search_no_results)) {}
+            amp && state.path.isEmpty() -> AmpHero(viewModel)
+        }
         return
     }
     LazyColumn(Modifier.fillMaxSize()) {
-        if (state.query.isBlank() && state.path.isEmpty()) {
+        if (amp && state.query.isBlank() && state.path.isEmpty()) {
+            item(key = "hero") { AmpHero(viewModel) }
+            item(key = "header") {
+                Text(
+                    text = stringResource(R.string.amp_latest),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                )
+            }
+        } else if (state.query.isBlank() && state.path.isEmpty()) {
             item(key = "hero") {
                 val total = (viewModel.indexState.collectAsStateWithLifecycle().value as? ModlandIndex.State.Ready)?.entries ?: 0
                 Card(
@@ -183,8 +213,8 @@ private fun Results(state: SearchUiState, libraryKeys: Set<String>, viewModel: S
                 is SourceItem.Folder -> FolderRow(item) { viewModel.open(item) }
                 is SourceItem.Module -> ModuleRow(
                     module = item,
-                    inLibrary = item.ref.key in libraryKeys,
-                    progress = state.downloads[item.ref.key],
+                    inLibrary = "${item.ref.sourceId}/${item.ref.key}" in libraryKeys,
+                    progress = state.downloads["${item.ref.sourceId}/${item.ref.key}"],
                     onClick = { viewModel.play(item) },
                 )
             }
@@ -192,7 +222,61 @@ private fun Results(state: SearchUiState, libraryKeys: Set<String>, viewModel: S
         if (state.loading) {
             item(key = "loading") { LinearProgressIndicator(Modifier.fillMaxWidth()) }
         }
+        if (amp && !state.loading) {
+            item(key = "credit") { AmpCredit() }
+        }
     }
+}
+
+/** Modland or AMP, side by side under the search field. */
+@Composable
+private fun SourceSwitch(selected: String, onSelect: (String) -> Unit) {
+    SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 8.dp)) {
+        listOf(ModlandSource.ID to R.string.source_modland, AmpSource.ID to R.string.source_amp).forEachIndexed { index, (id, label) ->
+            SegmentedButton(
+                selected = selected == id,
+                onClick = { onSelect(id) },
+                shape = SegmentedButtonDefaults.itemShape(index, 2),
+            ) { Text(stringResource(label)) }
+        }
+    }
+}
+
+@Composable
+private fun AmpHero(viewModel: SearchViewModel) {
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+            contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+        ),
+        shape = MaterialTheme.shapes.extraLarge,
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+    ) {
+        Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(stringResource(R.string.amp_title), style = MaterialTheme.typography.headlineSmall)
+            Text(stringResource(R.string.amp_text), style = MaterialTheme.typography.bodyMedium)
+            Button(onClick = { viewModel.playRandom() }, modifier = Modifier.padding(top = 8.dp)) {
+                Icon(painterResource(R.drawable.ic_shuffle), contentDescription = null, modifier = Modifier.size(18.dp))
+                Text(stringResource(R.string.hero_random), modifier = Modifier.padding(start = 8.dp))
+            }
+        }
+    }
+}
+
+/** AMP's data and files are used with the staff's permission; the app says where they come from. */
+@Composable
+private fun AmpCredit() {
+    val uri = LocalUriHandler.current
+    Text(
+        stringResource(R.string.amp_credit),
+        style = MaterialTheme.typography.labelSmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        textAlign = TextAlign.Center,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClickLabel = stringResource(R.string.amp_open_site)) { uri.openUri(Endpoints.AMP_SITE) }
+            .padding(16.dp),
+    )
 }
 
 @Composable
@@ -200,7 +284,15 @@ private fun FolderRow(folder: SourceItem.Folder, onClick: () -> Unit) {
     val count = folder.subtitle?.toIntOrNull()
     ListItem(
         headlineContent = { Text(folder.title, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-        supportingContent = count?.let { { Text(pluralStringResource(R.plurals.module_count, it, it)) } },
+        supportingContent = if (count != null || folder.detail != null) {
+            {
+                Text(
+                    listOfNotNull(count?.let { pluralStringResource(R.plurals.module_count, it, it) }, folder.detail).joinToString(" · "),
+                )
+            }
+        } else {
+            null
+        },
         leadingContent = {
             Icon(
                 painterResource(if (folder.kind == FolderKind.COMPOSER) R.drawable.ic_person else R.drawable.ic_folder),
@@ -252,7 +344,7 @@ private fun IndexMessage(text: String, extra: @Composable () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SearchField(query: String, onQueryChange: (String) -> Unit, modifier: Modifier = Modifier) {
+private fun SearchField(query: String, onQueryChange: (String) -> Unit, amp: Boolean, modifier: Modifier = Modifier) {
     val focus = LocalFocusManager.current
     Surface(
         shape = SearchBarDefaults.inputFieldShape,
@@ -262,7 +354,7 @@ private fun SearchField(query: String, onQueryChange: (String) -> Unit, modifier
         TextField(
             value = query,
             onValueChange = onQueryChange,
-            placeholder = { Text(stringResource(R.string.search_hint)) },
+            placeholder = { Text(stringResource(if (amp) R.string.search_hint_amp else R.string.search_hint)) },
             leadingIcon = { Icon(painterResource(R.drawable.ic_search), contentDescription = null) },
             trailingIcon = {
                 if (query.isNotEmpty()) {

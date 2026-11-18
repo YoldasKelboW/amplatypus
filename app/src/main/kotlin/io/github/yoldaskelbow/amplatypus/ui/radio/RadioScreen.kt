@@ -64,6 +64,30 @@ fun RadioScreen() {
                     onStop = radio::stop,
                 )
             }
+            if (container.amp != null) {
+                item(key = "amp") {
+                    ChannelCard(
+                        title = stringResource(R.string.radio_amp),
+                        text = stringResource(R.string.radio_amp_text),
+                        channel = Radio.Channel.AMP,
+                        state = state,
+                        primary = false,
+                        onStart = { radio.start(Radio.Channel.AMP) },
+                        onStop = radio::stop,
+                    )
+                }
+                item(key = "similar") {
+                    ChannelCard(
+                        title = stringResource(R.string.radio_similar),
+                        text = stringResource(R.string.radio_similar_text),
+                        channel = Radio.Channel.SIMILAR,
+                        state = state,
+                        primary = false,
+                        onStart = { radio.start(Radio.Channel.SIMILAR) },
+                        onStop = radio::stop,
+                    )
+                }
+            }
             item(key = "favorites") {
                 ChannelCard(
                     title = stringResource(R.string.radio_favorites),

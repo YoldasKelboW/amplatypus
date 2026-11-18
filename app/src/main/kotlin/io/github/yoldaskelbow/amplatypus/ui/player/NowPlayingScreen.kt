@@ -24,6 +24,7 @@ import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.layout.Box
@@ -62,6 +63,9 @@ import androidx.media3.common.Player
 import io.github.yoldaskelbow.amplatypus.R
 import io.github.yoldaskelbow.amplatypus.audio.ModuleEngine
 import io.github.yoldaskelbow.amplatypus.playback.PlayerConnection
+import io.github.yoldaskelbow.amplatypus.radio.Radio
+import io.github.yoldaskelbow.amplatypus.source.ModuleRef
+import io.github.yoldaskelbow.amplatypus.source.amp.AmpSource
 import io.github.yoldaskelbow.amplatypus.ui.formatTime
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -74,7 +78,8 @@ fun NowPlayingScreen(player: PlayerConnection, onClose: () -> Unit) {
     BackHandler(onBack = onClose)
 
     // The library entry of the playing module, for the favourite button.
-    val library = (LocalContext.current.applicationContext as AmplatypusApplication).container.library
+    val container = (LocalContext.current.applicationContext as AmplatypusApplication).container
+    val library = container.library
     val scope = rememberCoroutineScope()
     val entry by remember(nowPlaying.localPath) { library.byLocalPath(nowPlaying.localPath) }
         .collectAsStateWithLifecycle(null)
@@ -123,6 +128,12 @@ fun NowPlayingScreen(player: PlayerConnection, onClose: () -> Unit) {
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.weight(1f),
                     )
+                    // AMP modules can start a radio of modules that sound like them.
+                    entry?.takeIf { it.sourceId == AmpSource.ID && container.amp != null }?.let { module ->
+                        IconButton(onClick = { container.radio.start(Radio.Channel.SIMILAR, ModuleRef(module.sourceId, module.sourceKey)) }) {
+                            Icon(painterResource(R.drawable.ic_radio), stringResource(R.string.radio_similar_from_here))
+                        }
+                    }
                     entry?.let { module ->
                         IconButton(onClick = { scope.launch { library.setFavorite(module, !module.favorite) } }) {
                             Icon(
@@ -134,6 +145,19 @@ fun NowPlayingScreen(player: PlayerConnection, onClose: () -> Unit) {
                     }
                 }
 
+                // What the "sounds alike" radio button started: searching, or why nothing happened.
+                val radioState by container.radio.state.collectAsStateWithLifecycle()
+                when (radioState) {
+                    Radio.State.Tuning(Radio.Channel.SIMILAR) ->
+                        LinearProgressIndicator(Modifier.fillMaxWidth().padding(top = 4.dp))
+                    Radio.State.Failed(Radio.Channel.SIMILAR) -> Text(
+                        stringResource(R.string.radio_similar_failed),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(top = 4.dp),
+                    )
+                    else -> {}
+                }
                 Text(
                     nowPlaying.title,
                     style = MaterialTheme.typography.headlineMedium,

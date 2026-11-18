@@ -10,6 +10,7 @@ import io.github.yoldaskelbow.amplatypus.net.ApiConfig
 import io.github.yoldaskelbow.amplatypus.net.Http
 import io.github.yoldaskelbow.amplatypus.playback.PlayerConnection
 import io.github.yoldaskelbow.amplatypus.source.MusicSource
+import io.github.yoldaskelbow.amplatypus.source.amp.AmpSource
 import io.github.yoldaskelbow.amplatypus.source.modland.ModlandIndex
 import io.github.yoldaskelbow.amplatypus.source.modland.ModlandSource
 import io.github.yoldaskelbow.amplatypus.radio.Radio
@@ -27,11 +28,13 @@ class AppContainer(app: Application) {
 
     val modlandIndex = ModlandIndex(app, db, http)
     val modland: MusicSource = ModlandSource(db.indexDao(), http)
-    val sources: Map<String, MusicSource> = mapOf(modland.id to modland)
+    /** Amiga Music Preservation; `null` in builds where the source is switched off. */
+    val amp: AmpSource? = if (BuildConfig.AMP_SOURCE_ENABLED) AmpSource(http) else null
+    val sources: Map<String, MusicSource> = listOfNotNull(modland, amp).associateBy { it.id }
     val library = Library(db.libraryDao(), db.playlistDao(), sources, File(app.filesDir, "modules"))
     val player = PlayerConnection(app)
     val settings = Settings(app)
-    val radio = Radio(MainScope(), library, modland, player)
+    val radio = Radio(MainScope(), library, modland, amp, player)
 }
 
 class AmplatypusApplication : Application() {

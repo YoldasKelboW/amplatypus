@@ -39,7 +39,7 @@ interface MusicSource {
     fun companionFiles(ref: ModuleRef, file: File): List<File> = emptyList()
 }
 
-enum class Capability { SEARCH, BROWSE, RANDOM, LATEST, TEXT_SEARCH }
+enum class Capability { SEARCH, BROWSE, RANDOM, LATEST, SIMILAR, TEXT_SEARCH }
 
 enum class SearchKind { MODULE, COMPOSER, GROUP, TEXT }
 
@@ -56,6 +56,8 @@ sealed interface SourceItem {
         override val title: String,
         val kind: FolderKind,
         val subtitle: String? = null,
+        /** A short extra line, e.g. a composer's country. */
+        val detail: String? = null,
     ) : SourceItem
 
     data class Module(

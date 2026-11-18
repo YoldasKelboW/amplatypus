@@ -6,6 +6,7 @@
     <string name="nav_settings">Einstellungen</string>
 
     <string name="search_hint">Modland durchsuchen</string>
+    <string name="search_hint_amp">AMP durchsuchen</string>
     <string name="search_clear">Suche löschen</string>
     <string name="search_modules">Module</string>
     <string name="search_composers">Komponisten</string>
@@ -70,7 +71,7 @@
     <string name="design_workbench_text">Blau und Orange</string>
     <string name="design_copper_text">Warmes Orange bis Magenta, wie Copper-Balken</string>
 
-    <string name="radio_archive">Ganzes Archiv</string>
+    <string name="radio_archive">Modland</string>
     <string name="radio_archive_text">Ein Zufallsmodul aus Modland nach dem anderen.</string>
     <string name="radio_favorites">Deine Favoriten</string>
     <string name="radio_favorites_text">Mischt die Module, die du mit einem Herz markiert hast.</string>
@@ -116,4 +117,16 @@
     <string name="channel_playing">spielt</string>
     <string name="channel_toggle_mute">stumm schalten oder wieder einschalten</string>
     <string name="channel_solo">Nur diesen Kanal hören</string>
+    <string name="amp_title">Amiga Music Preservation</string>
+    <string name="amp_text">Das große Archiv für Amiga-Musik, online durchsucht. Komponisten, ihre Module und alles Neue.</string>
+    <string name="amp_latest">Neu auf AMP</string>
+    <string name="amp_offline">AMP ist nicht erreichbar. Prüfe die Verbindung und versuche es noch einmal.</string>
+    <string name="amp_credit">Moduldaten und Dateien von Amiga Music Preservation (amp.dascene.net), mit freundlicher Erlaubnis des AMP-Teams.</string>
+    <string name="amp_open_site">AMP-Website öffnen</string>
+    <string name="radio_amp">Amiga Music Preservation</string>
+    <string name="radio_amp_text">Ein Zufallsmodul aus AMP nach dem anderen.</string>
+    <string name="radio_similar">Klingt ähnlich</string>
+    <string name="radio_similar_text">Jedes Modul klingt wie das davor, nach der Klanganalyse von AMP. Im Player mit dem Radio-Knopf von einem Modul aus starten.</string>
+    <string name="radio_similar_from_here">Radio: Module, die so ähnlich klingen</string>
+    <string name="radio_similar_failed">Für dieses Modul gibt es gerade keine ähnlichen Module.</string>
 </resources>

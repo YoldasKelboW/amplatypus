@@ -24,6 +24,7 @@ import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffo
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteType
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffoldDefaults
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
+import androidx.window.core.layout.WindowSizeClass
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.isImeVisible
@@ -75,7 +76,14 @@ fun AmplatypusApp() {
 
     var showPlayer by rememberSaveable { mutableStateOf(false) }
     // Picks bottom bar (phone), rail (tablet) or drawer depending on the window size.
-    val adaptiveType = NavigationSuiteScaffoldDefaults.calculateFromAdaptiveInfo(currentWindowAdaptiveInfo())
+    val windowInfo = currentWindowAdaptiveInfo()
+    val adaptiveType = NavigationSuiteScaffoldDefaults.calculateFromAdaptiveInfo(windowInfo).let { type ->
+        // A phone on its side is wide but low: a rail at the side leaves the height to the content.
+        val sizes = windowInfo.windowSizeClass
+        val low = !sizes.isHeightAtLeastBreakpoint(WindowSizeClass.HEIGHT_DP_MEDIUM_LOWER_BOUND)
+        val wide = sizes.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND)
+        if (low && wide && type in BOTTOM_BARS) NavigationSuiteType.NavigationRail else type
+    }
     // While the keyboard is up, a bottom bar would only sit hidden under it; dropping it lets the
     // mini player ride on top of the keyboard, so you can see what plays while you search.
     val keyboardOpen = WindowInsets.isImeVisible

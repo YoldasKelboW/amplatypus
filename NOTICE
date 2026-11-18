@@ -11,7 +11,7 @@ Logic ported from 4champ is used under the MIT option; ported files carry the
 original copyright notice in their header.
 
 Amiga Music Preservation (AMP) – https://amp.dascene.net
-Module collection that 4champ gives access to. Not used by this app so far.
+Module data and files are fetched from AMP through its public API, with the permission of the AMP staff.
 All modules remain the property of their respective authors.
 
 Modland – https://modland.com

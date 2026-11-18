@@ -3,8 +3,8 @@
 # AMPlatypus
 
 A free, open-source Android player for Amiga and tracker music – MOD, XM, S3M, IT and some fifty related
-formats. It searches the [Modland](https://modland.com) archive (about 179,000 playable modules), downloads
-what you pick and plays it with [libopenmpt](https://lib.openmpt.org/libopenmpt/). AHX and HivelyTracker
+formats. It searches the [Modland](https://modland.com) archive (about 179,000 playable modules) and
+[Amiga Music Preservation](https://amp.dascene.net), downloads what you pick and plays it with [libopenmpt](https://lib.openmpt.org/libopenmpt/). AHX and HivelyTracker
 modules are played by the [HivelyTracker](https://github.com/pete-gordon/hivelytracker) replayer, and exotic
 Amiga formats (PreTracker, SidMon, Future Composer, Delta Music and about a hundred more) by
 [UADE](https://zakalwe.fi/uade), which runs the original replay routines in an emulated Amiga.
@@ -42,7 +42,8 @@ Modland or 4champ.
   pattern, oscilloscopes, level bars and playback buttons. More trackers will follow.
 - **Background playback** with notification, lock-screen and headset controls.
 - **Library** with favourites, playlists, search and sorting; import of your own module files.
-- **Radio**: an endless random pick from the whole archive, or a shuffle of your favourites.
+- **Radio**: an endless random pick from Modland or AMP, modules that sound alike, or a shuffle of your
+  favourites.
 - **Material 3** throughout: dynamic colour on Android 12+, four more colour designs, light and dark,
   English and German.
 - No ads, no tracking, no accounts.
@@ -53,7 +54,6 @@ Test builds are attached to the [releases](https://github.com/YoldasKelboW/ampla
 Android 8.0 or newer.
 
 Not there yet: muting channels of the UADE formats, formats that need a whole folder of instruments (IFF-SMUS),
-an AMP source, tablet layout,
 Android Auto. See `CHANGELOG.md` for what changed and `docs/RUNBOOK.md` (German) for the plan.
 
 ## Music sources
@@ -62,8 +62,9 @@ Sources sit behind one interface (`MusicSource`), so the app does not depend on 
 
 - **Modland** – the default source, searched through a locally stored index.
 - **Local files** – import your own modules through the system file picker.
-- **Amiga Music Preservation (AMP)** – not included. It would need an agreement with the AMP staff first
-  (see `docs/PERMISSIONS.md`).
+- **Amiga Music Preservation (AMP)** – searched online through the AMP API, with the permission of the AMP
+  staff: modules, composers, the latest additions, a random-module radio, and a "sounds alike" radio based
+  on AMP's sound analysis. The app keeps to the agreed limits (see `docs/PERMISSIONS.md`).
 
 ## Principles
 

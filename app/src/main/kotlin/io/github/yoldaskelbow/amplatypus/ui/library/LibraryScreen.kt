@@ -67,6 +67,7 @@ import io.github.yoldaskelbow.amplatypus.R
 import io.github.yoldaskelbow.amplatypus.data.Library
 import io.github.yoldaskelbow.amplatypus.data.LibraryModule
 import io.github.yoldaskelbow.amplatypus.data.PlaylistSummary
+import io.github.yoldaskelbow.amplatypus.source.amp.AmpSource
 import io.github.yoldaskelbow.amplatypus.source.modland.ModlandSource
 import io.github.yoldaskelbow.amplatypus.ui.FormatBadge
 import io.github.yoldaskelbow.amplatypus.ui.formatSize
@@ -526,14 +527,19 @@ private fun ModuleRow(
                             },
                         )
                         // Only archive modules have a public address that can be shared.
-                        if (module.sourceId == ModlandSource.ID) {
+                        val shareUrl = when (module.sourceId) {
+                            ModlandSource.ID -> ModlandSource.shareUrl(module.sourceKey)
+                            AmpSource.ID -> AmpSource.shareUrl(module.sourceKey)
+                            else -> null
+                        }
+                        if (shareUrl != null) {
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.share)) },
                                 leadingIcon = { Icon(painterResource(R.drawable.ic_share), contentDescription = null) },
                                 onClick = {
                                     menu = false
                                     val text = listOfNotNull(module.title, module.composer).joinToString(" – ") +
-                                        "\n" + ModlandSource.shareUrl(module.sourceKey)
+                                        "\n" + shareUrl
                                     val send = Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text)
                                     context.startActivity(Intent.createChooser(send, null))
                                 },
