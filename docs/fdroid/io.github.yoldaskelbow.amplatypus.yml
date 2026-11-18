@@ -15,7 +15,7 @@ Binaries: https://github.com/YoldasKelboW/amplatypus/releases/download/v%v/ampla
 Builds:
   - versionName: 1.2.0
     versionCode: 120
-    commit: v1.2.0
+    commit: 3bdb1f69c7049b43c57d174e33670bc8de385546
     subdir: app
     submodules: true
     sudo:

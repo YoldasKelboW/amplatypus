@@ -33,7 +33,8 @@ The release key is created once with `tools/create-release-key.sh`. It lives out
 
 The recipe draft is [fdroid/io.github.yoldaskelbow.amplatypus.yml](fdroid/io.github.yoldaskelbow.amplatypus.yml).
 Before submitting, fill in `AllowedAPKSigningKeys` (lower-case SHA-256 of the signing certificate, printed
-by `tools/sign-release.sh`) and check `commit`. Then open a merge request on
+by `tools/sign-release.sh`) and set `commit` to the full hash of the release tag's commit (fdroiddata wants
+the hash, not the tag name: `git rev-parse 'v1.2.0^{commit}'`). Then open a merge request on
 https://gitlab.com/fdroid/fdroiddata adding it as `metadata/io.github.yoldaskelbow.amplatypus.yml`,
 following the template there ("App inclusion").
 
