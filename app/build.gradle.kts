@@ -90,8 +90,7 @@ android {
     ndkVersion = "30.0.16248370"
 
     defaultConfig {
-        // PROVISIONAL: must be finalised before the first public release,
-        // the applicationId can never be changed afterwards.
+        // Final. The applicationId can never be changed once the app is in a store.
         applicationId = "io.github.yoldaskelbow.amplatypus"
         minSdk = 26
         targetSdk = 36

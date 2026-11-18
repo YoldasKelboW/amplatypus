@@ -1,6 +1,6 @@
 <img src="fastlane/metadata/android/en-US/images/icon.png" width="96" align="right" alt="App icon: a pixel-art platypus wearing headphones">
 
-# AMPlatypus (working title)
+# AMPlatypus
 
 A free, open-source Android player for Amiga and tracker music – MOD, XM, S3M, IT and some fifty related
 formats. It searches the [Modland](https://modland.com) archive (about 179,000 playable modules), downloads
@@ -16,6 +16,9 @@ It is modelled on [4champ](https://github.com/sitomani/4champ), the iOS app by A
 Logic, data model and flow are ported from 4champ; the user interface is rebuilt from scratch
 in Kotlin with Jetpack Compose and Material 3.
 
+AMPlatypus is an independent project. It is not affiliated with Amiga Music Preservation (AMP),
+Modland or 4champ.
+
 <p>
   <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/1_player.png" width="200" alt="Player with one oscilloscope and level meter per channel and the running pattern">
   <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/4_tracker_view.png" width="200" alt="Tracker view of a MOD file in the style of ProTracker, with level bars rising over the playing row">
@@ -24,8 +27,7 @@ in Kotlin with Jetpack Compose and Material 3.
 </p>
 
 > **Early test version.** It works day to day on the developer's phone, but expect rough edges.
-> The name and the application ID are provisional, and test builds are signed with a debug key, so a later
-> proper release will need a fresh install.
+> Test builds are signed with a debug key, so the first proper release will need a fresh install.
 
 ## What it does
 

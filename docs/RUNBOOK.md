@@ -1,4 +1,4 @@
-# Runbook: Paula – Amiga-Modul-Player für Android
+# Runbook: AMPlatypus – Amiga-Modul-Player für Android
 
 Stand: 12.11.2026 · Auftraggeber: Kelbo
 
@@ -8,8 +8,8 @@ Stand: 12.11.2026 · Auftraggeber: Kelbo
 
 Eine eigenständige, quelloffene Android-App, die große Modul-Archive durchsucht und Amiga-Module (MOD, AHX, DSS, PreTracker usw.) abspielt. Vorbild ist die iOS-App [4champ](https://github.com/sitomani/4champ) von Aleksi Sitomaniemi. Veröffentlicht wird auf GitHub, F-Droid und später Google Play (IzzyOnDroid fällt weg, siehe Phase 6).
 
-- **Arbeitstitel:** Paula (nach dem Amiga-Soundchip). Kein „4champ“ und kein „AMP“ im Namen.
-- **Paketname:** `io.github.<github-name>.paula` (Kelbo trägt den echten GitHub-Namen ein). Nach dem ersten Release nie mehr ändern.
+- **Name:** AMPlatypus (festgelegt am 18.11.2026; ursprünglicher Arbeitstitel war Paula). Kein „4champ“ im Namen; README und Store-Text sagen, dass die App nicht mit Amiga Music Preservation verbunden ist.
+- **Paketname:** `io.github.yoldaskelbow.amplatypus` (festgelegt). Nach dem ersten Release nie mehr ändern.
 
 ## Zusammenarbeit mit Kelbo
 
