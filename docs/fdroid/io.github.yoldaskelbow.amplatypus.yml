@@ -13,20 +13,6 @@ Repo: https://github.com/YoldasKelboW/amplatypus.git
 Binaries: https://github.com/YoldasKelboW/amplatypus/releases/download/v%v/amplatypus-%v-free.apk
 
 Builds:
-  - versionName: 1.1.0
-    versionCode: 110
-    commit: v1.1.0
-    subdir: app
-    submodules: true
-    sudo:
-      - apt-get update
-      - apt-get install -y -t trixie openjdk-21-jdk-headless
-      - update-alternatives --auto java
-    gradle:
-      - free
-    prebuild: sdkmanager 'cmake;4.1.2' 'platforms;android-37.2' 'build-tools;37.0.0'
-    ndk: 30.0.16248370
-
   - versionName: 1.2.0
     versionCode: 120
     commit: v1.2.0
