@@ -8,6 +8,8 @@ formats. It searches the [Modland](https://modland.com) archive (about 179,000 p
 modules are played by the [HivelyTracker](https://github.com/pete-gordon/hivelytracker) replayer, and exotic
 Amiga formats (PreTracker, SidMon, Future Composer, Delta Music and about a hundred more) by
 [UADE](https://zakalwe.fi/uade), which runs the original replay routines in an emulated Amiga.
+Commodore 64 music from the High Voltage SID Collection plays through
+[libsidplayfp](https://github.com/libsidplayfp/libsidplayfp) and its reSIDfp emulation of the SID chip.
 
 There are two builds. **free** contains only replay routines with a free licence and plays five of the
 exotic formats; **full** contains all of them. See [docs/UADE_LICENSING.md](docs/UADE_LICENSING.md).
@@ -91,6 +93,8 @@ CI runs lint, unit tests and the debug build on every push.
 - [4champ](https://github.com/sitomani/4champ) © Aleksi Sitomaniemi – the app this one is modelled on.
 - [Modland](https://modland.com) – the archive maintained by Coma (Daniel Johansson).
 - [Amiga Music Preservation](https://amp.dascene.net) – the collection and the people maintaining it.
+- [High Voltage SID Collection](https://www.hvsc.c64.org) – the C64 music, and
+  [libsidplayfp](https://github.com/libsidplayfp/libsidplayfp) by Leandro Nini and others, which plays it.
 - [Press Start 2P](https://fonts.google.com/specimen/Press+Start+2P) by CodeMan38 – the pixel font of the
   tracker views (SIL Open Font License).
 - This app is developed with the help of an AI coding assistant (Claude Code). See `NOTICE`.

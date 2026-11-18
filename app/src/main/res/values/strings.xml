@@ -18,6 +18,8 @@
     <string name="filter_hively_text">Synthesised Amiga chip music</string>
     <string name="filter_amiga">Exotic Amiga formats</string>
     <string name="filter_amiga_text">PreTracker, TFMX, SidMon, Future Composer and many more, played in an emulated Amiga</string>
+    <string name="filter_c64">Commodore 64</string>
+    <string name="filter_c64_text">SID music from the HVSC collection and Sidplayer songs, played in an emulated C64</string>
     <string name="search_clear">Clear search</string>
     <string name="search_modules">Modules</string>
     <string name="search_composers">Composers</string>

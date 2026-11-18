@@ -87,18 +87,27 @@ object ModuleFormats {
     val uadeModlandFolders: Set<String> = uadeModlandPlayers.filterValues { it in uadePlayers }.keys
 
     /** Changes whenever the set of playable Modland files does, so stored indexes are rebuilt. */
-    val VERSION: Int = 4 * 31 + uadeModlandFolders.hashCode()
+    val VERSION: Int = 5 * 31 + uadeModlandFolders.hashCode()
+
+    /** Commodore 64 files, played by libsidplayfp: SID tunes and Compute's Sidplayer songs. */
+    val c64Extensions: Set<String> = setOf("sid", "psid", "mus", "str")
+
+    /** Modland folders of C64 music the app plays. RealSID needs the C64's own ROMs, which it lacks. */
+    val c64ModlandFolders: Set<String> = setOf("HVSC", "Sidplayer", "Stereo Sidplayer")
 
     /** For files from the device: is there a replayer for this extension (or Amiga-style prefix)? */
-    fun isPlayable(extension: String): Boolean = extension.lowercase().let { it in trackerExtensions || it in uadeExtensions }
+    fun isPlayable(extension: String): Boolean =
+        extension.lowercase().let { it in trackerExtensions || it in uadeExtensions || it in c64Extensions }
 
     /** For Modland: [format] is the top folder of the file's path. */
     fun isPlayableOnModland(format: String, extension: String): Boolean =
-        extension.lowercase() in trackerExtensions || format in uadeModlandFolders
+        extension.lowercase() in trackerExtensions || format in uadeModlandFolders ||
+            (format in c64ModlandFolders && extension.lowercase() in c64Extensions)
 
     /** The group a file belongs to by its extension (or Amiga-style prefix), for the format filter. */
     fun groupOf(extension: String): FormatGroup = when (extension.lowercase()) {
         in hivelyExtensions -> FormatGroup.HIVELY
+        in c64Extensions -> FormatGroup.C64
         in trackerExtensions -> FormatGroup.TRACKER
         else -> FormatGroup.AMIGA
     }
@@ -107,19 +116,28 @@ object ModuleFormats {
 
     /** Extensions of the tracker group (libopenmpt), without AHX and HVL. */
     val trackerOnlyExtensions: Set<String> = trackerExtensions - hivelyExtensions
+
+    /** Extensions of all groups but the Amiga one, which takes everything else. */
+    val namedExtensions: Set<String> get() = trackerExtensions + c64Extensions
 }
 
 /** Format groups the user can show or hide. */
-enum class FormatGroup { TRACKER, HIVELY, AMIGA }
+enum class FormatGroup { TRACKER, HIVELY, AMIGA, C64 }
 
 /** Which [FormatGroup]s are shown. At least one always is. */
-data class FormatFilter(val tracker: Boolean = true, val hively: Boolean = true, val amiga: Boolean = true) {
-    val showsAll get() = tracker && hively && amiga
+data class FormatFilter(
+    val tracker: Boolean = true,
+    val hively: Boolean = true,
+    val amiga: Boolean = true,
+    val c64: Boolean = true,
+) {
+    val showsAll get() = tracker && hively && amiga && c64
 
     fun shows(group: FormatGroup) = when (group) {
         FormatGroup.TRACKER -> tracker
         FormatGroup.HIVELY -> hively
         FormatGroup.AMIGA -> amiga
+        FormatGroup.C64 -> c64
     }
 
     fun with(group: FormatGroup, shown: Boolean): FormatFilter {
@@ -127,14 +145,16 @@ data class FormatFilter(val tracker: Boolean = true, val hively: Boolean = true,
             FormatGroup.TRACKER -> copy(tracker = shown)
             FormatGroup.HIVELY -> copy(hively = shown)
             FormatGroup.AMIGA -> copy(amiga = shown)
+            FormatGroup.C64 -> copy(c64 = shown)
         }
-        return if (next.tracker || next.hively || next.amiga) next else this
+        return if (next.tracker || next.hively || next.amiga || next.c64) next else this
     }
 
-    /** Extensions the database query lets through by name; [amiga] covers all other extensions. */
+    /** Extensions the database query lets through by name; [amiga] covers all others (see [namedExtensions]). */
     fun shownExtensions(): List<String> = buildList {
         if (tracker) addAll(ModuleFormats.trackerOnlyExtensions)
         if (hively) addAll(ModuleFormats.hivelyExtensions)
+        if (c64) addAll(ModuleFormats.c64Extensions)
         // Room needs a non-empty list for IN (...).
         if (isEmpty()) add("")
     }

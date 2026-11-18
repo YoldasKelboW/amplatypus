@@ -27,6 +27,7 @@ class Settings(context: Context) {
             tracker = prefs.getBoolean(KEY_SHOW_TRACKER, true),
             hively = prefs.getBoolean(KEY_SHOW_HIVELY, true),
             amiga = prefs.getBoolean(KEY_SHOW_AMIGA, true),
+            c64 = prefs.getBoolean(KEY_SHOW_C64, true),
         ),
     )
 
@@ -40,6 +41,7 @@ class Settings(context: Context) {
             .putBoolean(KEY_SHOW_TRACKER, next.tracker)
             .putBoolean(KEY_SHOW_HIVELY, next.hively)
             .putBoolean(KEY_SHOW_AMIGA, next.amiga)
+            .putBoolean(KEY_SHOW_C64, next.c64)
             .apply()
     }
 
@@ -62,5 +64,6 @@ class Settings(context: Context) {
         const val KEY_SHOW_TRACKER = "show_tracker"
         const val KEY_SHOW_HIVELY = "show_hively"
         const val KEY_SHOW_AMIGA = "show_amiga"
+        const val KEY_SHOW_C64 = "show_c64"
     }
 }

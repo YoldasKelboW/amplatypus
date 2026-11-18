@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Commodore 64 music: about 63,000 SID tunes from the High Voltage SID Collection and 6,500 Sidplayer
+  songs (MUS, stereo with STR) on Modland, played by libsidplayfp with the reSIDfp emulation. Three
+  channels per SID chip that can be muted; levels and scopes are drawn from the SID's registers. Tunes
+  play for up to three minutes, or end earlier when they fall silent. A C64 player view in the colours of
+  the C64's start-up screen, and "Commodore 64" in the format filter.
 - Format filter: the filter button next to Modland/AMP shows or hides whole groups - tracker modules,
   AHX/HivelyTracker, exotic Amiga formats - in search, browsing, random picks and the radio.
 - New formats: IFF-SMUS (Sonix, about 750 songs; the song's instrument folder is downloaded with it)

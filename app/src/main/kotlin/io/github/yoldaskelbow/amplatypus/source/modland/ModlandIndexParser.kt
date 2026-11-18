@@ -31,6 +31,7 @@ object ModlandIndexParser {
         }
         val dot = file.lastIndexOf('.')
         if (dot <= 0 || dot == file.length - 1) return null
+        if (parts[0] == "HVSC") return hvscLine(path, parts, file.substring(0, dot), file.substring(dot + 1).lowercase(), size)
         return Line(
             path = path,
             format = parts[0],
@@ -39,6 +40,26 @@ object ModlandIndexParser {
             ext = file.substring(dot + 1).lowercase(),
             sizeBytes = size,
         )
+    }
+
+    /**
+     * The High Voltage SID Collection keeps its own layout: `HVSC/MUSICIANS/H/Hubbard_Rob/Commando.sid`,
+     * and `HVSC/GAMES/...` and `HVSC/DEMOS/...` for tunes not filed under a musician. Names use
+     * underscores for spaces and put the surname first.
+     */
+    private fun hvscLine(path: String, parts: List<String>, name: String, ext: String, size: Long): Line {
+        val composer = if (parts[1] == "MUSICIANS" && parts.size >= 5) {
+            hvscName(parts[3])
+        } else {
+            parts[1].lowercase().replaceFirstChar { it.uppercase() }
+        }
+        return Line(path, parts[0], composer, name.replace('_', ' '), ext, size)
+    }
+
+    /** "Hubbard_Rob" is "Rob Hubbard": two-part folder names are surname first; longer ones are kept in order. */
+    fun hvscName(folder: String): String {
+        val words = folder.split('_').filter { it.isNotEmpty() }
+        return if (words.size == 2) "${words[1]} ${words[0]}" else words.joinToString(" ")
     }
 
     /** Type prefixes Modland uses in file names instead of an extension (TFMX songs and samples). */

@@ -60,12 +60,13 @@ import io.github.yoldaskelbow.amplatypus.audio.ModuleEngine
  */
 
 /** The tracker whose look a retro view takes. */
-enum class RetroStyle { PROTRACKER, FASTTRACKER, IMPULSE, SCREAM, HIVELY, OCTAMED, DELITRACKER }
+enum class RetroStyle { PROTRACKER, FASTTRACKER, IMPULSE, SCREAM, HIVELY, OCTAMED, DELITRACKER, C64 }
 
 /** Which retro view fits this module, if any: MOD, XM, IT, S3M, AHX, HVL, MED, and the UADE formats. */
 fun retroStyleOf(info: ModuleEngine.ModuleInfo?): RetroStyle? {
     if (info == null) return null
-    // Replay routines in an emulated Amiga (UADE) have no pattern: they get a player window instead.
+    // C64 tunes and replay routines in an emulated Amiga (UADE) have no pattern: they get a player window.
+    if (info.type.startsWith("C64")) return RetroStyle.C64
     if (!info.hasPattern) return RetroStyle.DELITRACKER
     if (info.channels < 1) return null
     val type = info.type.lowercase()
@@ -94,6 +95,7 @@ fun RetroView(info: ModuleEngine.ModuleInfo, controls: RetroControls, onClose: (
         RetroStyle.HIVELY -> ClassicTrackerView(info, HivelyTheme, controls, onClose, modifier)
         RetroStyle.OCTAMED -> ClassicTrackerView(info, OctaMedTheme, controls, onClose, modifier)
         RetroStyle.DELITRACKER -> DeliTrackerView(info, controls, onClose, modifier)
+        RetroStyle.C64 -> DeliTrackerView(info, controls, onClose, modifier, look = C64Look)
         null -> Unit
     }
 }

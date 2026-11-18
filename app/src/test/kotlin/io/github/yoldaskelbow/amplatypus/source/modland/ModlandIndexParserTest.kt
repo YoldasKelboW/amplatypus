@@ -79,4 +79,18 @@ class ModlandIndexParserTest {
         )
         assertEquals("A/B/100%25%20%23.mod", ModlandIndexParser.encodePath("A/B/100% #.mod"))
     }
+
+    @Test
+    fun readsHvscPaths() {
+        val musician = ModlandIndexParser.parse("4223\tHVSC/MUSICIANS/H/Hubbard_Rob/Commando.sid")!!
+        assertEquals("HVSC", musician.format)
+        assertEquals("Rob Hubbard", musician.composer)
+        assertEquals("Commando", musician.title)
+        assertEquals("sid", musician.ext)
+        val game = ModlandIndexParser.parse("3000\tHVSC/GAMES/A-F/Bubble_Bobble.sid")!!
+        assertEquals("Games", game.composer)
+        assertEquals("Bubble Bobble", game.title)
+        assertTrue(ModuleFormats.isPlayableOnModland("HVSC", "sid"))
+        assertFalse(ModuleFormats.isPlayableOnModland("RealSID", "rsid"))
+    }
 }

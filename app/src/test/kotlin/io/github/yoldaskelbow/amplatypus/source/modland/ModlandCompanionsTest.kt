@@ -55,4 +55,11 @@ class ModlandCompanionsTest {
         // Other formats have no instrument folder.
         assertTrue(ModlandCompanions.folderCompanionsOf("Protracker/4-Mat/1978.mod", files).isEmpty())
     }
+
+    @Test
+    fun `Stereo Sidplayer songs bring their second-SID file`() {
+        val companions = ModlandCompanions.companionsOf("Stereo Sidplayer/Andrew Hackard/jaws.mus")
+        assertEquals(listOf("Stereo Sidplayer/Andrew Hackard/jaws.str"), companions.map { it.path })
+        assertTrue(ModlandCompanions.isCompanion("Stereo Sidplayer", "Stereo Sidplayer/Andrew Hackard/jaws.str"))
+    }
 }

@@ -54,9 +54,11 @@ set_target_properties(uadecore PROPERTIES
     OUTPUT_NAME uadecore PREFIX "lib" SUFFIX ".so"
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 
-add_library(amplatypus SHARED engine_jni.cpp engine_openmpt.cpp engine_hively.cpp engine_uade.cpp)
+add_subdirectory(sidplayfp)
+
+add_library(amplatypus SHARED engine_jni.cpp engine_openmpt.cpp engine_hively.cpp engine_uade.cpp engine_sid.cpp)
 set_source_files_properties(engine_hively.cpp PROPERTIES COMPILE_OPTIONS "-fsigned-char")
-target_link_libraries(amplatypus PRIVATE openmpt hively uade z m log)
+target_link_libraries(amplatypus PRIVATE openmpt hively uade sidplayfp z m log)
 target_link_options(amplatypus PRIVATE -Wl,--gc-sections)
 # Nothing links against uadecore, so make sure it is built along with the library.
 add_dependencies(amplatypus uadecore)

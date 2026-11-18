@@ -37,6 +37,14 @@ object ModlandCompanions {
             isCompanion = { it.endsWith(".ins", ignoreCase = true) },
             required = true,
         ),
+        // Stereo Sidplayer (C64): "name.mus" plays on the first SID, "name.str" on the second.
+        Rule(
+            formats = setOf("Stereo Sidplayer"),
+            isSong = { it.endsWith(".mus", ignoreCase = true) },
+            companionOf = { it.dropLast(".mus".length) + ".str" },
+            isCompanion = { it.endsWith(".str", ignoreCase = true) },
+            required = false,
+        ),
         // Audio Sculpture: "name.adsc" (or "name.mod") and "name.adsc.as".
         Rule(
             formats = setOf("Audio Sculpture"),

@@ -28,7 +28,7 @@ class ModlandSource(
     /** The format groups the user wants to see. */
     private val filter: () -> FormatFilter = { FormatFilter() },
 ) : MusicSource {
-    private val trackerExts = ModuleFormats.trackerExtensions.toList()
+    private val trackerExts = ModuleFormats.namedExtensions.toList()
     override val id = ID
     override val capabilities = setOf(Capability.SEARCH, Capability.BROWSE, Capability.RANDOM)
 

@@ -44,3 +44,7 @@ Press Start 2P font – SIL Open Font License 1.1, Copyright 2012 The Press Star
 bencodetools – BSD-2-Clause, Copyright (c) 2009-2020 Heikki Orsila; parts Copyright (c) 2002-2005 Bram Cohen
   and Ross Cohen.
 libzakalwe – BSD-style licence, Copyright (c) Heikki Orsila.
+libsidplayfp with reSIDfp (Commodore 64 SID music) – GNU GPL 2.0 or later; Copyright (c) 2000 Simon White,
+  2007-2010 Antti Lankila, 2010-2024 Leandro Nini; reSID by Dag Lem; see third_party/libsidplayfp/AUTHORS.
+  The C64's own ROMs are not included.
+High Voltage SID Collection (HVSC) – the C64 tunes are fetched from Modland's copy of the collection.

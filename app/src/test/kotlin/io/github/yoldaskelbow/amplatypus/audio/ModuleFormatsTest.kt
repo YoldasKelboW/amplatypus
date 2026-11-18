@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 package io.github.yoldaskelbow.amplatypus.audio
 
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -33,8 +34,9 @@ class ModuleFormatsTest {
 
     @Test
     fun `Modland folders of other machines are not taken for Amiga formats`() {
-        // "mus" is one of UADE's extensions, but these folders hold Commodore 64 music.
-        assertFalse(ModuleFormats.isPlayableOnModland("Sidplayer", "mus"))
+        // "mus" is one of UADE's extensions, but this folder holds Commodore 64 music, played as such.
+        assertTrue(ModuleFormats.isPlayableOnModland("Sidplayer", "mus"))
+        assertEquals(FormatGroup.C64, ModuleFormats.groupOf("sid"))
         assertFalse(ModuleFormats.isPlayableOnModland("FamiTracker", "ftm"))
         assertFalse(ModuleFormats.isPlayableOnModland("Playstation Sound Format", "psf"))
     }

@@ -31,16 +31,21 @@ JNIEXPORT jlong JNICALL FN(nativeLoad)(JNIEnv *env, jclass, jbyteArray data, jst
     jbyte *bytes = env->GetByteArrayElements(data, nullptr);
     if (bytes == nullptr) return 0;
     size_t size = static_cast<size_t>(length);
-    Player *created;
-    if (isHivelyData(bytes, size)) {
+    Player *created = nullptr;
+    const char *filePath = env->GetStringUTFChars(path, nullptr);
+    std::string pathText = filePath != nullptr ? filePath : "";
+    env->ReleaseStringUTFChars(path, filePath);
+    // ".mus" is also an Amiga format: what the C64 player does not take goes on to the others.
+    if (isSidFile(bytes, size, pathText)) created = createSidPlayer(pathText);
+    if (created != nullptr) {
+        // A C64 tune.
+    } else if (isHivelyData(bytes, size)) {
         created = createHivelyPlayer(bytes, size);
     } else {
         created = createOpenMptPlayer(bytes, size);
         if (created == nullptr) {
             // Whatever the tracker replayers do not know may be one of UADE's Amiga formats.
-            const char *filePath = env->GetStringUTFChars(path, nullptr);
-            created = createUadePlayer(filePath);
-            env->ReleaseStringUTFChars(path, filePath);
+            created = createUadePlayer(pathText);
         }
     }
     env->ReleaseByteArrayElements(data, bytes, JNI_ABORT);

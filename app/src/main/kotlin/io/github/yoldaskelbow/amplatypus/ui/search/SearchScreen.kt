@@ -269,6 +269,7 @@ private fun FormatFilterDialog(filter: FormatFilter, onChange: (FormatGroup, Boo
                     Triple(FormatGroup.TRACKER, R.string.filter_tracker, R.string.filter_tracker_text),
                     Triple(FormatGroup.HIVELY, R.string.filter_hively, R.string.filter_hively_text),
                     Triple(FormatGroup.AMIGA, R.string.filter_amiga, R.string.filter_amiga_text),
+                    Triple(FormatGroup.C64, R.string.filter_c64, R.string.filter_c64_text),
                 ).forEach { (group, title, text) ->
                     val shown = filter.shows(group)
                     // The last shown group cannot be switched off.

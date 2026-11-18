@@ -62,3 +62,7 @@ bool isHivelyData(const void *data, size_t length);
 // `path` is the module file; UADE uses the name's prefix or extension to pick the replay routine.
 void setupUade(const std::string &baseDir, const std::string &corePath);
 Player *createUadePlayer(const std::string &path);
+
+// Commodore 64: SID files and Compute's Sidplayer songs, by libsidplayfp.
+bool isSidFile(const void *data, size_t length, const std::string &path);
+Player *createSidPlayer(const std::string &path);
