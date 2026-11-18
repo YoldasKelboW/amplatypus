@@ -60,9 +60,9 @@ import io.github.yoldaskelbow.amplatypus.audio.ModuleEngine
  */
 
 /** The tracker whose look a retro view takes. */
-enum class RetroStyle { PROTRACKER, FASTTRACKER, IMPULSE, SCREAM, HIVELY }
+enum class RetroStyle { PROTRACKER, FASTTRACKER, IMPULSE, SCREAM, HIVELY, OCTAMED }
 
-/** Which retro view fits this module, if any: MOD, XM, IT, S3M, AHX and HVL. */
+/** Which retro view fits this module, if any: MOD, XM, IT, S3M, AHX, HVL and MED. */
 fun retroStyleOf(info: ModuleEngine.ModuleInfo?): RetroStyle? {
     if (info == null || !info.hasPattern || info.channels < 1) return null
     val type = info.type.lowercase()
@@ -73,6 +73,7 @@ fun retroStyleOf(info: ModuleEngine.ModuleInfo?): RetroStyle? {
         ("impulse tracker" in type || "openmpt" in type) && info.channels <= 64 -> RetroStyle.IMPULSE
         "scream tracker 3" in type && info.channels <= 32 -> RetroStyle.SCREAM
         "ahx" in type || "hivelytracker" in type -> RetroStyle.HIVELY
+        "octamed" in type && info.channels <= 64 -> RetroStyle.OCTAMED
         else -> null
     }
 }
@@ -88,6 +89,7 @@ fun RetroView(info: ModuleEngine.ModuleInfo, controls: RetroControls, onClose: (
         RetroStyle.IMPULSE -> ClassicTrackerView(info, ImpulseTheme, controls, onClose, modifier)
         RetroStyle.SCREAM -> ClassicTrackerView(info, ScreamTheme, controls, onClose, modifier)
         RetroStyle.HIVELY -> ClassicTrackerView(info, HivelyTheme, controls, onClose, modifier)
+        RetroStyle.OCTAMED -> ClassicTrackerView(info, OctaMedTheme, controls, onClose, modifier)
         null -> Unit
     }
 }

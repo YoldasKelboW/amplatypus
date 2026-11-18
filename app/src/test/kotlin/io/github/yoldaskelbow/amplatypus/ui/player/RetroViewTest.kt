@@ -57,4 +57,10 @@ class RetroViewTest {
         val rows = listOf("C-3 12 ...|... .. ...")
         assertEquals("12: twelve", lastSampleName(rows, 0, List(20) { if (it == 11) "twelve" else "" }, cellRadix = 10, decimal = true))
     }
+
+    @Test
+    fun `OctaMED cells count octaves as on the Amiga`() {
+        assertEquals("C-2 01 C40", medCell("C-5 01 C40"))
+        assertEquals("--- 00 000", medCell("... .. ..."))
+    }
 }

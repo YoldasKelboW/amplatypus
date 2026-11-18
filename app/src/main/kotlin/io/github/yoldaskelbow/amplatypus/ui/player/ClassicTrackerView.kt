@@ -85,6 +85,8 @@ internal data class TrackerTheme(
     val cellLengths: List<Int>,
     /** How the replayer writes instrument numbers in a cell: libopenmpt in hex, HivelyTracker in decimal. */
     val cellRadix: Int = 16,
+    /** Whether the tracker shows instrument numbers in decimal (IT, ST3, HivelyTracker) or in hex (OctaMED). */
+    val decimalInstruments: Boolean = true,
 )
 
 /** Impulse Tracker's own palette ("Camouflage" in Schism Tracker): khaki panels, green notes on black. */
@@ -184,6 +186,39 @@ internal val HivelyTheme = TrackerTheme(
     cellRadix = 10,
 )
 
+/** OctaMED in the colours of the Amiga Workbench 1.3: blue panels, white and orange. */
+internal val OctaMedTheme = TrackerTheme(
+    face = Color(0xFF0055AA),
+    light = Color(0xFFFFFFFF),
+    shadow = Color(0xFF000022),
+    label = Color(0xFFFFFFFF),
+    valueBox = Color(0xFF000022),
+    value = Color(0xFFFF8800),
+    screen = Color(0xFF002A55),
+    patternText = Color(0xFFFFFFFF),
+    patternDim = Color(0xFFA9C2E0),
+    beatRow = Color(0xFF003B77),
+    barRow = Color(0xFF003B77),
+    beat = 4,
+    bar = 0,
+    rowBar = Color(0xFFFF8800),
+    rowText = Color(0xFF000022),
+    header = Color(0xFFFF8800),
+    headerText = Color(0xFF000022),
+    scope = Color(0xFFFFFFFF),
+    vu = Color(0xFF000022),
+    readouts = listOf("Song pos", "Block", "Length", "Tempo", "Speed"),
+    exit = "Exit",
+    songLabel = "Song:",
+    instrumentLabel = "Instr:",
+    channelLabel = "Trk",
+    buttons = listOf("Prev", "Play", "Pause", "Next"),
+    rowDigits = 3,
+    cell = ::medCell,
+    cellLengths = listOf(10, 6, 3),
+    decimalInstruments = false,
+)
+
 /** A tracker view drawn in [theme]. */
 @Composable
 internal fun ClassicTrackerView(
@@ -200,7 +235,7 @@ internal fun ClassicTrackerView(
     val rows = remember(info.generation, pattern) { ModuleEngine.current?.patternRows(pattern) ?: emptyList() }
     val names = info.instruments.ifEmpty { info.samples }
     val instrument = remember(rows, row, names) {
-        lastSampleName(rows, row, names, cellRadix = theme.cellRadix, decimal = true)
+        lastSampleName(rows, row, names, cellRadix = theme.cellRadix, decimal = theme.decimalInstruments)
     }
     val label = TextStyle(fontFamily = pixelFont, fontSize = 9.sp, color = theme.label)
     val value = TextStyle(fontFamily = pixelFont, fontSize = 10.sp, color = theme.value)
@@ -456,5 +491,22 @@ internal fun hvlCell(cell: String): String {
     val note = if (rawNote.trim('.', ' ').isEmpty()) "---" else rawNote
     val instrument = padded.substring(4, 6).let { if (it.trim('.', ' ').isEmpty()) "00" else it }
     val effect = padded.substring(7, 10).let { if (it.trim('.', ' ').isEmpty()) "000" else it }
+    return "$note $instrument $effect"
+}
+
+/**
+ * A cell as OctaMED writes it: note with the octave three lower than libopenmpt (as on the Amiga),
+ * instrument in hex and the command - "C-2 01 C40", and "--- 00 000" for an empty step.
+ */
+internal fun medCell(cell: String): String {
+    val padded = cell.padEnd(10)
+    val rawNote = padded.substring(0, 3)
+    val note = when {
+        rawNote.trim('.', ' ').isEmpty() -> "---"
+        rawNote[2].isDigit() -> rawNote.substring(0, 2) + ((rawNote[2] - '0') - 3).coerceIn(0, 9)
+        else -> rawNote
+    }
+    val instrument = padded.substring(4, 6).replace('.', '0').replace(' ', '0')
+    val effect = padded.substring(7, 10).replace('.', '0').replace(' ', '0')
     return "$note $instrument $effect"
 }

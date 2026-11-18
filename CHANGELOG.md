@@ -2,9 +2,10 @@
 
 ## Unreleased
 
-- Three more tracker views, opened like the others from the format chip in the player: Impulse Tracker
+- Four more tracker views, opened like the others from the format chip in the player: Impulse Tracker
   for IT files (khaki panels, green notes), Scream Tracker 3 for S3M files (gold panels) and HivelyTracker
-  for AHX and HVL files (steel-blue panels). Colours follow each program's own palette.
+  for AHX and HVL files (steel-blue panels), and OctaMED for MED files in the blue, white and orange of
+  the Amiga Workbench. Colours follow each program's own palette.
 - Tracker views: cells that appear in several rows are now drawn in the right brightness.
 - UADE formats: the level meters no longer drop to zero for a moment.
 
