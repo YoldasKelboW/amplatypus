@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.5.0-pre1 – 2026-11-18
 
 - Amiga Music Preservation (AMP) as a second archive, with the permission of the AMP staff: switch between
   Modland and AMP under the search field. Search modules and composers, open a composer's modules, see
