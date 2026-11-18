@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Debug builds install next to the release app, so they carry their own name. -->
+<resources>
+    <string name="app_name" translatable="false">AMPlatypus Debug</string>
+</resources>

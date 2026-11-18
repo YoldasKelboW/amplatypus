@@ -123,6 +123,8 @@ android {
 
     buildTypes {
         debug {
+            // Installs next to the release app, which is signed with another key.
+            applicationIdSuffix = ".debug"
             ndk { abiFilters += debugAbi?.let { listOf(it) } ?: releaseAbis }
             buildConfigField("boolean", "AMP_SOURCE_ENABLED", "true")
         }

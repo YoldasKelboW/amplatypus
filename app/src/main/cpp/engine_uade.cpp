@@ -135,7 +135,12 @@ public:
         }
         size_t samples = static_cast<size_t>(bytes) / UADE_BYTES_PER_SAMPLE;
         for (size_t i = 0; i < samples; i++) out[i] = scratch[i] / 32768.0f;
-        if (tap != nullptr) tap->take(samples / UADE_CHANNELS, lastBlock);
+        if (tap != nullptr) {
+            // The emulator's channel data arrives in bursts, so a read can find none ready. Keeping
+            // the previous block then stops the meters and scopes from dropping to zero for a frame.
+            tap->take(samples / UADE_CHANNELS, takenBlock);
+            if (!takenBlock.empty()) lastBlock.swap(takenBlock);
+        }
         return samples / UADE_CHANNELS;
     }
 
@@ -208,8 +213,9 @@ private:
     bool failed = false;
     std::vector<int16_t> scratch;
     ChannelTap *tap = nullptr;
-    // Channel data that belongs to the audio of the last read().
+    // Channel data that belongs to the audio of the last read() that found some.
     std::vector<std::array<int16_t, 4>> lastBlock;
+    std::vector<std::array<int16_t, 4>> takenBlock;
 };
 
 // A replay routine that loads a second file (TFMX samples, Richard Joseph instruments) asks for it by
