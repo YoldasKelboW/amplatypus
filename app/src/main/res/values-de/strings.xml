@@ -8,6 +8,9 @@
     <string name="search_hint">Modland durchsuchen</string>
     <string name="search_hint_amp">AMP durchsuchen</string>
     <string name="done">Fertig</string>
+    <string name="subsong_of">Stück %1$d von %2$d</string>
+    <string name="subsong_previous">Vorheriges Stück in dieser Datei</string>
+    <string name="subsong_next">Nächstes Stück in dieser Datei</string>
     <string name="filter_formats">Formate</string>
     <string name="filter_formats_active">Formate, einige ausgeblendet</string>
     <string name="filter_text">Wähle, was Suche, Durchblättern, Zufall und Radio anbieten.</string>

@@ -17,6 +17,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.remember
+import kotlinx.coroutines.delay
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -110,6 +113,13 @@ internal fun DeliTrackerView(
     val value = TextStyle(fontFamily = pixelFont, fontFeatureSettings = NO_LIGATURES, fontSize = 10.sp, color = look.value)
     val title = info.title.ifBlank { controls.title }
     val length = if (controls.durationMs > 0) formatTime(controls.durationMs) else "--:--"
+    // Songs inside the file, as DeliTracker showed them: "3/12".
+    val subsongs by produceState(0 to 1, info.generation) {
+        while (true) {
+            this.value = ModuleEngine.current?.subsongs() ?: (0 to 1)
+            delay(500)
+        }
+    }
 
     RetroLayout(
         modifier = modifier,
@@ -154,6 +164,7 @@ internal fun DeliTrackerView(
             Box(Modifier.weight(1f)) { InfoLine("Time", formatTime(controls.positionMs), look, label, value) }
             Box(Modifier.weight(1f)) { InfoLine("Length", length, look, label, value) }
         }
+        if (subsongs.second > 1) InfoLine("Song", "${subsongs.first + 1}/${subsongs.second}", look, label, value)
     }
 }
 

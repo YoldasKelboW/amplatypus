@@ -31,6 +31,9 @@ object OpenMpt {
     @JvmStatic external fun nativeCanMute(handle: Long): Boolean
     @JvmStatic external fun nativeTempo(handle: Long): Int
     @JvmStatic external fun nativeOrderCount(handle: Long): Int
+    @JvmStatic external fun nativeSubsongCount(handle: Long): Int
+    @JvmStatic external fun nativeSubsong(handle: Long): Int
+    @JvmStatic external fun nativeSelectSubsong(handle: Long, index: Int): Boolean
     @JvmStatic external fun nativeOwnScopes(handle: Long): Boolean
     @JvmStatic external fun nativeOwnScopesRender(handle: Long, out: FloatArray, points: Int)
 

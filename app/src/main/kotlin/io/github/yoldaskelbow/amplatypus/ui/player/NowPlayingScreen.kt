@@ -93,6 +93,15 @@ fun NowPlayingScreen(player: PlayerConnection, onClose: () -> Unit) {
         }
     }
 
+    // Songs inside the file (current from 0, count): C64 tunes and Amiga game music often hold several.
+    var subsongs by remember { mutableStateOf(0 to 1) }
+    LaunchedEffect(info?.generation) {
+        while (true) {
+            subsongs = ModuleEngine.current?.subsongs() ?: (0 to 1)
+            delay(500)
+        }
+    }
+
     var positionMs by remember { mutableLongStateOf(0L) }
     LaunchedEffect(nowPlaying.isPlaying, nowPlaying.title) {
         positionMs = player.positionMs
@@ -192,6 +201,24 @@ fun NowPlayingScreen(player: PlayerConnection, onClose: () -> Unit) {
                                 onClick = {},
                                 label = { Text(pluralStringResource(R.plurals.channel_count, module.channels, module.channels)) },
                             )
+                        }
+                    }
+                }
+                val (subsong, subsongCount) = subsongs
+                if (subsongCount > 1) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(
+                            onClick = { if (ModuleEngine.current?.selectSubsong(subsong - 1) == true) subsongs = subsong - 1 to subsongCount },
+                            enabled = subsong > 0,
+                        ) {
+                            Icon(painterResource(R.drawable.ic_skip_previous), stringResource(R.string.subsong_previous))
+                        }
+                        Text(stringResource(R.string.subsong_of, subsong + 1, subsongCount), style = MaterialTheme.typography.labelLarge)
+                        IconButton(
+                            onClick = { if (ModuleEngine.current?.selectSubsong(subsong + 1) == true) subsongs = subsong + 1 to subsongCount },
+                            enabled = subsong + 1 < subsongCount,
+                        ) {
+                            Icon(painterResource(R.drawable.ic_skip_next), stringResource(R.string.subsong_next))
                         }
                     }
                 }

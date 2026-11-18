@@ -9,6 +9,9 @@
     <string name="search_hint">Search Modland</string>
     <string name="search_hint_amp">Search AMP</string>
     <string name="done">Done</string>
+    <string name="subsong_of">Song %1$d of %2$d</string>
+    <string name="subsong_previous">Previous song in this file</string>
+    <string name="subsong_next">Next song in this file</string>
     <string name="filter_formats">Formats</string>
     <string name="filter_formats_active">Formats, some hidden</string>
     <string name="filter_text">Choose what search, browsing, random picks and the radio offer.</string>

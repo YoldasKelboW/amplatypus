@@ -36,7 +36,10 @@ class ModulePlayer(
     private val onStarted: (String) -> Unit,
 ) : SimpleBasePlayer(looper) {
     private val handler = Handler(looper)
-    private val engine = ModuleEngine(onEnded = { handler.post(::onTrackEnded) })
+    private val engine = ModuleEngine(
+        onEnded = { handler.post(::onTrackEnded) },
+        onSubsongChanged = { handler.post(::onSubsongChanged) },
+    )
     private val audioManager = context.getSystemService(AudioManager::class.java)
 
     private var items: List<MediaItem> = emptyList()
@@ -216,6 +219,13 @@ class ModulePlayer(
         abandonFocus()
         engine.release()
         return Futures.immediateVoidFuture()
+    }
+
+    /** A new song inside the same file: its length may differ, and its time starts at zero. */
+    private fun onSubsongChanged() {
+        if (playbackState == Player.STATE_IDLE) return
+        durationMs = engine.durationMs.takeIf { it > 0 } ?: C.TIME_UNSET
+        invalidateState()
     }
 
     private fun loadCurrent(positionMs: Long) {

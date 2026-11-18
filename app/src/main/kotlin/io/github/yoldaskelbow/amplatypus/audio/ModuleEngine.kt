@@ -13,7 +13,11 @@ import kotlin.concurrent.thread
  *
  * [onEnded] is called from the audio thread when the song has played to its end.
  */
-class ModuleEngine(private val onEnded: () -> Unit) {
+class ModuleEngine(
+    private val onEnded: () -> Unit,
+    /** Another song inside the same file started (chosen, or the previous one ended). */
+    private val onSubsongChanged: () -> Unit = {},
+) {
     private val lock = Object()
     private var handle = 0L
     private var playing = false
@@ -197,6 +201,24 @@ class ModuleEngine(private val onEnded: () -> Unit) {
     /** Static facts about the loaded module, or null if none is loaded. */
     fun moduleInfo(): ModuleInfo? = synchronized(lock) { info }
 
+    /** The playing song inside the file and how many there are (current from 0, count at least 1). */
+    fun subsongs(): Pair<Int, Int> = synchronized(lock) {
+        if (handle == 0L) 0 to 1 else OpenMpt.nativeSubsong(handle) to OpenMpt.nativeSubsongCount(handle).coerceAtLeast(1)
+    }
+
+    /** Starts the song [index] inside the file from its beginning. */
+    fun selectSubsong(index: Int): Boolean {
+        val changed = synchronized(lock) {
+            if (handle == 0L || !OpenMpt.nativeSelectSubsong(handle, index)) return false
+            lastVisual = null
+            discardBuffered()
+            lock.notifyAll()
+            true
+        }
+        if (changed) onSubsongChanged()
+        return changed
+    }
+
     /** The rows of [pattern] as text, one string per row with channels separated by `|`. */
     fun patternRows(pattern: Int): List<String> = synchronized(lock) {
         OpenMpt.nativePattern(handle, pattern)?.toString(Charsets.UTF_8)?.trimEnd('\n')?.split('\n') ?: emptyList()
@@ -279,12 +301,20 @@ class ModuleEngine(private val onEnded: () -> Unit) {
         val buffer = FloatArray(FRAMES_PER_CHUNK * 2)
         while (true) {
             var frames: Int
+            var nextSubsong = false
             synchronized(lock) {
                 while (!released && (!playing || handle == 0L)) lock.wait()
                 if (released) return
                 frames = OpenMpt.nativeRead(handle, SAMPLE_RATE, buffer, FRAMES_PER_CHUNK)
                 if (frames == 0) {
-                    playing = false
+                    // A file with several songs goes on with the next one before the queue moves on.
+                    val count = OpenMpt.nativeSubsongCount(handle)
+                    val current = OpenMpt.nativeSubsong(handle)
+                    if (current + 1 < count && OpenMpt.nativeSelectSubsong(handle, current + 1)) {
+                        nextSubsong = true
+                    } else {
+                        playing = false
+                    }
                 } else {
                     val levels = FloatArray(info?.channels ?: 0)
                     OpenMpt.nativeVu(handle, levels)
@@ -303,6 +333,8 @@ class ModuleEngine(private val onEnded: () -> Unit) {
             }
             if (frames > 0) {
                 track.write(buffer, 0, frames * 2, AudioTrack.WRITE_BLOCKING)
+            } else if (nextSubsong) {
+                onSubsongChanged()
             } else {
                 onEnded()
             }

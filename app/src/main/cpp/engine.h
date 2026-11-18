@@ -39,6 +39,11 @@ public:
     virtual void tempo(int &speed, int &bpm) { speed = bpm = 0; }
     // Length of the song in orders (positions); 0 if unknown.
     virtual int orderCount() { return 0; }
+    // Songs inside the file (C64 tunes and Amiga game music often hold several), counted from 0.
+    virtual int subsongCount() { return 1; }
+    virtual int subsong() { return 0; }
+    // Starts subsong `index` from its beginning. Returns false if there is no such subsong.
+    virtual bool selectSubsong(int) { return false; }
 };
 
 // The waveform of every channel on its own, rendered in step with a Player.

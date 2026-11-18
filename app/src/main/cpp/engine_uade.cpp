@@ -158,14 +158,34 @@ public:
         // uade_get_time_position() only answers for RMC containers, so the position is taken
         // from the number of bytes synthesised so far.
         const struct uade_song_info *info = uade_get_song_info(state);
-        return info == nullptr ? 0.0 : static_cast<double>(info->songbytes) / (UADE_BYTES_PER_FRAME * RATE);
+        return info == nullptr ? 0.0 : static_cast<double>(info->subsongbytes) / (UADE_BYTES_PER_FRAME * RATE);
     }
 
     void seek(double seconds) override {
         if (failed) return;
         if (seconds < 0.0) seconds = 0.0;
-        uade_seek(UADE_SEEK_SONG_RELATIVE, seconds, 0, state);
+        const struct uade_song_info *info = uade_get_song_info(state);
+        int current = info != nullptr ? info->subsongs.cur : 0;
+        uade_seek(UADE_SEEK_SUBSONG_RELATIVE, seconds, current, state);
         if (tap != nullptr) tap->clear();
+    }
+
+    int subsongCount() override {
+        const struct uade_song_info *info = failed ? nullptr : uade_get_song_info(state);
+        return info == nullptr ? 1 : std::max(1, info->subsongs.max - info->subsongs.min + 1);
+    }
+
+    int subsong() override {
+        const struct uade_song_info *info = failed ? nullptr : uade_get_song_info(state);
+        return info == nullptr ? 0 : std::max(0, info->subsongs.cur - info->subsongs.min);
+    }
+
+    bool selectSubsong(int index) override {
+        const struct uade_song_info *info = failed ? nullptr : uade_get_song_info(state);
+        if (info == nullptr || index < 0 || index >= subsongCount()) return false;
+        if (uade_seek(UADE_SEEK_SUBSONG_RELATIVE, 0.0, info->subsongs.min + index, state) != 0) return false;
+        if (tap != nullptr) tap->clear();
+        return true;
     }
 
     void setStereoSeparation(int) override {}

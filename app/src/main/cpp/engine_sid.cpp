@@ -107,6 +107,27 @@ public:
         }
     }
 
+    int subsongCount() override { return ready ? static_cast<int>(std::max(1u, tune.getInfo()->songs())) : 1; }
+
+    int subsong() override {
+        return ready ? static_cast<int>(std::max(1u, tune.getInfo()->currentSong())) - 1 : 0;
+    }
+
+    bool selectSubsong(int index) override {
+        if (!ready || index < 0 || index >= subsongCount()) return false;
+        tune.selectSong(static_cast<unsigned int>(index + 1));
+        if (!engine.load(&tune)) return false;
+        seconds = 0.0;
+        silentFor = 0.0;
+        ended = false;
+        for (Voice &voice : voices) voice = Voice();
+        // Muting is set on the emulation, which a new load resets.
+        for (size_t c = 0; c < muted.size(); c++) {
+            if (muted[c]) engine.mute(static_cast<unsigned int>(c / VOICES), static_cast<unsigned int>(c % VOICES), true);
+        }
+        return true;
+    }
+
     void setStereoSeparation(int) override {}
     int channelCount() override { return ready ? chips * VOICES : 0; }
 

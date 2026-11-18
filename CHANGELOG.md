@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Files with several songs - C64 tunes and much Amiga game music - show "Song 3 of 10" in the player with
+  buttons to move between them, and play on into the next song when one ends. The player windows of
+  the UADE and C64 views show the song number too.
 - Commodore 64 music: about 63,000 SID tunes from the High Voltage SID Collection and 6,500 Sidplayer
   songs (MUS, stereo with STR) on Modland, played by libsidplayfp with the reSIDfp emulation. Three
   channels per SID chip that can be muted; levels and scopes are drawn from the SID's registers. Tunes

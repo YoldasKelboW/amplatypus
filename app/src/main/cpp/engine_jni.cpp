@@ -153,6 +153,18 @@ JNIEXPORT jint JNICALL FN(nativeOrderCount)(JNIEnv *, jclass, jlong handle) {
     return handle == 0 ? 0 : player(handle)->orderCount();
 }
 
+JNIEXPORT jint JNICALL FN(nativeSubsongCount)(JNIEnv *, jclass, jlong handle) {
+    return handle == 0 ? 1 : player(handle)->subsongCount();
+}
+
+JNIEXPORT jint JNICALL FN(nativeSubsong)(JNIEnv *, jclass, jlong handle) {
+    return handle == 0 ? 0 : player(handle)->subsong();
+}
+
+JNIEXPORT jboolean JNICALL FN(nativeSelectSubsong)(JNIEnv *, jclass, jlong handle, jint index) {
+    return handle != 0 && player(handle)->selectSubsong(index);
+}
+
 JNIEXPORT jboolean JNICALL FN(nativeCanMute)(JNIEnv *, jclass, jlong handle) {
     return handle != 0 && player(handle)->canMute();
 }
