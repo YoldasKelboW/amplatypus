@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.0 – unreleased
+## 1.0.0 – 2026-11-18
 
 - First release signed with the project's own key. Test builds (0.x) must be uninstalled first.
 - Builds are reproducible, so F-Droid can publish the same, developer-signed APK.

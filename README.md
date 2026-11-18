@@ -55,7 +55,7 @@ all replay routines, **free** with only the freely licensed ones. Android 8.0 or
 of the free build is being prepared ([docs/FDROID.md](docs/FDROID.md)).
 
 The certificate the releases are signed with has this SHA-256 fingerprint:
-`FINGERPRINT_PENDING`
+`d41349423770350460bc1c519428ae503655d1a239071e1ee1f51b5abb671fb3`
 
 Not there yet: muting channels of the UADE formats, formats that need a whole folder of instruments (IFF-SMUS),
 Android Auto. See `CHANGELOG.md` for what changed and `docs/RUNBOOK.md` (German) for the plan.

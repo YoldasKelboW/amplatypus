@@ -10,6 +10,7 @@ KEYSTORE="${AMPLATYPUS_KEYSTORE:-$HOME/AMPlatypus-Key/amplatypus-release.jks}"
 BUILD_TOOLS="$HOME/Android/Sdk/build-tools/34.0.0"
 APKSIGNER="$BUILD_TOOLS/apksigner"
 export JAVA_HOME="${JAVA_HOME:-$HOME/Android/jdk-21.0.13+9}"
+export PATH="$JAVA_HOME/bin:$PATH"  # apksigner starts "java" from the PATH
 cd "$(dirname "$0")/.."
 
 [ -f "$KEYSTORE" ] || { echo "No key at $KEYSTORE"; exit 1; }

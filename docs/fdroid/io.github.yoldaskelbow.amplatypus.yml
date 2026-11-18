@@ -31,7 +31,7 @@ Builds:
     prebuild: sdkmanager 'cmake;4.1.2' 'platforms;android-37.2' 'build-tools;37.0.0'
     ndk: 30.0.16248370
 
-AllowedAPKSigningKeys: FILL_IN_SHA256_OF_RELEASE_CERTIFICATE
+AllowedAPKSigningKeys: d41349423770350460bc1c519428ae503655d1a239071e1ee1f51b5abb671fb3
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags ^v[0-9]+\.[0-9]+\.[0-9]+$
