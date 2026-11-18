@@ -1,0 +1,1 @@
+Four more tracker views, opened from the format chip in the player: Impulse Tracker (IT), Scream Tracker 3 (S3M), HivelyTracker (AHX/HVL) and OctaMED (MED). Steadier level meters for the exotic Amiga formats. Fixed text colours in the tracker views.

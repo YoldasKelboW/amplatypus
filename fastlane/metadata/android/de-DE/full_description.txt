@@ -2,7 +2,7 @@ AMPlatypus ist ein freier, quelloffener Player für Amiga- und Trackermusik (MOD
 
 • Player mit Oszilloskop und Pegel für jeden Kanal, mitlaufendem Pattern und den Texten im Modul
 • Kanal antippen schaltet ihn stumm, halten spielt ihn allein (Tracker-Formate)
-• Tracker-Ansichten im Stil von ProTracker (MOD) und FastTracker 2 (XM)
+• Tracker-Ansichten im Stil von ProTracker, FastTracker 2, Impulse Tracker, Scream Tracker 3, HivelyTracker und OctaMED
 • Zufallswiedergabe und Wiederholen
 • Wiedergabe im Hintergrund mit Steuerung auf dem Sperrbildschirm und am Kopfhörer
 • Bibliothek mit Favoriten, Playlists, Suche und Sortierung; eigene Dateien importieren

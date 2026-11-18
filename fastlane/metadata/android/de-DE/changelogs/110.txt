@@ -1,0 +1,1 @@
+Vier weitere Tracker-Ansichten, zu öffnen über das Format-Kästchen im Player: Impulse Tracker (IT), Scream Tracker 3 (S3M), HivelyTracker (AHX/HVL) und OctaMED (MED). Ruhigere Pegel bei den exotischen Amiga-Formaten. Textfarben in den Tracker-Ansichten korrigiert.

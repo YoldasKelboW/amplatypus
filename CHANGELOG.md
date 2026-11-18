@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.1.0 – 2026-11-18
 
 - Four more tracker views, opened like the others from the format chip in the player: Impulse Tracker
   for IT files (khaki panels, green notes), Scream Tracker 3 for S3M files (gold panels) and HivelyTracker

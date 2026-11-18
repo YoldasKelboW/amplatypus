@@ -2,7 +2,7 @@ A free, open-source player for Amiga and tracker music (MOD, XM, S3M, IT, AHX an
 
 • Player with one oscilloscope and level meter per channel, the running pattern and the texts inside the module
 • Tap a channel to mute it, hold to hear it alone (tracker formats)
-• Tracker views in the style of ProTracker (MOD) and FastTracker 2 (XM)
+• Tracker views in the style of ProTracker, FastTracker 2, Impulse Tracker, Scream Tracker 3, HivelyTracker and OctaMED
 • Shuffle and repeat
 • Background playback with lock-screen and headset controls
 • Library with favourites, playlists, search and sorting; import your own files

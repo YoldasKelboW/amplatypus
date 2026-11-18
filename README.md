@@ -38,7 +38,8 @@ Modland or 4champ.
   Tap a channel's oscilloscope to mute it, hold it to hear that channel alone. Shuffle and repeat
   (all or one) sit beside the playback controls.
 - **Tracker views**: tap the format name in the player to switch to a full-screen view in the style of
-  the tracker the module was made with – ProTracker for MOD files, FastTracker 2 for XM files – with
+  the tracker the module was made with – ProTracker (MOD), FastTracker 2 (XM), Impulse Tracker (IT),
+  Scream Tracker 3 (S3M), HivelyTracker (AHX/HVL) and OctaMED (MED) – with
   pattern, oscilloscopes, level bars and playback buttons. More trackers will follow.
 - **Background playback** with notification, lock-screen and headset controls.
 - **Library** with favourites, playlists, search and sorting; import of your own module files.
