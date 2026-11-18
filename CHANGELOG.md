@@ -9,6 +9,7 @@
   by AMP's sound analysis. Start it from an AMP module with the radio button in the player.
 - Landscape and tablets: the player shows details and buttons on the left and channels or text on the
   right; on a phone held sideways the navigation moves to a rail at the side.
+  The tracker views put the pattern to the right of the panels there.
 - TalkBack announces each channel oscilloscope with its state and offers muting and solo as actions.
 - Builds are reproducible: building in another folder gives the same APK, byte for byte.
 
