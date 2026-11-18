@@ -37,4 +37,24 @@ class RetroViewTest {
         // Cells without volume column (older native output) still work.
         assertEquals("G#5 1B ... C10", ftCell("G#6 1B C10"))
     }
+
+    @Test
+    fun `Impulse and Scream Tracker cells show the instrument in decimal`() {
+        assertEquals("C-5 27 v40 A0F", itCell("C-5 1B A0F v40"))
+        assertEquals("... .. ... ...", itCell("... .. ... ..."))
+        assertEquals("G#6 01 ... C10", itCell("G#6 01 C10"))
+    }
+
+    @Test
+    fun `HivelyTracker cells fill empty steps with dashes and zeros`() {
+        assertEquals("C-3 01 C10", hvlCell("C-3 01 C10"))
+        assertEquals("--- 00 000", hvlCell("... .. ..."))
+        assertEquals("D#2 12 000", hvlCell("D#2 12 ..."))
+    }
+
+    @Test
+    fun `HivelyTracker instrument numbers are decimal`() {
+        val rows = listOf("C-3 12 ...|... .. ...")
+        assertEquals("12: twelve", lastSampleName(rows, 0, List(20) { if (it == 11) "twelve" else "" }, cellRadix = 10, decimal = true))
+    }
 }

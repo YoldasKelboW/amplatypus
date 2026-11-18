@@ -25,6 +25,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.TextMeasurer
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.ui.draw.drawBehind
@@ -58,9 +60,9 @@ import io.github.yoldaskelbow.amplatypus.audio.ModuleEngine
  */
 
 /** The tracker whose look a retro view takes. */
-enum class RetroStyle { PROTRACKER, FASTTRACKER }
+enum class RetroStyle { PROTRACKER, FASTTRACKER, IMPULSE, SCREAM, HIVELY }
 
-/** Which retro view fits this module, if any: MOD files and relatives, and FastTracker 2 XM files. */
+/** Which retro view fits this module, if any: MOD, XM, IT, S3M, AHX and HVL. */
 fun retroStyleOf(info: ModuleEngine.ModuleInfo?): RetroStyle? {
     if (info == null || !info.hasPattern || info.channels < 1) return null
     val type = info.type.lowercase()
@@ -68,6 +70,9 @@ fun retroStyleOf(info: ModuleEngine.ModuleInfo?): RetroStyle? {
     return when {
         mod && info.channels <= 8 -> RetroStyle.PROTRACKER
         "fasttracker 2" in type && info.channels <= 32 -> RetroStyle.FASTTRACKER
+        ("impulse tracker" in type || "openmpt" in type) && info.channels <= 64 -> RetroStyle.IMPULSE
+        "scream tracker 3" in type && info.channels <= 32 -> RetroStyle.SCREAM
+        "ahx" in type || "hivelytracker" in type -> RetroStyle.HIVELY
         else -> null
     }
 }
@@ -80,6 +85,9 @@ fun RetroView(info: ModuleEngine.ModuleInfo, controls: RetroControls, onClose: (
     when (retroStyleOf(info)) {
         RetroStyle.PROTRACKER -> ProTrackerView(info, controls, onClose, modifier)
         RetroStyle.FASTTRACKER -> FastTrackerView(info, controls, onClose, modifier)
+        RetroStyle.IMPULSE -> ClassicTrackerView(info, ImpulseTheme, controls, onClose, modifier)
+        RetroStyle.SCREAM -> ClassicTrackerView(info, ScreamTheme, controls, onClose, modifier)
+        RetroStyle.HIVELY -> ClassicTrackerView(info, HivelyTheme, controls, onClose, modifier)
         null -> Unit
     }
 }
@@ -101,6 +109,15 @@ private object Retro {
 }
 
 internal val pixelFont = FontFamily(Font(R.font.press_start_2p))
+
+/**
+ * Draws one line of [text] in [color]. The measurer caches layouts without regard to colour, so a cell
+ * that appears in several rows would keep the colour it was first drawn in; the colour is therefore
+ * given at drawing time.
+ */
+internal fun DrawScope.drawTextIn(measurer: TextMeasurer, text: String, topLeft: Offset, style: TextStyle, color: Color) {
+    drawText(measurer.measure(text, style, softWrap = false, maxLines = 1), color = color, topLeft = topLeft)
+}
 
 // Press Start 2P is a square 8 x 8 font: every character is one em wide.
 internal const val CHAR_ADVANCE = 1.0f
@@ -376,7 +393,7 @@ private fun RetroPattern(visual: State<ModuleEngine.Visual?>, rows: List<String>
                     val left = columnLeft(column)
                     if (current) drawRect(Retro.rowBar, Offset(left, y), Size(columnWidth(column), lineHeight))
                     val text = if (column == 0) "%02d".format(index) else retroCell(cells.getOrNull(column - 1).orEmpty())
-                    drawText(measurer, text, Offset(left + pad, y + textTop), style.copy(color = color), softWrap = false, maxLines = 1)
+                    drawTextIn(measurer, text, Offset(left + pad, y + textTop), style, color)
                 }
             }
 
@@ -423,14 +440,21 @@ internal fun retroCell(cell: String): String {
  * The sample last struck at or before [row], as the tracker shows the current sample: its number in
  * hex and its name ("0C: BASS"), or "" before the first note.
  */
-internal fun lastSampleName(rows: List<String>, row: Int, samples: List<String>): String {
+internal fun lastSampleName(
+    rows: List<String>,
+    row: Int,
+    samples: List<String>,
+    /** How the cells write the number (HivelyTracker: decimal), and how the tracker shows it. */
+    cellRadix: Int = 16,
+    decimal: Boolean = false,
+): String {
     for (index in row.coerceAtMost(rows.size - 1) downTo 0) {
         val cells = rows[index].split('|')
         for (cell in cells.asReversed()) {
-            val number = cell.padEnd(10).substring(4, 6).trim().toIntOrNull(16) ?: continue
+            val number = cell.padEnd(10).substring(4, 6).trim().toIntOrNull(cellRadix) ?: continue
             if (number > 0) {
                 val name = samples.getOrNull(number - 1)?.trim().orEmpty()
-                return "%02X".format(number) + if (name.isEmpty()) "" else ": $name"
+                return (if (decimal) "%02d" else "%02X").format(number) + if (name.isEmpty()) "" else ": $name"
             }
         }
     }

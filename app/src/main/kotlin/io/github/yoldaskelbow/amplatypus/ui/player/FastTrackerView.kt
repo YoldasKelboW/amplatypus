@@ -251,15 +251,15 @@ private fun FtPattern(visual: State<ModuleEngine.Visual?>, rows: List<String>, r
                 val channel = first + column - 1
                 val x = left(column)
                 drawRect(Ft.header, Offset(x, 0f), Size(channelWidth, headerHeight))
-                drawText(measurer, "%02d".format(channel + 1), Offset(x + pad, textTop), style.copy(color = Ft.label), softWrap = false, maxLines = 1)
+                drawTextIn(measurer, "%02d".format(channel + 1), Offset(x + pad, textTop), style, Ft.label)
                 val level = levels?.getOrNull(channel)?.coerceIn(0f, 1f) ?: 0f
                 val barLeft = x + 3 * charPx + pad * 2
                 val barWidth = (channelWidth - (barLeft - x) - pad) * level
                 if (barWidth > 0f) drawRect(Ft.vu, Offset(barLeft, headerHeight * 0.3f), Size(barWidth, headerHeight * 0.4f))
             }
-            if (first > 0) drawText(measurer, "<", Offset(pad, textTop), style.copy(color = Ft.label), softWrap = false, maxLines = 1)
+            if (first > 0) drawTextIn(measurer, "<", Offset(pad, textTop), style, Ft.label)
             if (first + visibleChannels < count) {
-                drawText(measurer, ">", Offset(charPx + pad, textTop), style.copy(color = Ft.label), softWrap = false, maxLines = 1)
+                drawTextIn(measurer, ">", Offset(charPx + pad, textTop), style, Ft.label)
             }
 
             val bodyTop = headerHeight + gap
@@ -281,10 +281,10 @@ private fun FtPattern(visual: State<ModuleEngine.Visual?>, rows: List<String>, r
                     index % 4 == 0 -> Ft.patternText
                     else -> Ft.patternDim
                 }
-                drawText(measurer, "%02X".format(index), Offset(pad, y + textTop), style.copy(color = color), softWrap = false, maxLines = 1)
+                drawTextIn(measurer, "%02X".format(index), Offset(pad, y + textTop), style, color)
                 for (column in 1..visibleChannels) {
                     val text = ftCell(cells.getOrNull(first + column - 1).orEmpty()).take(cellChars)
-                    drawText(measurer, text, Offset(left(column) + pad, y + textTop), style.copy(color = color), softWrap = false, maxLines = 1)
+                    drawTextIn(measurer, text, Offset(left(column) + pad, y + textTop), style, color)
                 }
             }
         }
