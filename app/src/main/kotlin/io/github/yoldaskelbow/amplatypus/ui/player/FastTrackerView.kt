@@ -84,14 +84,22 @@ internal fun FastTrackerView(info: ModuleEngine.ModuleInfo, controls: RetroContr
     fun Modifier.panel(sunken: Boolean = false) =
         bevel(sunken = sunken, fill = if (sunken) Ft.screen else Ft.face, light = Ft.light, shadow = Ft.shadow)
 
-    Column(
-        modifier
-            .fillMaxSize()
-            .background(Ft.face)
-            .systemBarsPadding()
-            .padding(4.dp),
-        verticalArrangement = Arrangement.spacedBy(3.dp),
-    ) {
+    RetroLayout(
+        modifier = modifier,
+        background = Ft.face,
+        pattern = { place -> FtPattern(visual, rows, row, info.channels, place.panel(sunken = true)) },
+        controls = {
+            val buttonLabel = label.copy(fontSize = 12.sp)
+            RetroControlBar(controls) { control, enabled, onClick, slot ->
+                val (text, description) = when (control) {
+                    RetroControl.PREVIOUS -> "Prev" to stringResource(R.string.previous)
+                    RetroControl.PLAY_PAUSE -> if (controls.isPlaying) "Pause" to stringResource(R.string.pause) else "Play" to stringResource(R.string.play)
+                    RetroControl.NEXT -> "Next" to stringResource(R.string.next)
+                }
+                RetroButton(text, description, enabled, onClick, slot, buttonLabel, fill = Ft.face, light = Ft.light, shadow = Ft.shadow)
+            }
+        },
+    ) { wide ->
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                 FtReadout("Pos.", "%03d".format(order), label, value)
@@ -114,22 +122,14 @@ internal fun FastTrackerView(info: ModuleEngine.ModuleInfo, controls: RetroContr
             }
         }
 
-        FtScopes(visual, info.channels, Modifier.fillMaxWidth().height(88.dp).panel(sunken = true))
+        FtScopes(
+            visual,
+            info.channels,
+            Modifier.fillMaxWidth().then(if (wide) Modifier.weight(1f) else Modifier.height(88.dp)).panel(sunken = true),
+        )
 
         FtNameLine("Songname:", info.title, label, value)
         FtNameLine("Instr.:", instrument, label, value)
-
-        FtPattern(visual, rows, row, info.channels, Modifier.fillMaxWidth().weight(1f).panel(sunken = true))
-
-        val buttonLabel = label.copy(fontSize = 12.sp)
-        RetroControlBar(controls) { control, enabled, onClick, slot ->
-            val (text, description) = when (control) {
-                RetroControl.PREVIOUS -> "Prev" to stringResource(R.string.previous)
-                RetroControl.PLAY_PAUSE -> if (controls.isPlaying) "Pause" to stringResource(R.string.pause) else "Play" to stringResource(R.string.play)
-                RetroControl.NEXT -> "Next" to stringResource(R.string.next)
-            }
-            RetroButton(text, description, enabled, onClick, slot, buttonLabel, fill = Ft.face, light = Ft.light, shadow = Ft.shadow)
-        }
     }
 }
 

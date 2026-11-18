@@ -25,6 +25,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -198,14 +200,27 @@ private fun ProTrackerView(info: ModuleEngine.ModuleInfo, controls: RetroControl
     val label = TextStyle(fontFamily = pixelFont, fontSize = 10.sp, color = Retro.label, shadow = Shadow(Retro.shadow, Offset(2f, 2f), 0f))
     val value = TextStyle(fontFamily = pixelFont, fontSize = 11.sp, color = Retro.value)
 
-    Column(
-        modifier
-            .fillMaxSize()
-            .background(Retro.face)
-            .systemBarsPadding()
-            .padding(4.dp),
-        verticalArrangement = Arrangement.spacedBy(3.dp),
-    ) {
+    RetroLayout(
+        modifier = modifier,
+        background = Retro.face,
+        pattern = { place -> RetroPattern(visual, rows, row, info.channels, place) },
+        controls = {
+            val buttonLabel = label.copy(fontSize = 12.sp)
+            RetroControlBar(controls) { control, enabled, onClick, slot ->
+                when (control) {
+                    RetroControl.PREVIOUS ->
+                        RetroButton("PREV", stringResource(R.string.previous), enabled, onClick, slot, buttonLabel)
+                    RetroControl.PLAY_PAUSE -> if (controls.isPlaying) {
+                        RetroButton("PAUSE", stringResource(R.string.pause), enabled, onClick, slot, buttonLabel)
+                    } else {
+                        RetroButton("PLAY", stringResource(R.string.play), enabled, onClick, slot, buttonLabel)
+                    }
+                    RetroControl.NEXT ->
+                        RetroButton("NEXT", stringResource(R.string.next), enabled, onClick, slot, buttonLabel)
+                }
+            }
+        },
+    ) { wide ->
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                 Readout("POS", "%04d".format(order), label, value)
@@ -228,26 +243,39 @@ private fun ProTrackerView(info: ModuleEngine.ModuleInfo, controls: RetroControl
             }
         }
 
-        Quadrascope(visual, info.channels, Modifier.fillMaxWidth().height(84.dp))
+        Quadrascope(visual, info.channels, Modifier.fillMaxWidth().then(if (wide) Modifier.weight(1f) else Modifier.height(84.dp)))
 
         NameLine("SONGNAME:", info.title, label, value)
         NameLine("SAMPLE:", sample, label, value)
+    }
+}
 
-        RetroPattern(visual, rows, row, info.channels, Modifier.fillMaxWidth().weight(1f))
-
-        val buttonLabel = label.copy(fontSize = 12.sp)
-        RetroControlBar(controls) { control, enabled, onClick, slot ->
-            when (control) {
-                RetroControl.PREVIOUS ->
-                    RetroButton("PREV", stringResource(R.string.previous), enabled, onClick, slot, buttonLabel)
-                RetroControl.PLAY_PAUSE -> if (controls.isPlaying) {
-                    RetroButton("PAUSE", stringResource(R.string.pause), enabled, onClick, slot, buttonLabel)
-                } else {
-                    RetroButton("PLAY", stringResource(R.string.play), enabled, onClick, slot, buttonLabel)
+/**
+ * The frame every tracker view shares: [panels] (readouts, scopes, names) on top, the [pattern] below
+ * and the [controls] at the very bottom. On a phone held sideways the pattern moves to the right of the
+ * panels, so it keeps enough rows; the controls stay at the bottom either way. [panels] is told which.
+ */
+@Composable
+internal fun RetroLayout(
+    modifier: Modifier,
+    background: Color,
+    pattern: @Composable (Modifier) -> Unit,
+    controls: @Composable () -> Unit,
+    panels: @Composable ColumnScope.(wide: Boolean) -> Unit,
+) {
+    BoxWithConstraints(modifier.fillMaxSize().background(background).systemBarsPadding().padding(4.dp)) {
+        val wide = maxWidth > maxHeight && maxHeight < 520.dp
+        Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+            if (wide) {
+                Row(Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                    Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(3.dp)) { panels(true) }
+                    pattern(Modifier.weight(1f).fillMaxHeight())
                 }
-                RetroControl.NEXT ->
-                    RetroButton("NEXT", stringResource(R.string.next), enabled, onClick, slot, buttonLabel)
+            } else {
+                panels(false)
+                pattern(Modifier.fillMaxWidth().weight(1f))
             }
+            controls()
         }
     }
 }
