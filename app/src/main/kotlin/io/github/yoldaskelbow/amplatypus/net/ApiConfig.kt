@@ -10,7 +10,7 @@ data class ApiConfig(
     val repoUrl: String,
 ) {
     val userAgent: String
-        get() = "$APP_NAME/$appVersion (+$repoUrl)"
+        get() = "$APP_NAME/$appVersion (Android; +$repoUrl)"
 
     companion object {
         const val APP_NAME = "AMPlatypus"

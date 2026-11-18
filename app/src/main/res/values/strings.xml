@@ -116,4 +116,9 @@
     <string name="import_done_skipped">%1$d imported, %2$d skipped (format not supported)</string>
     <string name="scope_hint_no_mute">This format is played by an emulated Amiga, so channels cannot be muted.</string>
     <string name="scope_hint">Tap a channel to mute it, hold to hear it alone</string>
+    <string name="channel_name">Channel %1$d</string>
+    <string name="channel_muted">muted</string>
+    <string name="channel_playing">playing</string>
+    <string name="channel_toggle_mute">mute or unmute</string>
+    <string name="channel_solo">Hear this channel alone</string>
 </resources>

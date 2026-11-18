@@ -3,6 +3,9 @@ package io.github.yoldaskelbow.amplatypus.ui.player
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -106,201 +109,222 @@ fun NowPlayingScreen(player: PlayerConnection, onClose: () -> Unit) {
 
     Box(Modifier.fillMaxSize()) {
     Surface(color = MaterialTheme.colorScheme.surface, modifier = Modifier.fillMaxSize()) {
-        Column(Modifier.fillMaxSize().systemBarsPadding().padding(horizontal = 20.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) {
-                IconButton(onClick = onClose) {
-                    Icon(painterResource(R.drawable.ic_expand_more), stringResource(R.string.close_player))
-                }
-                Text(
-                    stringResource(R.string.now_playing),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.weight(1f),
-                )
-                entry?.let { module ->
-                    IconButton(onClick = { scope.launch { library.setFavorite(module, !module.favorite) } }) {
-                        Icon(
-                            painterResource(if (module.favorite) R.drawable.ic_favorite else R.drawable.ic_favorite_border),
-                            stringResource(if (module.favorite) R.string.favorite_remove else R.string.favorite_add),
-                            tint = if (module.favorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
+        BoxWithConstraints(Modifier.fillMaxSize().systemBarsPadding()) {
+            // Landscape and tablets: details and buttons on the left, channels or text on the right.
+            val wide = maxWidth >= 600.dp && maxWidth > maxHeight
+            val header: @Composable () -> Unit = {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) {
+                    IconButton(onClick = onClose) {
+                        Icon(painterResource(R.drawable.ic_expand_more), stringResource(R.string.close_player))
                     }
-                }
-            }
-
-            Text(
-                nowPlaying.title,
-                style = MaterialTheme.typography.headlineMedium,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(top = 8.dp),
-            )
-            Text(
-                nowPlaying.composer,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            info?.let { module ->
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 4.dp)) {
-                    if (module.type.isNotBlank()) {
-                        val hasRetro = hasRetroView(module)
-                        AssistChip(
-                            onClick = { if (hasRetro) showRetro = true },
-                            label = { Text(module.type, maxLines = 1) },
-                            // A small hint that this chip opens something.
-                            trailingIcon = if (hasRetro) {
-                                { Icon(painterResource(R.drawable.ic_retro), null, Modifier.size(AssistChipDefaults.IconSize)) }
-                            } else {
-                                null
-                            },
-                        )
-                    }
-                    if (module.channels > 0) {
-                        AssistChip(
-                            onClick = {},
-                            label = { Text(pluralStringResource(R.plurals.channel_count, module.channels, module.channels)) },
-                        )
-                    }
-                }
-            }
-
-            SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(top = 8.dp)) {
-                listOf(R.string.tab_channels, R.string.tab_text).forEachIndexed { index, label ->
-                    SegmentedButton(
-                        selected = tab == index,
-                        onClick = { tab = index },
-                        shape = SegmentedButtonDefaults.itemShape(index, 2),
-                    ) { Text(stringResource(label)) }
-                }
-            }
-
-            Card(
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
-                modifier = Modifier.fillMaxWidth().weight(1f).padding(top = 12.dp),
-            ) {
-                val module = info
-                if (tab == 0 && module?.channels == 0) {
-                    // UADE formats: the replay routine runs inside an emulated Amiga and gives no per-channel data yet.
-                    Box(Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
-                        Text(
-                            stringResource(R.string.no_channel_view),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center,
-                        )
-                    }
-                } else if (tab == 0) {
-                    val channels = module?.channels ?: 4
-                    val scopeRows = (channels + scopeColumns(channels) - 1) / scopeColumns(channels)
-                    Column(Modifier.fillMaxSize().padding(vertical = 12.dp)) {
-                        // Muted channels of the playing module; forgotten when the next module starts.
-                        var muted by remember(module?.generation) {
-                            mutableStateOf(ModuleEngine.current?.mutedChannels() ?: BooleanArray(0))
-                        }
-                        val haptics = LocalHapticFeedback.current
-                        ChannelScopes(
-                            visual = visual,
-                            channels = channels,
-                            muted = muted,
-                            onTap = { channel -> ModuleEngine.current?.toggleMute(channel)?.let { muted = it } },
-                            onLongPress = { channel ->
-                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                ModuleEngine.current?.toggleSolo(channel)?.let { muted = it }
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(if (scopeRows == 1) 64.dp else (36 * scopeRows.coerceAtMost(4)).dp)
-                                .padding(horizontal = 12.dp),
-                        )
-                        Text(
-                            stringResource(if (module?.canMute == false) R.string.scope_hint_no_mute else R.string.scope_hint),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                            modifier = Modifier.padding(start = 14.dp, top = 4.dp),
-                        )
-                        ChannelMeters(
-                            visual = visual,
-                            channels = channels,
-                            modifier = Modifier.fillMaxWidth().weight(1f).padding(start = 12.dp, end = 12.dp, top = 6.dp, bottom = 12.dp),
-                            segments = 12,
-                        )
-                        // Replay routines in an emulated Amiga (UADE) have no pattern to show.
-                        if (module?.hasPattern != false) {
-                            PatternView(
-                                visual = visual,
-                                generation = module?.generation ?: 0,
-                                channels = channels,
-                                modifier = Modifier.fillMaxWidth(),
+                    Text(
+                        stringResource(R.string.now_playing),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.weight(1f),
+                    )
+                    entry?.let { module ->
+                        IconButton(onClick = { scope.launch { library.setFavorite(module, !module.favorite) } }) {
+                            Icon(
+                                painterResource(if (module.favorite) R.drawable.ic_favorite else R.drawable.ic_favorite_border),
+                                stringResource(if (module.favorite) R.string.favorite_remove else R.string.favorite_add),
+                                tint = if (module.favorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
                     }
-                } else {
-                    ModuleText(module)
                 }
-            }
 
-            var dragging by remember { mutableStateOf<Float?>(null) }
-            val duration = nowPlaying.durationMs
-            Slider(
-                value = dragging ?: if (duration <= 0) 0f else (positionMs.toFloat() / duration).coerceIn(0f, 1f),
-                onValueChange = { dragging = it },
-                onValueChangeFinished = {
-                    dragging?.let {
-                        val target = (it * duration).toLong()
-                        player.seekTo(target)
-                        positionMs = target
+                Text(
+                    nowPlaying.title,
+                    style = MaterialTheme.typography.headlineMedium,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(top = 8.dp),
+                )
+                Text(
+                    nowPlaying.composer,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                info?.let { module ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 4.dp)) {
+                        if (module.type.isNotBlank()) {
+                            val hasRetro = hasRetroView(module)
+                            AssistChip(
+                                onClick = { if (hasRetro) showRetro = true },
+                                label = { Text(module.type, maxLines = 1) },
+                                // A small hint that this chip opens something.
+                                trailingIcon = if (hasRetro) {
+                                    { Icon(painterResource(R.drawable.ic_retro), null, Modifier.size(AssistChipDefaults.IconSize)) }
+                                } else {
+                                    null
+                                },
+                            )
+                        }
+                        if (module.channels > 0) {
+                            AssistChip(
+                                onClick = {},
+                                label = { Text(pluralStringResource(R.plurals.channel_count, module.channels, module.channels)) },
+                            )
+                        }
                     }
-                    dragging = null
-                },
-                enabled = duration > 0,
-                modifier = Modifier.padding(top = 8.dp),
-            )
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(formatTime(positionMs), style = MaterialTheme.typography.labelMedium)
-                // Many Amiga formats have no known length; the replay routine only says when it is done.
-                Text(if (duration > 0) formatTime(duration) else "–:––", style = MaterialTheme.typography.labelMedium)
+                }
             }
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
-                modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 16.dp),
-            ) {
-                // Shuffle and repeat flank the main buttons as plain icons, lit while they are on.
-                val on = MaterialTheme.colorScheme.primary
-                val off = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f)
-                IconButton(onClick = player::toggleShuffle) {
-                    Icon(
-                        painterResource(R.drawable.ic_shuffle),
-                        stringResource(if (nowPlaying.shuffle) R.string.shuffle_on else R.string.shuffle_off),
-                        tint = if (nowPlaying.shuffle) on else off,
-                    )
-                }
-                FilledTonalIconButton(onClick = player::previous, modifier = Modifier.size(52.dp)) {
-                    Icon(painterResource(R.drawable.ic_skip_previous), stringResource(R.string.previous))
-                }
-                FilledIconButton(onClick = player::togglePlayPause, modifier = Modifier.size(76.dp)) {
-                    Icon(
-                        painterResource(if (nowPlaying.isPlaying) R.drawable.ic_pause else R.drawable.ic_play),
-                        stringResource(if (nowPlaying.isPlaying) R.string.pause else R.string.play),
-                        Modifier.size(36.dp),
-                    )
-                }
-                FilledTonalIconButton(onClick = player::next, enabled = nowPlaying.hasNext, modifier = Modifier.size(52.dp)) {
-                    Icon(painterResource(R.drawable.ic_skip_next), stringResource(R.string.next))
-                }
-                IconButton(onClick = player::cycleRepeat) {
-                    val (icon, label) = when (nowPlaying.repeatMode) {
-                        Player.REPEAT_MODE_ONE -> R.drawable.ic_repeat_one to R.string.repeat_one
-                        Player.REPEAT_MODE_ALL -> R.drawable.ic_repeat to R.string.repeat_all
-                        else -> R.drawable.ic_repeat to R.string.repeat_off
+            val views: @Composable ColumnScope.() -> Unit = {
+                SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(top = 8.dp)) {
+                    listOf(R.string.tab_channels, R.string.tab_text).forEachIndexed { index, label ->
+                        SegmentedButton(
+                            selected = tab == index,
+                            onClick = { tab = index },
+                            shape = SegmentedButtonDefaults.itemShape(index, 2),
+                        ) { Text(stringResource(label)) }
                     }
-                    Icon(
-                        painterResource(icon),
-                        stringResource(label),
-                        tint = if (nowPlaying.repeatMode == Player.REPEAT_MODE_OFF) off else on,
-                    )
+                }
+
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+                    modifier = Modifier.fillMaxWidth().weight(1f).padding(top = 12.dp),
+                ) {
+                    val module = info
+                    if (tab == 0 && module?.channels == 0) {
+                        // UADE formats: the replay routine runs inside an emulated Amiga and gives no per-channel data yet.
+                        Box(Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
+                            Text(
+                                stringResource(R.string.no_channel_view),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center,
+                            )
+                        }
+                    } else if (tab == 0) {
+                        val channels = module?.channels ?: 4
+                        val scopeRows = (channels + scopeColumns(channels) - 1) / scopeColumns(channels)
+                        Column(Modifier.fillMaxSize().padding(vertical = 12.dp)) {
+                            // Muted channels of the playing module; forgotten when the next module starts.
+                            var muted by remember(module?.generation) {
+                                mutableStateOf(ModuleEngine.current?.mutedChannels() ?: BooleanArray(0))
+                            }
+                            val haptics = LocalHapticFeedback.current
+                            ChannelScopes(
+                                visual = visual,
+                                channels = channels,
+                                muted = muted,
+                                onTap = { channel -> ModuleEngine.current?.toggleMute(channel)?.let { muted = it } },
+                                onLongPress = { channel ->
+                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    ModuleEngine.current?.toggleSolo(channel)?.let { muted = it }
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(if (scopeRows == 1) 64.dp else (36 * scopeRows.coerceAtMost(4)).dp)
+                                    .padding(horizontal = 12.dp),
+                            )
+                            Text(
+                                stringResource(if (module?.canMute == false) R.string.scope_hint_no_mute else R.string.scope_hint),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                modifier = Modifier.padding(start = 14.dp, top = 4.dp),
+                            )
+                            ChannelMeters(
+                                visual = visual,
+                                channels = channels,
+                                modifier = Modifier.fillMaxWidth().weight(1f).padding(start = 12.dp, end = 12.dp, top = 6.dp, bottom = 12.dp),
+                                segments = 12,
+                            )
+                            // Replay routines in an emulated Amiga (UADE) have no pattern to show.
+                            if (module?.hasPattern != false) {
+                                PatternView(
+                                    visual = visual,
+                                    generation = module?.generation ?: 0,
+                                    channels = channels,
+                                    modifier = Modifier.fillMaxWidth(),
+                                )
+                            }
+                        }
+                    } else {
+                        ModuleText(module)
+                    }
+                }
+            }
+            val transport: @Composable () -> Unit = {
+                var dragging by remember { mutableStateOf<Float?>(null) }
+                val duration = nowPlaying.durationMs
+                Slider(
+                    value = dragging ?: if (duration <= 0) 0f else (positionMs.toFloat() / duration).coerceIn(0f, 1f),
+                    onValueChange = { dragging = it },
+                    onValueChangeFinished = {
+                        dragging?.let {
+                            val target = (it * duration).toLong()
+                            player.seekTo(target)
+                            positionMs = target
+                        }
+                        dragging = null
+                    },
+                    enabled = duration > 0,
+                    modifier = Modifier.padding(top = 8.dp),
+                )
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text(formatTime(positionMs), style = MaterialTheme.typography.labelMedium)
+                    // Many Amiga formats have no known length; the replay routine only says when it is done.
+                    Text(if (duration > 0) formatTime(duration) else "–:––", style = MaterialTheme.typography.labelMedium)
+                }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 16.dp),
+                ) {
+                    // Shuffle and repeat flank the main buttons as plain icons, lit while they are on.
+                    val on = MaterialTheme.colorScheme.primary
+                    val off = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f)
+                    IconButton(onClick = player::toggleShuffle) {
+                        Icon(
+                            painterResource(R.drawable.ic_shuffle),
+                            stringResource(if (nowPlaying.shuffle) R.string.shuffle_on else R.string.shuffle_off),
+                            tint = if (nowPlaying.shuffle) on else off,
+                        )
+                    }
+                    FilledTonalIconButton(onClick = player::previous, modifier = Modifier.size(52.dp)) {
+                        Icon(painterResource(R.drawable.ic_skip_previous), stringResource(R.string.previous))
+                    }
+                    FilledIconButton(onClick = player::togglePlayPause, modifier = Modifier.size(76.dp)) {
+                        Icon(
+                            painterResource(if (nowPlaying.isPlaying) R.drawable.ic_pause else R.drawable.ic_play),
+                            stringResource(if (nowPlaying.isPlaying) R.string.pause else R.string.play),
+                            Modifier.size(36.dp),
+                        )
+                    }
+                    FilledTonalIconButton(onClick = player::next, enabled = nowPlaying.hasNext, modifier = Modifier.size(52.dp)) {
+                        Icon(painterResource(R.drawable.ic_skip_next), stringResource(R.string.next))
+                    }
+                    IconButton(onClick = player::cycleRepeat) {
+                        val (icon, label) = when (nowPlaying.repeatMode) {
+                            Player.REPEAT_MODE_ONE -> R.drawable.ic_repeat_one to R.string.repeat_one
+                            Player.REPEAT_MODE_ALL -> R.drawable.ic_repeat to R.string.repeat_all
+                            else -> R.drawable.ic_repeat to R.string.repeat_off
+                        }
+                        Icon(
+                            painterResource(icon),
+                            stringResource(label),
+                            tint = if (nowPlaying.repeatMode == Player.REPEAT_MODE_OFF) off else on,
+                        )
+                    }
+                }
+            }
+            if (wide) {
+                Row(Modifier.fillMaxSize().padding(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+                    Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState())) {
+                        header()
+                        transport()
+                    }
+                    Column(Modifier.weight(1.3f).fillMaxHeight().padding(bottom = 16.dp)) { views() }
+                }
+            } else {
+                Column(Modifier.fillMaxSize().padding(horizontal = 20.dp)) {
+                    header()
+                    views()
+                    transport()
                 }
             }
         }

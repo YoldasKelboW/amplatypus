@@ -4,7 +4,9 @@ package io.github.yoldaskelbow.amplatypus.ui.player
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -42,7 +44,17 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
+import io.github.yoldaskelbow.amplatypus.R
 import androidx.compose.ui.unit.sp
 import io.github.yoldaskelbow.amplatypus.audio.ModuleEngine
 import kotlin.math.sqrt
@@ -143,7 +155,14 @@ fun ChannelScopes(
         )
     }
 
-    Canvas(modifier.then(gestures).graphicsLayer()) {
+    val channelName = stringResource(R.string.channel_name)
+    val mutedText = stringResource(R.string.channel_muted)
+    val playingText = stringResource(R.string.channel_playing)
+    val muteAction = stringResource(R.string.channel_toggle_mute)
+    val soloAction = stringResource(R.string.channel_solo)
+
+    Box(modifier) {
+    Canvas(Modifier.matchParentSize().then(gestures).graphicsLayer()) {
         val count = channels.coerceAtLeast(1)
         val columns = scopeColumns(count)
         val rows = (count + columns - 1) / columns
@@ -183,6 +202,35 @@ fun ChannelScopes(
             }
             drawPath(path, line, style = stroke)
         }
+    }
+
+    // For TalkBack: the scopes are one drawing, so each channel gets an invisible node of its own,
+    // laid out like the grid above, with the same two actions as tap and hold.
+    val count = channels.coerceAtLeast(1)
+    val columns = scopeColumns(count)
+    val rows = (count + columns - 1) / columns
+    Column(Modifier.matchParentSize()) {
+        for (row in 0 until rows) {
+            Row(Modifier.weight(1f).fillMaxWidth()) {
+                for (column in 0 until columns) {
+                    val channel = row * columns + column
+                    if (channel >= count) {
+                        Box(Modifier.weight(1f))
+                        continue
+                    }
+                    Box(
+                        Modifier.weight(1f).fillMaxHeight().clearAndSetSemantics {
+                            contentDescription = channelName.format(channel + 1)
+                            stateDescription = if (muted.getOrNull(channel) == true) mutedText else playingText
+                            role = Role.Button
+                            onClick(label = muteAction) { onTap(channel); true }
+                            customActions = listOf(CustomAccessibilityAction(soloAction) { onLongPress(channel); true })
+                        },
+                    )
+                }
+            }
+        }
+    }
     }
 }
 
