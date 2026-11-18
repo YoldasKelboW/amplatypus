@@ -122,6 +122,7 @@ Reihenfolge: GitHub Releases → F-Droid → Google Play.
   - Anti-Features nach heutigem Stand: keine. Module werden erst auf Wunsch geladen und stecken nicht in der App; Modland ist ein offenes Dateiarchiv, kein proprietärer Dienst. Mit AMP-Quelle eventuell „NonFreeNet“ (Hinweis, kein Ausschluss).
   - Signatur: Ist der Build reproduzierbar, liefert F-Droid die APK mit Kelbos eigener Signatur aus; dann passen GitHub- und F-Droid-Version zueinander. Sonst signiert F-Droid selbst, und ein Wechsel zwischen beiden heißt neu installieren.
   - Vor dem Antrag: endgültiger Name und App-ID, Release-Schlüssel, getaggte Version ohne „pre“.
+  - Stand 18.11.2026: Name, Schlüssel und Version 1.2.0 sind fertig, das Rezept liegt in `docs/fdroid/`. F-Droid erwartet mindestens 3 Monate aktive Entwicklung (Inclusion Policy, Qualität Punkt 6); der Antrag wird deshalb etwa Mitte Februar 2027 gestellt.
 - **Google Play:** Konto für einmalig 25 USD mit Ausweis. Neue persönliche Konten brauchen einen geschlossenen Test mit mindestens 12 Testern über 14 Tage am Stück. Upload als AAB, `targetSdk 36`, 16-KB-kompatible native Bibliotheken, Datenschutzerklärung als Link, Formular zur Datensicherheit, Fragebogen zur Altersfreigabe.
 - **Google-Entwicklerverifizierung:** ab 2027 weltweit auch außerhalb des Play Store. Mit Play-Konto lassen sich Paketname und Schlüssel auch für die GitHub-APK registrieren. F-Droid lehnt die Verifizierung ab; die Entscheidung dazu trifft Kelbo 2027.
 
