@@ -1,8 +1,10 @@
-AMPlatypus ist ein freier, quelloffener Player für Amiga- und Trackermusik (MOD, XM, S3M, IT, AHX und viele mehr). Die App durchsucht das Modland-Archiv und Amiga Music Preservation (AMP), lädt herunter, was du auswählst, und spielt es mit libopenmpt, dem HivelyTracker-Abspieler oder UADE ab, einem nachgebildeten Amiga, der die originalen Abspielroutinen exotischer Formate wie PreTracker ausführt.
+AMPlatypus ist ein freier, quelloffener Player für Amiga-, Tracker- und Commodore-64-Musik (MOD, XM, S3M, IT, AHX, SID und viele mehr). Die App durchsucht das Modland-Archiv und Amiga Music Preservation (AMP), lädt herunter, was du auswählst, und spielt es mit libopenmpt, dem HivelyTracker-Abspieler, UADE, einem nachgebildeten Amiga, der die originalen Abspielroutinen exotischer Formate wie PreTracker ausführt, oder libsidplayfp ab, einem nachgebildeten C64, für die High Voltage SID Collection.
 
 • Player mit Oszilloskop und Pegel für jeden Kanal, mitlaufendem Pattern und den Texten im Modul
 • Kanal antippen schaltet ihn stumm, halten spielt ihn allein (Tracker-Formate)
-• Tracker-Ansichten im Stil von ProTracker, FastTracker 2, Impulse Tracker, Scream Tracker 3, HivelyTracker und OctaMED
+• Tracker-Ansichten im Stil von ProTracker, FastTracker 2, Impulse Tracker, Scream Tracker 3, HivelyTracker und OctaMED, dazu Abspielfenster für die Amiga-Formate und den C64
+• Dateien mit mehreren Stücken: Stück wählen oder alle nacheinander hören
+• Format-Filter: nur die Musik anzeigen, die du willst
 • Zufallswiedergabe und Wiederholen
 • Wiedergabe im Hintergrund mit Steuerung auf dem Sperrbildschirm und am Kopfhörer
 • Bibliothek mit Favoriten, Playlists, Suche und Sortierung; eigene Dateien importieren

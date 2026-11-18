@@ -1,0 +1,1 @@
+Commodore 64 music: about 63,000 SID tunes from the High Voltage SID Collection and Sidplayer songs, with a C64 player view. Files with several songs can be played song by song. Format filter for search, browsing and radio. New Amiga formats: IFF-SMUS and DeliTracker custom modules. A Workbench-style player window for the exotic Amiga formats.

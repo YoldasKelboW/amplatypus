@@ -1,8 +1,10 @@
-A free, open-source player for Amiga and tracker music (MOD, XM, S3M, IT, AHX and many more). It searches the Modland archive and Amiga Music Preservation (AMP), downloads what you pick and plays it with libopenmpt, the HivelyTracker replayer, or UADE, an emulated Amiga that runs the original replay routines of exotic formats such as PreTracker.
+A free, open-source player for Amiga, tracker and Commodore 64 music (MOD, XM, S3M, IT, AHX, SID and many more). It searches the Modland archive and Amiga Music Preservation (AMP), downloads what you pick and plays it with libopenmpt, the HivelyTracker replayer, UADE, an emulated Amiga that runs the original replay routines of exotic formats such as PreTracker, or libsidplayfp, an emulated C64, for the High Voltage SID Collection.
 
 • Player with one oscilloscope and level meter per channel, the running pattern and the texts inside the module
 • Tap a channel to mute it, hold to hear it alone (tracker formats)
-• Tracker views in the style of ProTracker, FastTracker 2, Impulse Tracker, Scream Tracker 3, HivelyTracker and OctaMED
+• Tracker views in the style of ProTracker, FastTracker 2, Impulse Tracker, Scream Tracker 3, HivelyTracker and OctaMED, and player windows for the Amiga formats and the C64
+• Files with several songs: choose the song, or let them play one after another
+• Format filter: show only the kinds of music you want
 • Shuffle and repeat
 • Background playback with lock-screen and headset controls
 • Library with favourites, playlists, search and sorting; import your own files

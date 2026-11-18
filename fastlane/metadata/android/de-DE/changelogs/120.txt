@@ -1,0 +1,1 @@
+Commodore-64-Musik: rund 63.000 SID-Stücke aus der High Voltage SID Collection und Sidplayer-Songs, mit C64-Ansicht. Dateien mit mehreren Stücken lassen sich Stück für Stück abspielen. Format-Filter für Suche, Durchblättern und Radio. Neue Amiga-Formate: IFF-SMUS und DeliTracker-Custom-Module. Ein Abspielfenster im Workbench-Stil für die exotischen Amiga-Formate.

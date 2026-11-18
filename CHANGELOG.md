@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.2.0 – 2026-11-18
 
 - Files with several songs - C64 tunes and much Amiga game music - show "Song 3 of 10" in the player with
   buttons to move between them, and play on into the next song when one ends. The player windows of
