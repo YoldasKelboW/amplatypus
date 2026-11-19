@@ -32,7 +32,7 @@ jobs:
           - language: c-cpp
             build-mode: none
           - language: java-kotlin
-            build-mode: manual
+            build-mode: autobuild
     steps:
       - uses: actions/checkout@v4
         with:
@@ -44,17 +44,15 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      - if: matrix.language == 'java-kotlin'
-        uses: gradle/actions/setup-gradle@v4
-
+      # Der eingebaute Build von CodeQL (autobuild) bringt sein eigenes Gradle-Init-Skript mit.
+      # Er scheiterte im Standard-Setup nur an den fehlenden Submodulen.
       - uses: github/codeql-action/init@v4
         with:
           languages: ${{ matrix.language }}
           build-mode: ${{ matrix.build-mode }}
 
-      - if: matrix.language == 'java-kotlin'
-        name: Build (Kotlin)
-        run: ./gradlew assembleDebug --no-daemon --no-build-cache --stacktrace
+      - if: matrix.build-mode == 'autobuild'
+        uses: github/codeql-action/autobuild@v4
 
       - uses: github/codeql-action/analyze@v4
         with:
