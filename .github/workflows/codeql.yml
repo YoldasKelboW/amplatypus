@@ -1,0 +1,61 @@
+name: CodeQL
+
+# Eigene CodeQL-Konfiguration statt "Default setup": Das Standard-Setup checkt
+# keine Git-Submodule aus, dadurch scheitert der Gradle-Build (third_party/uade fehlt)
+# und Java/Kotlin wird nicht analysiert.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "27 3 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - language: actions
+            build-mode: none
+          - language: c-cpp
+            build-mode: none
+          - language: java-kotlin
+            build-mode: manual
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - if: matrix.language == 'java-kotlin'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - if: matrix.language == 'java-kotlin'
+        uses: gradle/actions/setup-gradle@v4
+
+      - uses: github/codeql-action/init@v4
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+
+      - if: matrix.language == 'java-kotlin'
+        name: Build (Kotlin)
+        run: ./gradlew assembleDebug --no-daemon --no-build-cache --stacktrace
+
+      - uses: github/codeql-action/analyze@v4
+        with:
+          category: /language:${{ matrix.language }}
