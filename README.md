@@ -10,6 +10,8 @@ Amiga formats (PreTracker, SidMon, Future Composer, Delta Music and about a hund
 [UADE](https://zakalwe.fi/uade), which runs the original replay routines in an emulated Amiga.
 Commodore 64 music from the High Voltage SID Collection plays through
 [libsidplayfp](https://github.com/libsidplayfp/libsidplayfp) and its reSIDfp emulation of the SID chip.
+Music from consoles and home computers – NES, SNES, Game Boy, Mega Drive and Master System, PC Engine, MSX,
+Atari 8-bit, ZX Spectrum and Amstrad CPC – plays through [Game_Music_Emu](https://github.com/libgme/game-music-emu).
 
 There are two builds. **free** contains only replay routines with a free licence and plays five of the
 exotic formats; **full** contains all of them. See [docs/UADE_LICENSING.md](docs/UADE_LICENSING.md).
@@ -95,6 +97,8 @@ CI runs lint, unit tests and the debug build on every push.
 - [Amiga Music Preservation](https://amp.dascene.net) – the collection and the people maintaining it.
 - [High Voltage SID Collection](https://www.hvsc.c64.org) – the C64 music, and
   [libsidplayfp](https://github.com/libsidplayfp/libsidplayfp) by Leandro Nini and others, which plays it.
+- [Game_Music_Emu](https://github.com/libgme/game-music-emu) by Shay Green (blargg) and its maintainers – the
+  console and home computer music.
 - [Press Start 2P](https://fonts.google.com/specimen/Press+Start+2P) by CodeMan38 – the pixel font of the
   tracker views (SIL Open Font License).
 - This app is developed with the help of an AI coding assistant (Claude Code). See `NOTICE`.

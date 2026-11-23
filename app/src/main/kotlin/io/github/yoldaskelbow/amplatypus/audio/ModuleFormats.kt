@@ -87,7 +87,7 @@ object ModuleFormats {
     val uadeModlandFolders: Set<String> = uadeModlandPlayers.filterValues { it in uadePlayers }.keys
 
     /** Changes whenever the set of playable Modland files does, so stored indexes are rebuilt. */
-    val VERSION: Int = 5 * 31 + uadeModlandFolders.hashCode()
+    val VERSION: Int = 6 * 31 + uadeModlandFolders.hashCode()
 
     /** Commodore 64 files, played by libsidplayfp: SID tunes and Compute's Sidplayer songs. */
     val c64Extensions: Set<String> = setOf("sid", "psid", "mus", "str")
@@ -95,19 +95,49 @@ object ModuleFormats {
     /** Modland folders of C64 music the app plays. RealSID needs the C64's own ROMs, which it lacks. */
     val c64ModlandFolders: Set<String> = setOf("HVSC", "Sidplayer", "Stereo Sidplayer")
 
+    /**
+     * Console and home computer music, played by Game Music Emu: NES, SNES, Game Boy, Mega Drive and
+     * Master System, PC Engine, MSX, Atari 8-bit, ZX Spectrum and Amstrad CPC. Modland keeps AY files
+     * as ".emul".
+     */
+    val consoleExtensions: Set<String> =
+        setOf("nsf", "nsfe", "spc", "gbs", "vgm", "vgz", "gym", "hes", "kss", "sap", "ay", "emul")
+
+    /** Modland folders of console and home computer music that Game Music Emu plays. */
+    val consoleModlandFolders: Set<String> = setOf(
+        "Nintendo Sound Format", "Nintendo SPC", "Gameboy Sound System", "Video Game Music", "Megadrive GYM",
+        "HES", "KSS", "Slight Atari Player", "AY Emul",
+    )
+
+    /**
+     * Video Game Music is filed by system. Game Music Emu has the Sega and Texas Instruments sound chips
+     * (SN76489, YM2612, YM2413), not those of the 32X, Mega CD, MSX, Vectrex and others.
+     */
+    val vgmSystems: Set<String> = setOf(
+        "Sega Megadrive", "Sega Master System", "Sega Game Gear", "Sega SG-1000", "Sega SC-3000",
+        "BBC Micro", "Colecovision",
+    )
+
     /** For files from the device: is there a replayer for this extension (or Amiga-style prefix)? */
     fun isPlayable(extension: String): Boolean =
-        extension.lowercase().let { it in trackerExtensions || it in uadeExtensions || it in c64Extensions }
+        extension.lowercase().let {
+            it in trackerExtensions || it in uadeExtensions || it in c64Extensions || it in consoleExtensions
+        }
 
-    /** For Modland: [format] is the top folder of the file's path. */
-    fun isPlayableOnModland(format: String, extension: String): Boolean =
-        extension.lowercase() in trackerExtensions || format in uadeModlandFolders ||
-            (format in c64ModlandFolders && extension.lowercase() in c64Extensions)
+    /** For Modland: [format] is the top folder of the file's [path]. */
+    fun isPlayableOnModland(format: String, extension: String, path: String = ""): Boolean {
+        val ext = extension.lowercase()
+        if (format == "Video Game Music") return path.split('/').getOrNull(1) in vgmSystems && ext in consoleExtensions
+        return ext in trackerExtensions || format in uadeModlandFolders ||
+            (format in c64ModlandFolders && ext in c64Extensions) ||
+            (format in consoleModlandFolders && ext in consoleExtensions)
+    }
 
     /** The group a file belongs to by its extension (or Amiga-style prefix), for the format filter. */
     fun groupOf(extension: String): FormatGroup = when (extension.lowercase()) {
         in hivelyExtensions -> FormatGroup.HIVELY
         in c64Extensions -> FormatGroup.C64
+        in consoleExtensions -> FormatGroup.CONSOLE
         in trackerExtensions -> FormatGroup.TRACKER
         else -> FormatGroup.AMIGA
     }
@@ -118,11 +148,11 @@ object ModuleFormats {
     val trackerOnlyExtensions: Set<String> = trackerExtensions - hivelyExtensions
 
     /** Extensions of all groups but the Amiga one, which takes everything else. */
-    val namedExtensions: Set<String> get() = trackerExtensions + c64Extensions
+    val namedExtensions: Set<String> get() = trackerExtensions + c64Extensions + consoleExtensions
 }
 
 /** Format groups the user can show or hide. */
-enum class FormatGroup { TRACKER, HIVELY, AMIGA, C64 }
+enum class FormatGroup { TRACKER, HIVELY, AMIGA, C64, CONSOLE }
 
 /** Which [FormatGroup]s are shown. At least one always is. */
 data class FormatFilter(
@@ -130,14 +160,16 @@ data class FormatFilter(
     val hively: Boolean = true,
     val amiga: Boolean = true,
     val c64: Boolean = true,
+    val console: Boolean = true,
 ) {
-    val showsAll get() = tracker && hively && amiga && c64
+    val showsAll get() = tracker && hively && amiga && c64 && console
 
     fun shows(group: FormatGroup) = when (group) {
         FormatGroup.TRACKER -> tracker
         FormatGroup.HIVELY -> hively
         FormatGroup.AMIGA -> amiga
         FormatGroup.C64 -> c64
+        FormatGroup.CONSOLE -> console
     }
 
     fun with(group: FormatGroup, shown: Boolean): FormatFilter {
@@ -146,8 +178,9 @@ data class FormatFilter(
             FormatGroup.HIVELY -> copy(hively = shown)
             FormatGroup.AMIGA -> copy(amiga = shown)
             FormatGroup.C64 -> copy(c64 = shown)
+            FormatGroup.CONSOLE -> copy(console = shown)
         }
-        return if (next.tracker || next.hively || next.amiga || next.c64) next else this
+        return if (next.tracker || next.hively || next.amiga || next.c64 || next.console) next else this
     }
 
     /** Extensions the database query lets through by name; [amiga] covers all others (see [namedExtensions]). */
@@ -155,6 +188,7 @@ data class FormatFilter(
         if (tracker) addAll(ModuleFormats.trackerOnlyExtensions)
         if (hively) addAll(ModuleFormats.hivelyExtensions)
         if (c64) addAll(ModuleFormats.c64Extensions)
+        if (console) addAll(ModuleFormats.consoleExtensions)
         // Room needs a non-empty list for IN (...).
         if (isEmpty()) add("")
     }

@@ -241,7 +241,7 @@ fun NowPlayingScreen(player: PlayerConnection, onClose: () -> Unit) {
                 ) {
                     val module = info
                     if (tab == 0 && module?.channels == 0) {
-                        // UADE formats: the replay routine runs inside an emulated Amiga and gives no per-channel data yet.
+                        // UADE formats, SPC and FM music give no per-channel data.
                         Box(Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
                             Text(
                                 stringResource(R.string.no_channel_view),

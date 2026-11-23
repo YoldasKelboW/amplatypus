@@ -90,7 +90,7 @@ class ModlandIndex(
                     val insertFts = sql.compileStatement("INSERT INTO index_fts(rowid, title, composer) VALUES(?,?,?)")
                     reader.lineSequence().forEach { raw ->
                         val line = ModlandIndexParser.parse(raw) ?: return@forEach
-                        if (!ModuleFormats.isPlayableOnModland(line.format, line.ext)) return@forEach
+                        if (!ModuleFormats.isPlayableOnModland(line.format, line.ext, line.path)) return@forEach
                         // Sample files of two-file formats are fetched with their song, not listed.
                         if (ModlandCompanions.isFolderFile(line.format, line.path)) {
                             folderFiles += line.path

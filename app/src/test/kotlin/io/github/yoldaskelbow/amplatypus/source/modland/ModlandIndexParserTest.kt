@@ -39,6 +39,18 @@ class ModlandIndexParserTest {
     }
 
     @Test
+    fun consoleMusicPutsTheGameInTheTitle() {
+        val spc = ModlandIndexParser.parse("66160\tNintendo SPC/Dave Wise/Donkey Kong Country 2/46m - diddy clear.spc")!!
+        assertEquals("Dave Wise", spc.composer)
+        assertEquals("Donkey Kong Country 2 - 46m - diddy clear", spc.title)
+        val vgm = ModlandIndexParser.parse("44228\tVideo Game Music/Sega Megadrive/Nazo Suzuki/Light Crusader/24 battle with ramiah.vgz")!!
+        assertEquals("Video Game Music", vgm.format)
+        assertEquals("Nazo Suzuki", vgm.composer)
+        assertEquals("Light Crusader - 24 battle with ramiah", vgm.title)
+        assertEquals("vgz", vgm.ext)
+    }
+
+    @Test
     fun titleMayContainDots() {
         val line = ModlandIndexParser.parse("102\tGameboy Sound Format/_unknown/Poke Inu/2108.000d.minigsf")!!
         assertEquals("2108.000d", line.title)

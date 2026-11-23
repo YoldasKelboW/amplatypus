@@ -28,6 +28,7 @@ class Settings(context: Context) {
             hively = prefs.getBoolean(KEY_SHOW_HIVELY, true),
             amiga = prefs.getBoolean(KEY_SHOW_AMIGA, true),
             c64 = prefs.getBoolean(KEY_SHOW_C64, true),
+            console = prefs.getBoolean(KEY_SHOW_CONSOLE, true),
         ),
     )
 
@@ -42,6 +43,7 @@ class Settings(context: Context) {
             .putBoolean(KEY_SHOW_HIVELY, next.hively)
             .putBoolean(KEY_SHOW_AMIGA, next.amiga)
             .putBoolean(KEY_SHOW_C64, next.c64)
+            .putBoolean(KEY_SHOW_CONSOLE, next.console)
             .apply()
     }
 
@@ -65,5 +67,6 @@ class Settings(context: Context) {
         const val KEY_SHOW_HIVELY = "show_hively"
         const val KEY_SHOW_AMIGA = "show_amiga"
         const val KEY_SHOW_C64 = "show_c64"
+        const val KEY_SHOW_CONSOLE = "show_console"
     }
 }

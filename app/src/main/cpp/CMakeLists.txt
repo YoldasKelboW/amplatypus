@@ -56,9 +56,27 @@ set_target_properties(uadecore PROPERTIES
 
 add_subdirectory(sidplayfp)
 
-add_library(amplatypus SHARED engine_jni.cpp engine_openmpt.cpp engine_hively.cpp engine_uade.cpp engine_sid.cpp)
+# Game Music Emu: console and home computer music (NES, SNES, Game Boy, Mega Drive/Master System,
+# PC Engine, MSX, Atari 8-bit, ZX Spectrum/Amstrad CPC). The Nuked YM2612 emulator keeps the library
+# under the LGPL; MAME's would make it GPL-2.0.
+set(GME_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../../third_party/game-music-emu)
+if(NOT EXISTS ${GME_DIR}/gme/gme.h)
+    message(FATAL_ERROR "gme.h not found - is the third_party/game-music-emu submodule checked out?")
+endif()
+set(GME_BUILD_SHARED OFF CACHE BOOL "" FORCE)
+set(GME_BUILD_STATIC ON CACHE BOOL "" FORCE)
+set(GME_BUILD_TESTING OFF CACHE BOOL "" FORCE)
+set(GME_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(GME_ENABLE_UBSAN OFF CACHE BOOL "" FORCE)
+set(GME_YM2612_EMU "Nuked" CACHE STRING "" FORCE)
+set(GME_ZLIB ON CACHE BOOL "" FORCE)
+# zlib (part of the NDK) unpacks VGZ files; without it Game Music Emu would quietly skip them.
+find_package(ZLIB REQUIRED)
+add_subdirectory(${GME_DIR} ${CMAKE_CURRENT_BINARY_DIR}/gme EXCLUDE_FROM_ALL)
+
+add_library(amplatypus SHARED engine_jni.cpp engine_openmpt.cpp engine_hively.cpp engine_uade.cpp engine_sid.cpp engine_gme.cpp)
 set_source_files_properties(engine_hively.cpp PROPERTIES COMPILE_OPTIONS "-fsigned-char")
-target_link_libraries(amplatypus PRIVATE openmpt hively uade sidplayfp z m log)
+target_link_libraries(amplatypus PRIVATE openmpt hively uade sidplayfp gme_static z m log)
 target_link_options(amplatypus PRIVATE -Wl,--gc-sections)
 # Nothing links against uadecore, so make sure it is built along with the library.
 add_dependencies(amplatypus uadecore)

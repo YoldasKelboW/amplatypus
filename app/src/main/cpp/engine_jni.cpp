@@ -37,8 +37,10 @@ JNIEXPORT jlong JNICALL FN(nativeLoad)(JNIEnv *env, jclass, jbyteArray data, jst
     env->ReleaseStringUTFChars(path, filePath);
     // ".mus" is also an Amiga format: what the C64 player does not take goes on to the others.
     if (isSidFile(bytes, size, pathText)) created = createSidPlayer(pathText);
+    // Console and home computer music, recognised by its header (or, for AY files, the extension).
+    if (created == nullptr && isGmeData(bytes, size, pathText)) created = createGmePlayer(bytes, size, pathText);
     if (created != nullptr) {
-        // A C64 tune.
+        // A C64 tune or console music.
     } else if (isHivelyData(bytes, size)) {
         created = createHivelyPlayer(bytes, size);
     } else {
