@@ -3,11 +3,13 @@ package io.github.yoldaskelbow.amplatypus.playback
 
 import android.content.ComponentName
 import android.content.Context
+import android.os.Bundle
 import androidx.core.content.ContextCompat
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
+import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionToken
 import io.github.yoldaskelbow.amplatypus.data.LibraryModule
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,7 +30,13 @@ data class NowPlaying(
     val shuffle: Boolean = false,
     /** One of Player.REPEAT_MODE_OFF, _ALL and _ONE. */
     val repeatMode: Int = Player.REPEAT_MODE_OFF,
+    /** Wall-clock time (ms) at which the sleep timer stops playback, or 0 when none runs. */
+    val sleepEndsAt: Long = 0,
+    /** The sleep timer stops playback when the playing module ends. */
+    val sleepAtEndOfModule: Boolean = false,
 ) {
+    val sleepTimerSet: Boolean get() = sleepEndsAt > 0 || sleepAtEndOfModule
+
     val isActive: Boolean get() = title.isNotEmpty()
 }
 
@@ -69,6 +77,14 @@ class PlayerConnection(private val context: Context) {
     fun seekTo(positionMs: Long) = withController { it.seekTo(positionMs) }
     fun toggleShuffle() = withController { it.shuffleModeEnabled = !it.shuffleModeEnabled }
 
+    /**
+     * Stops playback after [minutes], or when the playing module ends ([SleepTimer.END_OF_MODULE]);
+     * [SleepTimer.OFF] cancels the timer.
+     */
+    fun setSleepTimer(minutes: Int) = withController { c ->
+        c.sendCustomCommand(SessionCommand(SleepTimer.COMMAND, Bundle.EMPTY), SleepTimer.args(minutes))
+    }
+
     /** Off, then the whole queue, then the playing module, then off again. */
     fun cycleRepeat() = withController { c ->
         c.repeatMode = when (c.repeatMode) {
@@ -84,7 +100,12 @@ class PlayerConnection(private val context: Context) {
         if (connecting) return
         connecting = true
         val token = SessionToken(context, ComponentName(context, PlaybackService::class.java))
-        val future = MediaController.Builder(context, token).buildAsync()
+        val future = MediaController.Builder(context, token)
+            .setListener(object : MediaController.Listener {
+                // The sleep timer travels in the session extras.
+                override fun onExtrasChanged(controller: MediaController, extras: Bundle) = publish(controller)
+            })
+            .buildAsync()
         future.addListener({
             connecting = false
             val c = try {
@@ -105,6 +126,7 @@ class PlayerConnection(private val context: Context) {
 
     private fun publish(player: Player) {
         val metadata = player.mediaMetadata
+        val extras = (player as? MediaController)?.sessionExtras ?: Bundle.EMPTY
         val duration = player.duration
         _nowPlaying.value = NowPlaying(
             title = if (player.mediaItemCount == 0) "" else metadata.title?.toString().orEmpty(),
@@ -119,6 +141,8 @@ class PlayerConnection(private val context: Context) {
             count = player.mediaItemCount,
             shuffle = player.shuffleModeEnabled,
             repeatMode = player.repeatMode,
+            sleepEndsAt = extras.getLong(SleepTimer.EXTRA_ENDS_AT_WALL, 0L),
+            sleepAtEndOfModule = extras.getBoolean(SleepTimer.EXTRA_END_OF_MODULE, false),
         )
     }
 

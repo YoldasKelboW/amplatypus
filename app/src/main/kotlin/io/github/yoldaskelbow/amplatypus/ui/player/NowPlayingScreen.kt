@@ -137,6 +137,7 @@ fun NowPlayingScreen(player: PlayerConnection, onClose: () -> Unit) {
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.weight(1f),
                     )
+                    SleepTimerButton(nowPlaying, onSet = player::setSleepTimer)
                     // AMP modules can start a radio of modules that sound like them.
                     entry?.takeIf { it.sourceId == AmpSource.ID && container.amp != null }?.let { module ->
                         IconButton(onClick = { container.radio.start(Radio.Channel.SIMILAR, ModuleRef(module.sourceId, module.sourceKey)) }) {

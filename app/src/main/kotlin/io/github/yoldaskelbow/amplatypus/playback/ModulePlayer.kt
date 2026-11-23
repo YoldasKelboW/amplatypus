@@ -9,6 +9,7 @@ import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
@@ -28,12 +29,14 @@ import java.io.File
  * and the lock-screen controls on top of this player.
  *
  * [onStarted] is called with the file path every time a module starts playing.
+ * [onSleepTimerChanged] is called whenever the sleep timer is set, cancelled or runs out.
  */
 @UnstableApi
 class ModulePlayer(
     private val context: Context,
     looper: Looper,
     private val onStarted: (String) -> Unit,
+    private val onSleepTimerChanged: (SleepTimer) -> Unit = {},
 ) : SimpleBasePlayer(looper) {
     private val handler = Handler(looper)
     private val engine = ModuleEngine(
@@ -54,6 +57,25 @@ class ModulePlayer(
     // Shuffle reorders the queue itself and keeps the order it had before, to go back to.
     private var shuffled = false
     private var unshuffled: List<MediaItem> = emptyList()
+
+    val sleepTimer = SleepTimer { SystemClock.elapsedRealtime() }
+    // Volume before the sleep fade: lowered while another app ducks us.
+    private var baseVolume = 1f
+    private val sleepTick = object : Runnable {
+        override fun run() {
+            if (sleepTimer.endsAt == null) return
+            if (sleepTimer.isDue()) {
+                sleepTimer.cancel()
+                setPlaying(false)
+                applyVolume()
+                invalidateState()
+                onSleepTimerChanged(sleepTimer)
+                return
+            }
+            applyVolume()
+            handler.postDelayed(this, SLEEP_TICK_MS)
+        }
+    }
 
     private val focusListener = AudioManager.OnAudioFocusChangeListener { change ->
         handler.post { onFocusChange(change) }
@@ -205,7 +227,36 @@ class ModulePlayer(
         return Futures.immediateVoidFuture()
     }
 
+    /**
+     * Sets the sleep timer: minutes from now, [SleepTimer.END_OF_MODULE] for "when this module ends",
+     * or [SleepTimer.OFF] to cancel it.
+     */
+    fun setSleepTimer(minutes: Int) {
+        handler.removeCallbacks(sleepTick)
+        when {
+            minutes == SleepTimer.END_OF_MODULE -> sleepTimer.startEndOfModule()
+            minutes > 0 -> {
+                sleepTimer.startMinutes(minutes)
+                handler.post(sleepTick)
+            }
+            else -> sleepTimer.cancel()
+        }
+        applyVolume()
+        onSleepTimerChanged(sleepTimer)
+    }
+
+    private fun cancelSleepTimer() {
+        if (!sleepTimer.isSet) return
+        handler.removeCallbacks(sleepTick)
+        sleepTimer.cancel()
+        applyVolume()
+        onSleepTimerChanged(sleepTimer)
+    }
+
+    private fun applyVolume() = engine.setVolume(baseVolume * sleepTimer.volume())
+
     override fun handleStop(): ListenableFuture<*> {
+        cancelSleepTimer()
         engine.pause()
         engine.unload()
         abandonFocus()
@@ -215,6 +266,7 @@ class ModulePlayer(
     }
 
     override fun handleRelease(): ListenableFuture<*> {
+        handler.removeCallbacks(sleepTick)
         context.unregisterReceiver(noisyReceiver)
         abandonFocus()
         engine.release()
@@ -269,7 +321,8 @@ class ModulePlayer(
             playWhenReady = false
             return
         }
-        engine.setVolume(1f)
+        baseVolume = 1f
+        applyVolume()
         engine.play()
         onStarted(items[index].mediaId)
     }
@@ -281,6 +334,13 @@ class ModulePlayer(
 
     private fun onTrackEnded() {
         if (playbackState != Player.STATE_READY) return
+        // "Stop when this module ends": move on as usual, but paused.
+        if (sleepTimer.atEndOfModule) {
+            playWhenReady = false
+            engine.pause()
+            sleepTimer.cancel()
+            onSleepTimerChanged(sleepTimer)
+        }
         if (repeatMode == Player.REPEAT_MODE_ONE) {
             loadCurrent(0)
         } else if (index < items.lastIndex) {
@@ -301,11 +361,15 @@ class ModulePlayer(
         when (change) {
             AudioManager.AUDIOFOCUS_GAIN -> {
                 hasFocus = true
-                engine.setVolume(1f)
+                baseVolume = 1f
+                applyVolume()
                 if (pausedByFocusLoss && playWhenReady && playbackState == Player.STATE_READY) engine.play()
                 pausedByFocusLoss = false
             }
-            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> engine.setVolume(0.25f)
+            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
+                baseVolume = 0.25f
+                applyVolume()
+            }
             AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
                 if (playWhenReady) {
                     pausedByFocusLoss = true
@@ -321,6 +385,8 @@ class ModulePlayer(
     }
 
     private companion object {
+        const val SLEEP_TICK_MS = 500L
+
         val AUDIO_ATTRIBUTES: AudioAttributes = AudioAttributes.Builder()
             .setUsage(C.USAGE_MEDIA)
             .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)

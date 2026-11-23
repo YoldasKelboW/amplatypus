@@ -144,4 +144,15 @@
     <string name="radio_similar_text">Jedes Modul klingt wie das davor, nach der Klanganalyse von AMP. Im Player mit dem Radio-Knopf von einem Modul aus starten.</string>
     <string name="radio_similar_from_here">Radio: Module, die so ähnlich klingen</string>
     <string name="radio_similar_failed">Für dieses Modul gibt es gerade keine ähnlichen Module.</string>
+    <!-- Sleep timer -->
+    <string name="sleep_timer">Sleep-Timer</string>
+    <plurals name="sleep_timer_minutes">
+        <item quantity="one">%1$d Minute</item>
+        <item quantity="other">%1$d Minuten</item>
+    </plurals>
+    <string name="sleep_timer_end_of_module">Wenn dieses Modul endet</string>
+    <string name="sleep_timer_end_of_module_short">Ende</string>
+    <string name="sleep_timer_off">Ausschalten</string>
+    <string name="sleep_timer_active">Sleep-Timer: noch %1$s</string>
+    <string name="sleep_timer_active_end_of_module">Sleep-Timer: stoppt am Ende dieses Moduls</string>
 </resources>
