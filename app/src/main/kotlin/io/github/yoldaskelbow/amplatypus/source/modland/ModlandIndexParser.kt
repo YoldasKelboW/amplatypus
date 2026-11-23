@@ -32,6 +32,7 @@ object ModlandIndexParser {
         val dot = file.lastIndexOf('.')
         if (dot <= 0 || dot == file.length - 1) return null
         if (parts[0] == "HVSC") return hvscLine(path, parts, file.substring(0, dot), file.substring(dot + 1).lowercase(), size)
+        if (parts[0] in GAME_FOLDERS) return gameLine(path, parts, file.substring(0, dot), file.substring(dot + 1).lowercase(), size)
         return Line(
             path = path,
             format = parts[0],
@@ -55,6 +56,23 @@ object ModlandIndexParser {
         }
         return Line(path, parts[0], composer, name.replace('_', ' '), ext, size)
     }
+
+    /**
+     * Console music is filed by game: `Nintendo SPC/Dave Wise/Donkey Kong Country 2/46m - diddy clear.spc`,
+     * and Video Game Music by system first: `Video Game Music/Sega Megadrive/Yuzo Koshiro/Streets of Rage/01.vgz`.
+     * The game goes in front of the track's name, the system is left out.
+     */
+    private fun gameLine(path: String, parts: List<String>, name: String, ext: String, size: Long): Line {
+        val composerAt = if (parts[0] == VIDEO_GAME_MUSIC && parts.size >= 4) 2 else 1
+        val game = parts.subList(composerAt + 1, parts.size - 1).joinToString(" - ")
+        val title = if (game.isEmpty()) name else "$game - $name"
+        return Line(path, parts[0], parts[composerAt], title, ext, size)
+    }
+
+    const val VIDEO_GAME_MUSIC = "Video Game Music"
+
+    /** Modland folders whose files sit in a folder named after their game. */
+    private val GAME_FOLDERS = setOf("Nintendo SPC", "Megadrive GYM", VIDEO_GAME_MUSIC)
 
     /** "Hubbard_Rob" is "Rob Hubbard": two-part folder names are surname first; longer ones are kept in order. */
     fun hvscName(folder: String): String {

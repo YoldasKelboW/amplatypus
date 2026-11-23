@@ -71,3 +71,7 @@ Player *createUadePlayer(const std::string &path);
 // Commodore 64: SID files and Compute's Sidplayer songs, by libsidplayfp.
 bool isSidFile(const void *data, size_t length, const std::string &path);
 Player *createSidPlayer(const std::string &path);
+
+// Console and home computer music (NSF, SPC, GBS, VGM/VGZ, GYM, HES, KSS, SAP, AY), by Game Music Emu.
+bool isGmeData(const void *data, size_t length, const std::string &path);
+Player *createGmePlayer(const void *data, size_t length, const std::string &path);

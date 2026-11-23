@@ -22,6 +22,8 @@
     <string name="filter_amiga_text">PreTracker, TFMX, SidMon, Future Composer und viele mehr, abgespielt in einem nachgebildeten Amiga</string>
     <string name="filter_c64">Commodore 64</string>
     <string name="filter_c64_text">SID-Musik aus der HVSC-Sammlung und Sidplayer-Songs, abgespielt in einem nachgebildeten C64</string>
+    <string name="filter_console">Konsolen und Heimcomputer</string>
+    <string name="filter_console_text">NES, SNES, Game Boy, Mega Drive und Master System, PC Engine, MSX, Atari 8-Bit, ZX Spectrum und Amstrad CPC, abgespielt mit Game Music Emu</string>
     <string name="search_clear">Suche löschen</string>
     <string name="search_modules">Module</string>
     <string name="search_composers">Komponisten</string>
@@ -53,7 +55,7 @@
     <string name="now_playing">Läuft gerade</string>
     <string name="close_player">Player schließen</string>
     <string name="tab_channels">Kanäle</string>
-    <string name="no_channel_view">Dieses Format spielt ein nachgebildeter Amiga ab. Kanalansichten gibt es dafür noch nicht.</string>
+    <string name="no_channel_view">Für dieses Format gibt es noch keine Kanalansicht.</string>
     <string name="retro_close">Tracker-Ansicht schließen</string>
     <string name="shuffle_on">Zufallswiedergabe an</string>
     <string name="shuffle_off">Zufallswiedergabe aus</string>

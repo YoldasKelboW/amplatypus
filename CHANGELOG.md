@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Music from consoles and home computers, played by Game_Music_Emu: NES (NSF), Super Nintendo (SPC), Game Boy
+  (GBS), Sega Mega Drive and Master System (VGM, GYM), PC Engine (HES), MSX (KSS), Atari 8-bit (SAP) and
+  ZX Spectrum / Amstrad CPC (AY) - about 62,000 pieces on Modland. Most sound chips' voices show as
+  channels with levels and scopes and can be muted; Super Nintendo and Mega Drive FM music show no channels.
+  "Consoles and home computers" in the format filter.
+
 ## 1.3.0 – 2026-11-23
 
 - Sleep timer: the moon in the player's header stops playback after 15 to 120 minutes, or when the playing

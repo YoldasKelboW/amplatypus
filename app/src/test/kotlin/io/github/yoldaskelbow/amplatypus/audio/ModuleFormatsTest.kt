@@ -21,9 +21,38 @@ class ModuleFormatsTest {
 
     @Test
     fun `formats without a bundled replayer are not playable`() {
-        assertFalse(ModuleFormats.isPlayable("spc"))
-        assertFalse(ModuleFormats.isPlayable("nsf"))
+        assertFalse(ModuleFormats.isPlayable("minigsf"))
+        assertFalse(ModuleFormats.isPlayable("sndh"))
         assertFalse(ModuleFormats.isPlayable(""))
+    }
+
+    @Test
+    fun `console and home computer music is playable and grouped`() {
+        for (ext in listOf("nsf", "NSFE", "spc", "gbs", "vgm", "vgz", "gym", "hes", "kss", "sap", "ay", "emul")) {
+            assertTrue(ext, ModuleFormats.isPlayable(ext))
+            assertEquals(ext, FormatGroup.CONSOLE, ModuleFormats.groupOf(ext))
+        }
+    }
+
+    @Test
+    fun `console music on Modland comes from its own folders`() {
+        assertTrue(ModuleFormats.isPlayableOnModland("Nintendo SPC", "spc"))
+        assertTrue(ModuleFormats.isPlayableOnModland("Video Game Music", "vgz", "Video Game Music/Sega Megadrive/Yuzo Koshiro/Bare Knuckle/01.vgz"))
+        // Systems whose sound chips Game Music Emu lacks.
+        assertFalse(ModuleFormats.isPlayableOnModland("Video Game Music", "vgz", "Video Game Music/Sega 32X/X/Y/01.vgz"))
+        assertTrue(ModuleFormats.isPlayableOnModland("AY Emul", "emul"))
+        assertTrue(ModuleFormats.isPlayableOnModland("Slight Atari Player", "sap"))
+        // Same machines, other emulators the app does not bundle.
+        assertFalse(ModuleFormats.isPlayableOnModland("Gameboy Sound Format", "minigsf"))
+        assertFalse(ModuleFormats.isPlayableOnModland("Super Nintendo Sound Format", "minisnsf"))
+    }
+
+    @Test
+    fun `hiding the console group keeps its extensions out of searches`() {
+        val filter = FormatFilter().with(FormatGroup.CONSOLE, false)
+        assertFalse(filter.shows(FormatGroup.CONSOLE))
+        assertFalse("nsf" in filter.shownExtensions())
+        assertTrue("nsf" in FormatFilter().shownExtensions())
     }
 
     @Test

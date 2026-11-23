@@ -21,3 +21,7 @@
 [submodule "third_party/libsidplayfp"]
 	path = third_party/libsidplayfp
 	url = https://github.com/libsidplayfp/libsidplayfp.git
+[submodule "third_party/game-music-emu"]
+	path = third_party/game-music-emu
+	url = https://github.com/libgme/game-music-emu.git
+	shallow = true

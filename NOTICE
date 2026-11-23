@@ -48,3 +48,7 @@ libsidplayfp with reSIDfp (Commodore 64 SID music) – GNU GPL 2.0 or later; Cop
   2007-2010 Antti Lankila, 2010-2024 Leandro Nini; reSID by Dag Lem; see third_party/libsidplayfp/AUTHORS.
   The C64's own ROMs are not included.
 High Voltage SID Collection (HVSC) – the C64 tunes are fetched from Modland's copy of the collection.
+Game_Music_Emu (console and home computer music: NSF, SPC, GBS, VGM/VGZ, GYM, HES, KSS, SAP, AY) – GNU LGPL 2.1
+  or later; Copyright (c) 2003-2006 Shay Green (blargg) and the libgme contributors; built with the Nuked OPN2
+  YM2612 emulator (GNU LGPL 2.1 or later, Copyright (c) 2017 Alexey Khokholov) and emu2413 (MIT,
+  Copyright (c) 2001-2019 Mitsutaka Okazaki). See third_party/game-music-emu/license.txt.
