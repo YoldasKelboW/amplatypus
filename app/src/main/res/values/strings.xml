@@ -153,7 +153,10 @@
     <string name="radio_similar_failed">No similar modules available for this one right now.</string>
     <!-- Sleep timer -->
     <string name="sleep_timer">Sleep timer</string>
-    <string name="sleep_timer_minutes">%1$d minutes</string>
+    <plurals name="sleep_timer_minutes">
+        <item quantity="one">%1$d minute</item>
+        <item quantity="other">%1$d minutes</item>
+    </plurals>
     <string name="sleep_timer_end_of_module">When this module ends</string>
     <string name="sleep_timer_end_of_module_short">End</string>
     <string name="sleep_timer_off">Turn off</string>

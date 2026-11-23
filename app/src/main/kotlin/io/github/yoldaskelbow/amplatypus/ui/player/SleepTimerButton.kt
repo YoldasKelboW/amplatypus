@@ -21,6 +21,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -73,7 +74,7 @@ fun SleepTimerButton(nowPlaying: NowPlaying, onSet: (Int) -> Unit) {
             )
             SleepTimer.CHOICES.forEach { minutes ->
                 DropdownMenuItem(
-                    text = { Text(stringResource(R.string.sleep_timer_minutes, minutes)) },
+                    text = { Text(pluralStringResource(R.plurals.sleep_timer_minutes, minutes, minutes)) },
                     onClick = { open = false; onSet(minutes) },
                 )
             }
