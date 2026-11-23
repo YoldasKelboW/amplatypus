@@ -213,8 +213,9 @@ public:
     float vu(int channel) override {
         if (!multi || channel < 0) return 0.0f;
         if (static_cast<size_t>(channel) < muted.size() && muted[static_cast<size_t>(channel)]) return 0.0f;
-        // Voices past the eighth share the last pair.
-        return level[static_cast<size_t>(std::min(channel, PAIRS - 1))];
+        // Voices past the eighth share the last pair. A single voice rarely goes past half of full
+        // scale (the chip's voices share its output), so the meter shows twice the level.
+        return std::min(1.0f, 2.0f * level[static_cast<size_t>(std::min(channel, PAIRS - 1))]);
     }
 
     void playPosition(int &order, int &pattern, int &row) override { order = pattern = row = 0; }
