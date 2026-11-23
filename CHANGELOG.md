@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Sleep timer: the moon in the player's header stops playback after 15 to 120 minutes, or when the playing
+  module ends. Timed stops fade the music out over the last 30 seconds. The time left shows next to the
+  moon, and the timer keeps running while the app is closed.
+
 ## 1.2.0 – 2026-11-18
 
 - Files with several songs - C64 tunes and much Amiga game music - show "Song 3 of 10" in the player with
