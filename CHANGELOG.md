@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.4.0 – 2026-11-23
 
 - Music from consoles and home computers, played by Game_Music_Emu: NES (NSF), Super Nintendo (SPC), Game Boy
   (GBS), Sega Mega Drive and Master System (VGM, GYM), PC Engine (HES), MSX (KSS), Atari 8-bit (SAP) and
