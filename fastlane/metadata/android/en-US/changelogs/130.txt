@@ -1,0 +1,1 @@
+Sleep timer: the moon in the player stops playback after 15 to 120 minutes or when the playing module ends, fading the music out first. It keeps running while the app is closed.

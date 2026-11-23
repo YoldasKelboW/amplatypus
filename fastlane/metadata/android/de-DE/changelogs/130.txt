@@ -1,0 +1,1 @@
+Sleep-Timer: Der Mond im Player stoppt die Wiedergabe nach 15 bis 120 Minuten oder am Ende des laufenden Moduls und blendet die Musik vorher sanft aus. Er läuft auch bei geschlossener App weiter.

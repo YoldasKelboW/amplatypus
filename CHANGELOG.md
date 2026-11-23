@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.3.0 – 2026-11-23
 
 - Sleep timer: the moon in the player's header stops playback after 15 to 120 minutes, or when the playing
   module ends. Timed stops fade the music out over the last 30 seconds. The time left shows next to the
