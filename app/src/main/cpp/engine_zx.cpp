@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 // ZX Spectrum tracker music: Pro Tracker 1-3, Sound Tracker and its compilers, ASC Sound Master,
-// SQ-Tracker, Pro Sound Creator and Maker, Fast Tracker, Global Tracker and VTX register dumps. Each
-// is read and played by its replay routine from ZXTune, on ZXTune's emulation of the AY-3-8910.
+// SQ-Tracker, Pro Sound Creator and Maker, Fast Tracker, Global Tracker, Vortex Tracker II's text files
+// and VTX register dumps. Each is read and played by its replay routine from ZXTune, on ZXTune's
+// emulation of the AY-3-8910. Chip Tracker plays samples instead, on ZXTune's sample engine.
 //
 // The app drives ZXTune's chip itself, frame by frame, with the registers the routine writes: so it can
 // silence a voice (ZXTune's own mute only stops its tone generator, which leaves a constant level) and
 // draw the voices' levels and waveforms from the same registers. Pro Tracker 3 files for two chips
-// (TurboSound) play through ZXTune's renderer, without channels.
+// (TurboSound) and Chip Tracker's samples play through ZXTune's renderer, without channels.
 #include "engine.h"
 #include "psg_view.h"
 
@@ -28,6 +29,8 @@
 #include "module/players/aym/aym_factory.h"
 #include "module/players/aym/aym_parameters.h"
 #include "module/players/aym/protracker3.h"
+#include "module/players/dac/all.h"
+#include "module/players/dac/dac_factory.h"
 #include "parameters/container.h"
 #include "parameters/merged_accessor.h"
 
@@ -57,6 +60,8 @@ struct Replayer {
     // Pro Tracker 3 has a factory of its own: its files may hold music for two chips.
     Formats::Chiptune::ProTracker3::Parser pt3 = nullptr;
     ChiptuneCreator create = nullptr;
+    // Chip Tracker plays samples through the Spectrum's beeper port or a DAC, not on the AY chip.
+    Module::DAC::Factory dac = nullptr;
 };
 
 // The replay routines to try for a file, the one its extension names first. Modland's extensions:
@@ -64,6 +69,11 @@ struct Replayer {
 std::vector<Replayer> replayersFor(const std::string &ext) {
     using namespace Module::AYM;
     if (ext == "pt3") return {{Formats::Chiptune::ProTracker3::Parse, nullptr}};
+    // Vortex Tracker II's text files, made readable for ZXTune by vt2Text().
+    if (ext == "vt2") return {{Formats::Chiptune::ProTracker3::VortexTracker2::Parse, nullptr}};
+    // Sound Tracker 1.1 modules, inside AY_Emul's "ZXAY" container (see zxayOffsets()).
+    if (ext == "st11") return {{nullptr, CreateSoundTrackerChiptune}};
+    if (ext == "chi") return {{nullptr, nullptr, Module::DAC::CreateChipTrackerChiptune}};
     if (ext == "pt2") return {{nullptr, CreateProTracker2Chiptune}};
     if (ext == "pt1") return {{nullptr, CreateProTracker1Chiptune}};
     if (ext == "stc" || ext == "st13" || ext == "zxs") {
@@ -86,11 +96,72 @@ Module::Holder::Ptr load(const Replayer &replayer, const Binary::Container &data
         properties = Parameters::Container::Create();
         auto none = Parameters::Container::Create();
         auto factory = replayer.pt3 != nullptr ? Module::ProTracker3::CreateFactory(replayer.pt3)
-                                               : Module::AYM::CreateModuleFactory(replayer.create);
+                       : replayer.dac != nullptr ? Module::DAC::CreateModuleFactory(replayer.dac)
+                                                 : Module::AYM::CreateModuleFactory(replayer.create);
         return factory->CreateModule(*none, data, properties);
     } catch (...) {
         return {};
     }
+}
+
+// Where the module in an AY_Emul "ZXAY" file may start. Its header points (big-endian, relative to where
+// each pointer is stored) from byte 18 to the song table, and from there to the song's data, which
+// begins with 8 bytes of settings before the module itself.
+std::vector<size_t> zxayOffsets(const unsigned char *bytes, size_t length) {
+    if (length < 24 || std::memcmp(bytes, "ZXAY", 4) != 0) return {};
+    auto pointer = [&](size_t at) -> long {
+        if (at + 2 > length) return -1;
+        auto offset = static_cast<int16_t>(bytes[at] << 8 | bytes[at + 1]);
+        return static_cast<long>(at) + offset;
+    };
+    long songs = pointer(18);
+    long song = songs >= 0 ? pointer(static_cast<size_t>(songs) + 2) : -1;
+    if (song < 0 || static_cast<size_t>(song) >= length) return {};
+    std::vector<size_t> offsets = {static_cast<size_t>(song) + 8};
+    // In case the settings are longer in some file.
+    for (size_t at = static_cast<size_t>(song); at < static_cast<size_t>(song) + 32 && at < length; at++) {
+        if (at != offsets.front()) offsets.push_back(at);
+    }
+    return offsets;
+}
+
+// Vortex Tracker II 2.5 and later write text that ZXTune's reader does not take: two blank lines after
+// the header, an [Info] block, and "." for a switched-off flag in samples where older versions wrote it
+// in lower case ("T.." for "Tne"). This writes it the old way.
+std::string vt2Text(const char *data, size_t length) {
+    std::string out;
+    out.reserve(length);
+    bool inSample = false, inInfo = false, blank = false;
+    size_t start = 0;
+    while (start < length) {
+        size_t end = start;
+        while (end < length && data[end] != '\n') end++;
+        std::string line(data + start, end - start);
+        start = end + 1;
+        if (!line.empty() && line.back() == '\r') line.pop_back();
+        if (line == "[Info]") inInfo = true;
+        if (inInfo) {
+            if (line == "[/Info]") inInfo = false;
+            continue;
+        }
+        if (line.empty()) {
+            if (blank) continue;
+            blank = true;
+        } else {
+            blank = false;
+        }
+        if (!line.empty() && line[0] == '[') {
+            inSample = line.rfind("[Sample", 0) == 0;
+        } else if (inSample && line.size() >= 3) {
+            static const char OFF[] = "tne";
+            for (size_t i = 0; i < 3; i++) {
+                if (line[i] == '.') line[i] = OFF[i];
+            }
+        }
+        out += line;
+        out += "\n";
+    }
+    return out;
 }
 
 class ZxPlayer : public Player {
@@ -351,18 +422,32 @@ private:
 bool isZxData(const void *, size_t, const std::string &path) { return !replayersFor(extensionOf(path)).empty(); }
 
 Player *createZxPlayer(const void *data, size_t length, const std::string &path) {
-    std::shared_ptr<const Binary::Container> container;
+    std::string ext = extensionOf(path);
+    const auto *bytes = static_cast<const char *>(data);
+    // What is handed to ZXTune: the file, or the module inside it at each place it may start.
+    std::vector<Binary::Container::Ptr> candidates;
     try {
-        container = Binary::CreateContainer(Binary::View(data, length));
+        if (ext == "vt2") {
+            std::string text = vt2Text(bytes, length);
+            candidates.push_back(Binary::CreateContainer(Binary::Dump(text.begin(), text.end())));
+        } else if (ext == "st11") {
+            for (size_t at : zxayOffsets(reinterpret_cast<const unsigned char *>(bytes), length)) {
+                candidates.push_back(Binary::CreateContainer(Binary::View(bytes + at, length - at)));
+            }
+        } else {
+            candidates.push_back(Binary::CreateContainer(Binary::View(data, length)));
+        }
     } catch (...) {
         return nullptr;
     }
-    if (container == nullptr) return nullptr;
-    for (const auto &replayer : replayersFor(extensionOf(path))) {
-        Parameters::Container::Ptr properties;
-        if (auto holder = load(replayer, *container, properties)) {
-            auto player = std::make_unique<ZxPlayer>(holder, holder->GetModuleProperties());
-            if (player->ok()) return player.release();
+    for (const auto &container : candidates) {
+        if (container == nullptr) continue;
+        for (const auto &replayer : replayersFor(ext)) {
+            Parameters::Container::Ptr properties;
+            if (auto holder = load(replayer, *container, properties)) {
+                auto player = std::make_unique<ZxPlayer>(holder, holder->GetModuleProperties());
+                if (player->ok()) return player.release();
+            }
         }
     }
     return nullptr;
