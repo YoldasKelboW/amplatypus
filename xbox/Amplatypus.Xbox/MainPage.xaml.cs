@@ -9,14 +9,16 @@ using Windows.Storage;
 using Windows.Storage.AccessCache;
 using Windows.Storage.Pickers;
 using Windows.Storage.Search;
+using Windows.System;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Navigation;
 
 namespace Amplatypus.Xbox
 {
-    /// <summary>One module file in the list.</summary>
+    /// <summary>One module file on the Xbox.</summary>
     public sealed class ModuleEntry
     {
         public ModuleEntry(StorageFile file, string folder)
@@ -31,22 +33,29 @@ namespace Amplatypus.Xbox
     }
 
     /// <summary>
-    /// The modules in the music library and a folder the user picks, and the one playing. The controller
-    /// moves between the list and the buttons; A plays the module under the focus.
+    /// Modland (searched on the device, played from its mirrors) and the modules on the Xbox, and the one
+    /// playing. The controller moves between the lists and the buttons; A plays the module under the focus.
     /// </summary>
     public sealed partial class MainPage : Page
     {
         private const string FolderToken = "modules";
-        private readonly ObservableCollection<ModuleEntry> modules = new ObservableCollection<ModuleEntry>();
+        private readonly ObservableCollection<object> modlandItems = new ObservableCollection<object>();
+        private readonly ObservableCollection<object> localItems = new ObservableCollection<object>();
         private readonly ModulePlayer player = new ModulePlayer();
         private readonly DispatcherTimer clock = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(250) };
+        private ModlandCatalog modland;
+        private string[] extensions = new string[0];
+        // The list the playing module came from, so that Next goes on in it.
+        private ObservableCollection<object> playingList;
         private int current = -1;
+        private int loading;
 
         public MainPage()
         {
             InitializeComponent();
-            Modules.ItemsSource = modules;
-            player.Ended += (sender, args) => _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => PlayAt(current + 1));
+            ModlandList.ItemsSource = modlandItems;
+            LocalList.ItemsSource = localItems;
+            player.Ended += (sender, args) => _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => PlayAt(playingList, current + 1));
             clock.Tick += (sender, args) => ShowProgress();
         }
 
@@ -59,14 +68,68 @@ namespace Amplatypus.Xbox
                 return;
             }
             clock.Start();
-            await LoadModulesAsync();
+            extensions = OpenMpt.SupportedExtensions();
+            await LoadLocalAsync();
+            await LoadModlandAsync();
         }
 
-        private async Task LoadModulesAsync()
+        // ---- Modland ----
+
+        private async Task LoadModlandAsync()
         {
-            Status.Text = "Looking for modules…";
-            modules.Clear();
-            var types = OpenMpt.SupportedExtensions().Select(ext => "." + ext).ToList();
+            modland = new ModlandCatalog(extensions);
+            try
+            {
+                await modland.LoadAsync(text => _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => Status.Text = text));
+                Status.Text = modland.Count.ToString("N0") + " modules on Modland";
+                Query.IsEnabled = SearchButton.IsEnabled = RandomButton.IsEnabled = true;
+                ShowModland(modland.Random());
+            }
+            catch (Exception)
+            {
+                Status.Text = "Modland cannot be reached. Modules on this Xbox still play.";
+            }
+        }
+
+        private void ShowModland(IEnumerable<ModlandEntry> entries)
+        {
+            modlandItems.Clear();
+            foreach (var entry in entries) modlandItems.Add(entry);
+        }
+
+        private void OnSearch(object sender, RoutedEventArgs e) => Search();
+
+        private void OnQueryKeyDown(object sender, KeyRoutedEventArgs e)
+        {
+            if (e.Key == VirtualKey.Enter || e.Key == VirtualKey.GamepadA)
+            {
+                e.Handled = true;
+                Search();
+            }
+        }
+
+        private void Search()
+        {
+            if (modland == null) return;
+            var found = modland.Search(Query.Text);
+            ShowModland(found);
+            Status.Text = found.Count == 0 ? "Nothing found." : found.Count + (found.Count >= 300 ? "+" : "") + " found";
+            if (found.Count > 0) ModlandList.Focus(FocusState.Programmatic);
+        }
+
+        private void OnRandom(object sender, RoutedEventArgs e)
+        {
+            if (modland == null) return;
+            ShowModland(modland.Random());
+            PlayAt(modlandItems, 0);
+        }
+
+        // ---- This Xbox ----
+
+        private async Task LoadLocalAsync()
+        {
+            localItems.Clear();
+            var types = extensions.Select(ext => "." + ext).ToList();
             var folders = new List<StorageFolder>();
             try
             {
@@ -92,18 +155,13 @@ namespace Amplatypus.Xbox
                 try
                 {
                     var query = folder.CreateFileQueryWithOptions(new QueryOptions(CommonFileQuery.OrderByName, types));
-                    foreach (var file in await query.GetFilesAsync())
-                    {
-                        modules.Add(new ModuleEntry(file, folder.DisplayName));
-                    }
+                    foreach (var file in await query.GetFilesAsync()) localItems.Add(new ModuleEntry(file, folder.DisplayName));
                 }
                 catch (Exception)
                 {
                     // A folder that cannot be searched is skipped.
                 }
             }
-            Status.Text = modules.Count == 0 ? "No modules found. Put some in Music, or choose a folder." : modules.Count + " modules";
-            if (modules.Count > 0) Modules.Focus(FocusState.Programmatic);
         }
 
         private async void OnChooseFolder(object sender, RoutedEventArgs e)
@@ -113,49 +171,57 @@ namespace Amplatypus.Xbox
             StorageFolder folder = await picker.PickSingleFolderAsync();
             if (folder == null) return;
             StorageApplicationPermissions.FutureAccessList.AddOrReplace(FolderToken, folder);
-            await LoadModulesAsync();
+            await LoadLocalAsync();
         }
 
-        private void OnModuleClick(object sender, ItemClickEventArgs e)
+        // ---- Playing ----
+
+        private void OnItemClick(object sender, ItemClickEventArgs e)
         {
-            PlayAt(modules.IndexOf((ModuleEntry)e.ClickedItem));
+            var list = sender == ModlandList ? modlandItems : localItems;
+            PlayAt(list, list.IndexOf(e.ClickedItem));
         }
 
-        private async void PlayAt(int index)
+        private async void PlayAt(ObservableCollection<object> list, int index)
         {
-            // Modules libopenmpt cannot read are passed over, up to the end of the list.
-            for (; index >= 0 && index < modules.Count; index++)
+            if (list == null) return;
+            int request = ++loading;
+            // Modules that cannot be fetched or read are passed over, up to the end of the list.
+            for (; index >= 0 && index < list.Count; index++)
             {
-                LoadedFile loaded = await ReadAsync(modules[index].File);
-                if (loaded.Bytes != null && player.Play(loaded.Bytes, out string title, out string type))
+                object item = list[index];
+                Title.Text = "Loading…";
+                byte[] data = await ReadAsync(item);
+                // Another module was asked for in the meantime.
+                if (request != loading) return;
+                if (data != null && player.Play(data, out string title, out string type))
                 {
+                    playingList = list;
                     current = index;
-                    Modules.SelectedIndex = index;
-                    Title.Text = string.IsNullOrWhiteSpace(title) ? modules[index].Name : title;
+                    (list == modlandItems ? ModlandList : LocalList).SelectedIndex = index;
+                    var entry = item as ModlandEntry;
+                    Title.Text = !string.IsNullOrWhiteSpace(title) ? title : entry?.Title ?? ((ModuleEntry)item).Name;
+                    Composer.Text = entry?.Composer ?? string.Empty;
                     Format.Text = type;
                     PlayButton.Content = "Pause";
                     return;
                 }
             }
             Title.Text = "Nothing playing";
-            Format.Text = string.Empty;
+            Composer.Text = Format.Text = string.Empty;
         }
 
-        private struct LoadedFile
-        {
-            public byte[] Bytes;
-        }
-
-        private static async Task<LoadedFile> ReadAsync(StorageFile file)
+        private async Task<byte[]> ReadAsync(object item)
         {
             try
             {
-                var buffer = await FileIO.ReadBufferAsync(file);
-                return new LoadedFile { Bytes = buffer.ToArray() };
+                if (item is ModlandEntry entry) return await modland.DownloadAsync(entry);
+                var buffer = await FileIO.ReadBufferAsync(((ModuleEntry)item).File);
+                return buffer.ToArray();
             }
             catch (Exception)
             {
-                return new LoadedFile();
+                return null;
             }
         }
 
@@ -163,16 +229,18 @@ namespace Amplatypus.Xbox
         {
             // Back to the start of the module, or to the one before when it has only just begun.
             if (player.Position > 3 || current <= 0) player.Seek(0);
-            else PlayAt(current - 1);
+            else PlayAt(playingList, current - 1);
         }
 
-        private void OnNext(object sender, RoutedEventArgs e) => PlayAt(current + 1);
+        private void OnNext(object sender, RoutedEventArgs e) => PlayAt(playingList ?? modlandItems, current + 1);
 
         private void OnPlayPause(object sender, RoutedEventArgs e)
         {
             if (current < 0)
             {
-                PlayAt(Math.Max(0, Modules.SelectedIndex));
+                var list = Sources.SelectedIndex == 0 ? modlandItems : localItems;
+                var view = Sources.SelectedIndex == 0 ? ModlandList : LocalList;
+                PlayAt(list, Math.Max(0, view.SelectedIndex));
                 return;
             }
             player.TogglePause();

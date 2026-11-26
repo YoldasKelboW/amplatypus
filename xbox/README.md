@@ -1,12 +1,18 @@
 # Amplatypus for Xbox
 
 A first version of Amplatypus as a UWP app, for an Xbox in developer mode (and for Windows). It plays
-module files from the music library, or from a folder you choose, through libopenmpt: MOD, XM, S3M, IT,
-MED and the other formats libopenmpt knows. The Android app's other players (UADE, C64, consoles,
-Atari, Spectrum, PC-98), the archives (Modland, AMP) and the radio are not part of it yet.
+modules through libopenmpt (MOD, XM, S3M, IT, MED and the other formats libopenmpt knows):
 
-Everything works with the controller: the stick or D-pad moves between the list and the buttons, A plays
-the module under the focus.
+- from **Modland**: the app downloads Modland's file list once a week, as the Android app does, keeps the
+  formats it plays (about 180,000 modules) and searches them on the Xbox. *Surprise me* plays a random
+  pick. Modules are fetched from Modland's mirrors when played and kept in the app's cache.
+- from **this Xbox**: the music library, or a folder you choose.
+
+The Android app's other players (UADE, C64, consoles, Atari, Spectrum, PC-98), AMP and the radio are not
+part of it yet.
+
+Everything works with the controller: LB and RB switch between Modland and this Xbox, the stick or D-pad
+moves between the lists and the buttons, A plays the module under the focus.
 
 ## Getting the package
 

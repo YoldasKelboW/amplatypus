@@ -4,6 +4,14 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     Background="#FF0B1A1C">
+    <Page.Resources>
+        <DataTemplate x:Key="ModuleTemplate">
+            <StackPanel Padding="0,6">
+                <TextBlock Text="{Binding Name}" FontSize="20" TextTrimming="CharacterEllipsis" />
+                <TextBlock Text="{Binding Folder}" FontSize="14" Opacity="0.6" TextTrimming="CharacterEllipsis" />
+            </StackPanel>
+        </DataTemplate>
+    </Page.Resources>
     <!-- TV-safe margins: televisions may cut off the edges of the picture. -->
     <Grid Margin="48,27,48,27">
         <Grid.ColumnDefinitions>
@@ -15,27 +23,46 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="16" Margin="0,0,0,16">
+        <StackPanel Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="16" Margin="0,0,0,8">
             <Image Source="Assets/Square44x44Logo.png" Width="44" Height="44" />
             <TextBlock Text="Amplatypus" FontSize="32" VerticalAlignment="Center" />
-            <Button x:Name="FolderButton" Content="Choose a folder" Click="OnChooseFolder" VerticalAlignment="Center" Margin="24,0,0,0" />
-            <TextBlock x:Name="Status" VerticalAlignment="Center" Opacity="0.7" />
+            <TextBlock x:Name="Status" VerticalAlignment="Center" Opacity="0.7" Margin="16,0,0,0" />
         </StackPanel>
 
-        <ListView x:Name="Modules" Grid.Row="1" IsItemClickEnabled="True" ItemClick="OnModuleClick" SelectionMode="Single">
-            <ListView.ItemTemplate>
-                <DataTemplate>
-                    <StackPanel Padding="0,6">
-                        <TextBlock Text="{Binding Name}" FontSize="20" TextTrimming="CharacterEllipsis" />
-                        <TextBlock Text="{Binding Folder}" FontSize="14" Opacity="0.6" TextTrimming="CharacterEllipsis" />
+        <!-- LB and RB switch between the tabs. -->
+        <Pivot x:Name="Sources" Grid.Row="1">
+            <PivotItem Header="Modland">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,8,0,8">
+                        <TextBox x:Name="Query" Width="420" PlaceholderText="Title or composer" KeyDown="OnQueryKeyDown" IsEnabled="False" />
+                        <Button x:Name="SearchButton" Content="Search" Click="OnSearch" IsEnabled="False" />
+                        <Button x:Name="RandomButton" Content="Surprise me" Click="OnRandom" IsEnabled="False" />
                     </StackPanel>
-                </DataTemplate>
-            </ListView.ItemTemplate>
-        </ListView>
+                    <ListView x:Name="ModlandList" Grid.Row="1" IsItemClickEnabled="True" ItemClick="OnItemClick"
+                              SelectionMode="Single" ItemTemplate="{StaticResource ModuleTemplate}" />
+                </Grid>
+            </PivotItem>
+            <PivotItem Header="This Xbox">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <Button x:Name="FolderButton" Content="Choose a folder" Click="OnChooseFolder" Margin="0,8,0,8" />
+                    <ListView x:Name="LocalList" Grid.Row="1" IsItemClickEnabled="True" ItemClick="OnItemClick"
+                              SelectionMode="Single" ItemTemplate="{StaticResource ModuleTemplate}" />
+                </Grid>
+            </PivotItem>
+        </Pivot>
 
-        <StackPanel Grid.Row="1" Grid.Column="1" Margin="32,0,0,0" Spacing="12">
+        <StackPanel Grid.Row="1" Grid.Column="1" Margin="32,48,0,0" Spacing="12">
             <TextBlock x:Name="Title" Text="Nothing playing" FontSize="28" TextWrapping="Wrap" />
-            <TextBlock x:Name="Format" FontSize="18" Opacity="0.7" TextWrapping="Wrap" />
+            <TextBlock x:Name="Composer" FontSize="20" Opacity="0.8" TextWrapping="Wrap" />
+            <TextBlock x:Name="Format" FontSize="16" Opacity="0.6" TextWrapping="Wrap" />
             <ProgressBar x:Name="Progress" Minimum="0" Maximum="1" Height="8" Margin="0,16,0,0" />
             <TextBlock x:Name="Time" FontSize="16" Opacity="0.7" />
             <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,16,0,0">
