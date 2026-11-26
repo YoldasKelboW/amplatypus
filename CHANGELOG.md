@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Android Auto: the library can be browsed in the car - favourites, recently played, all modules and the
+  playlists - and searched; a module plays with the rest of its list after it. Voice commands ("play
+  Hippel on Amplatypus") play the matching modules of the library, or the favourites without a name.
 - Player: a long format name no longer squeezes the channel count next to it; the count moves to the next line.
 - More ZX Spectrum music: Chip Tracker (sampled sound, 21 pieces), Vortex Tracker II's text files of version
   2.5 and later (12) and Sound Tracker 1.1 modules in AY_Emul's container (56 of 59). Chip Tracker shows no
