@@ -16,6 +16,8 @@
 #include <cctype>
 #include <cstring>
 #include <memory>
+#include <cmath>
+#include <map>
 #include <optional>
 #include <string>
 #include <vector>
@@ -260,7 +262,19 @@ public:
     }
 
     int orderCount() override { return positions; }
-    std::string patternText(int) override { return {}; }
+    // The rows of a pattern as the module played them (see scanPatterns()).
+    std::string patternText(int pattern) override {
+        auto found = patterns.find(pattern);
+        // Pattern 0 is how the app asks whether there are patterns at all; not every module plays one.
+        if (found == patterns.end() && pattern == 0 && !patterns.empty()) found = patterns.begin();
+        if (found == patterns.end()) return {};
+        std::string text;
+        for (const auto &row : found->second) {
+            if (!text.empty()) text += '\n';
+            text += row;
+        }
+        return text;
+    }
     bool ownScopes() override { return ready && tune != nullptr; }
     void scopes(int points, float *out) override { chip.scopes(points, out); }
 
@@ -287,13 +301,77 @@ private:
                 renderer = holder->CreateRenderer(static_cast<uint_t>(sampleRate), params);
             }
             using Parameters::ZXTune::Core::AYM::Clockrate;
-            chip.setClock(static_cast<double>(Parameters::GetInteger(*params, Clockrate::Key, Clockrate::Default)));
+            clock = static_cast<double>(Parameters::GetInteger(*params, Clockrate::Key, Clockrate::Default));
+            chip.setClock(clock);
+            if (tune && patterns.empty()) scanPatterns();
             rate = sampleRate;
             restart();
             return true;
         } catch (...) {
             return false;
         }
+    }
+
+    /**
+     * ZXTune keeps each tracker's notes in its own form and does not hand them out. So the module is run
+     * once without sound, and for every row the three voices' registers are written down as a tracker
+     * would show them: the note when one is struck, its volume (or "E" and the shape when the envelope
+     * plays it) and the noise period. Sample and ornament numbers are not known.
+     * Each cell is "note noise effect volume" in libopenmpt's layout: "C-4 1F E0E v0F".
+     */
+    void scanPatterns() {
+        using Devices::AYM::Registers;
+        auto rows = tune->CreateDataIterator(Module::AYM::TrackParameters::Create(params));
+        uint8_t regs[16] = {};
+        regs[Registers::MIXER] = 0x3f;
+        int lastPeriod[VOICES] = {};
+        int lastVolume[VOICES] = {};
+        std::optional<std::pair<unsigned, unsigned>> lastRow;
+        // A quarter of an hour at 50 frames a second is longer than any module's first run.
+        for (int frame = 0; frame < 50 * 60 * 15; frame++) {
+            auto state = rows->GetState();
+            if (state.LoopCount > 0) break;
+            auto changed = rows->Advance();
+            for (Registers::IndicesIterator it(changed); it; ++it) regs[*it] = changed[*it];
+            if (!state.Track) return;
+            std::pair<unsigned, unsigned> row(state.Track->Pattern, state.Track->Line);
+            if (lastRow == row) continue;
+            lastRow = row;
+            std::string line;
+            for (int v = 0; v < VOICES; v++) {
+                if (v > 0) line += '|';
+                line += cell(regs, v, lastPeriod[v], lastVolume[v]);
+            }
+            auto &pattern = patterns[static_cast<int>(row.first)];
+            if (pattern.size() <= row.second) pattern.resize(row.second + 1, "... .. ... ...|... .. ... ...|... .. ... ...");
+            // A pattern played again keeps what was written the first time.
+            if (pattern[row.second].find_first_not_of(".| ") == std::string::npos) pattern[row.second] = line;
+        }
+    }
+
+    std::string cell(const uint8_t *r, int v, int &lastPeriod, int &lastVolume) const {
+        static const char *const NAMES[] = {"C-", "C#", "D-", "D#", "E-", "F-", "F#", "G-", "G#", "A-", "A#", "B-"};
+        static const char HEX[] = "0123456789ABCDEF";
+        bool tone = (r[7] & (1 << v)) == 0;
+        bool noise = (r[7] & (8 << v)) == 0;
+        int level = r[8 + v] & 0x1f;
+        bool envelope = (level & 0x10) != 0;
+        int volume = envelope ? 15 : level & 0x0f;
+        int period = r[v * 2] | ((r[v * 2 + 1] & 0x0f) << 8);
+        bool sounding = (tone || noise) && volume > 0;
+        // A note shows where one is struck: a new pitch, or a voice that was silent.
+        std::string note = "...";
+        if (sounding && tone && period > 0 && (period != lastPeriod || lastVolume == 0)) {
+            double hz = clock / (16.0 * period);
+            int n = static_cast<int>(std::lround(12.0 * std::log2(hz / 440.0))) + 57;
+            if (n >= 0 && n < 120) note = std::string(NAMES[n % 12]) + static_cast<char>('0' + n / 12);
+        }
+        lastPeriod = tone ? period : 0;
+        lastVolume = sounding ? volume : 0;
+        std::string noiseText = noise && sounding ? std::string{HEX[(r[6] >> 4) & 1], HEX[r[6] & 0x0f]} : "..";
+        std::string effect = envelope && sounding ? std::string{'E', '0', HEX[r[13] & 0x0f]} : "...";
+        std::string vol = sounding ? std::string{'v', '0', HEX[volume]} : "...";
+        return note + " " + noiseText + " " + effect + " " + vol;
     }
 
     void restart() {
@@ -415,6 +493,9 @@ private:
     bool muted[VOICES] = {};
     bool restore[VOICES] = {};
     PsgView chip{1750000.0};
+    double clock = 1750000.0;
+    // Pattern number to its rows, each row the three cells separated by '|'.
+    std::map<int, std::vector<std::string>> patterns;
 };
 
 } // namespace

@@ -60,13 +60,15 @@ import io.github.yoldaskelbow.amplatypus.audio.ModuleEngine
  */
 
 /** The tracker whose look a retro view takes. */
-enum class RetroStyle { PROTRACKER, FASTTRACKER, IMPULSE, SCREAM, HIVELY, OCTAMED, DELITRACKER, C64 }
+enum class RetroStyle { PROTRACKER, FASTTRACKER, IMPULSE, SCREAM, HIVELY, OCTAMED, DELITRACKER, C64, ZX_SPECTRUM }
 
-/** Which retro view fits this module, if any: MOD, XM, IT, S3M, AHX, HVL, MED, and the UADE formats. */
+/** Which retro view fits this module, if any: MOD, XM, IT, S3M, AHX, HVL, MED, the Spectrum trackers, and the UADE formats. */
 fun retroStyleOf(info: ModuleEngine.ModuleInfo?): RetroStyle? {
     if (info == null) return null
     // C64 tunes and replay routines in an emulated Amiga (UADE) have no pattern: they get a player window.
     if (info.type.startsWith("C64")) return RetroStyle.C64
+    // Spectrum tracker modules show the rows the engine wrote down while running them once.
+    if (info.type.startsWith("ZX Spectrum") && info.hasPattern && info.channels == 3) return RetroStyle.ZX_SPECTRUM
     if (!info.hasPattern) return RetroStyle.DELITRACKER
     if (info.channels < 1) return null
     val type = info.type.lowercase()
@@ -96,6 +98,7 @@ fun RetroView(info: ModuleEngine.ModuleInfo, controls: RetroControls, onClose: (
         RetroStyle.OCTAMED -> ClassicTrackerView(info, OctaMedTheme, controls, onClose, modifier)
         RetroStyle.DELITRACKER -> DeliTrackerView(info, controls, onClose, modifier)
         RetroStyle.C64 -> DeliTrackerView(info, controls, onClose, modifier, look = C64Look)
+        RetroStyle.ZX_SPECTRUM -> ClassicTrackerView(info, ZxSpectrumTheme, controls, onClose, modifier)
         null -> Unit
     }
 }

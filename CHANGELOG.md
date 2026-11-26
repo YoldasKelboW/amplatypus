@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Tracker view for ZX Spectrum modules, in the Spectrum's colours: the module's patterns with the notes, volumes,
+  envelopes and noise the AY chip played, written down when the module is loaded. Sample and ornament numbers
+  are not shown; the trackers keep them in forms of their own.
 - Player: a long format name no longer squeezes the channel count next to it; the count moves to the next line.
 - More ZX Spectrum music: Chip Tracker (sampled sound, 21 pieces), Vortex Tracker II's text files of version
   2.5 and later (12) and Sound Tracker 1.1 modules in AY_Emul's container (56 of 59). Chip Tracker shows no

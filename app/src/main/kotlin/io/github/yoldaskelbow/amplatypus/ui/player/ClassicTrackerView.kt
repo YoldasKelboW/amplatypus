@@ -153,6 +153,43 @@ internal val ScreamTheme = TrackerTheme(
     cellLengths = listOf(14, 10, 6, 3),
 )
 
+/**
+ * ZX Spectrum trackers, in the Spectrum's own colours: blue panels with cyan bevels, white notes on black,
+ * a red bar with yellow text on the playing row. The notes are what the music played (see engine_zx.cpp).
+ */
+internal val ZxSpectrumTheme = TrackerTheme(
+    face = Color(0xFF0000D7),
+    light = Color(0xFF00D7D7),
+    shadow = Color(0xFF000000),
+    label = Color(0xFFFFFFFF),
+    valueBox = Color(0xFF000000),
+    value = Color(0xFFFFFF00),
+    screen = Color(0xFF000000),
+    patternText = Color(0xFFD7D7D7),
+    patternDim = Color(0xFF00D7D7),
+    beatRow = Color(0xFF000040),
+    barRow = Color(0xFF00006B),
+    beat = 4,
+    bar = 16,
+    rowBar = Color(0xFFD70000),
+    rowText = Color(0xFFFFFF00),
+    header = Color(0xFF0000D7),
+    headerText = Color(0xFFFFFFFF),
+    scope = Color(0xFF00FF00),
+    vu = Color(0xFF00D700),
+    readouts = listOf("POSITION", "PATTERN", "LENGTH", "TEMPO", "DELAY"),
+    exit = "EXIT",
+    songLabel = "TITLE",
+    // Sample numbers are not known; the cells carry the noise period where trackers have the instrument.
+    instrumentLabel = "NOISE",
+    channelLabel = "CHANNEL",
+    buttons = listOf("PREV", "PLAY", "PAUSE", "NEXT"),
+    rowDigits = 2,
+    cell = ::zxCell,
+    cellLengths = listOf(12, 5, 3),
+    decimalInstruments = false,
+)
+
 /** HivelyTracker's steel-blue skin: brushed blue panels, light blue tracks on black. */
 internal val HivelyTheme = TrackerTheme(
     face = Color(0xFF6E8CA8),
@@ -482,6 +519,19 @@ internal fun itCell(cell: String): String {
     val effect = padded.substring(7, 10).replace(' ', '.')
     val volume = padded.substring(11, 14).replace(' ', '.')
     return "$note $instrument $volume $effect"
+}
+
+/**
+ * A Spectrum cell from what the AY chip played: note, volume, envelope and its shape, noise period -
+ * "C-4 F E0E 1F". The engine writes it in libopenmpt's layout, "C-4 1F E0E v0F".
+ */
+internal fun zxCell(cell: String): String {
+    val padded = cell.padEnd(14)
+    val note = padded.substring(0, 3).let { if (it.isBlank()) "..." else it }
+    val noise = padded.substring(4, 6).replace(' ', '.')
+    val envelope = padded.substring(7, 10).replace(' ', '.')
+    val volume = padded.substring(11, 14).let { if (it.startsWith("v")) it.last().toString() else "." }
+    return "$note $volume $envelope $noise"
 }
 
 /** A cell as HivelyTracker writes it: "C-3 01 C10", and "--- 00 000" for an empty step. */

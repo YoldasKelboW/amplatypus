@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 package io.github.yoldaskelbow.amplatypus.ui.player
 
+import io.github.yoldaskelbow.amplatypus.audio.ModuleEngine
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -43,6 +44,22 @@ class RetroViewTest {
         assertEquals("C-5 27 v40 A0F", itCell("C-5 1B A0F v40"))
         assertEquals("... .. ... ...", itCell("... .. ... ..."))
         assertEquals("G#6 01 ... C10", itCell("G#6 01 C10"))
+    }
+
+    @Test
+    fun `Spectrum cells put volume before envelope and noise`() {
+        assertEquals("C-4 F E0E 1F", zxCell("C-4 1F E0E v0F"))
+        assertEquals("... 7 ... ..", zxCell("... .. ... v07"))
+        assertEquals("... . ... ..", zxCell("... .. ... ..."))
+    }
+
+    @Test
+    fun `Spectrum modules with patterns get the Spectrum tracker view`() {
+        val info = ModuleEngine.ModuleInfo(generation = 1, title = "", type = "ZX Spectrum (ProTracker 3.5)", tracker = "", channels = 3,
+            message = "", samples = emptyList(), instruments = emptyList())
+        assertEquals(RetroStyle.ZX_SPECTRUM, retroStyleOf(info))
+        // Register dumps (VTX) and two-chip files have no patterns.
+        assertEquals(RetroStyle.DELITRACKER, retroStyleOf(info.copy(hasPattern = false)))
     }
 
     @Test
