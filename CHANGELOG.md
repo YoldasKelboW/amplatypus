@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Super Nintendo (SPC) and Mega Drive FM music (VGM, VGZ, GYM) show their eight voices as channels and can
+  mute them. Levels and pitch come from the sound chips' registers: the SNES chip's are read from the
+  emulator, the Mega Drive's are followed in the file. The waveforms are only sketched from them.
 - Search: the keyboard closes when a result is tapped or the list is scrolled, after the search key, and when
   the player opens; before, it stayed open and covered the channels.
 - Atari ST music: about 7,300 SNDH and SC68 files, played by sc68 in an emulated Atari ST (68000, YM-2149,

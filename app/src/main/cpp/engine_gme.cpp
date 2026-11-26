@@ -6,8 +6,14 @@
 //
 // Where the emulator can, it renders every voice into a stereo pair of its own ("multi-channel"); the
 // player mixes them itself and so knows each voice's level and waveform, and the voices show as
-// channels. The SNES emulator and the Mega Drive FM sound cannot; those files show no channels.
+// channels. The SNES emulator and the Mega Drive FM sound cannot. Their voices still show as channels
+// and can be muted; level and pitch come from the chips' registers: the SNES sound chip's are read from
+// the emulator (gme_peek.cpp), the Mega Drive's are followed in the file itself (fm_track.h). Their
+// waveforms are only sketched from that (voice_view.h).
 #include "engine.h"
+#include "fm_track.h"
+#include "gme_peek.h"
+#include "voice_view.h"
 
 #include <algorithm>
 #include <cctype>
@@ -37,6 +43,7 @@ constexpr int GYM_HEADER = 0x1AC;
 // tried briefly at a low rate when the file is loaded, and only those that make a sound are offered.
 constexpr int SCAN_RATE = 8000;
 constexpr int SCAN_MS = 400;
+constexpr int SPC_VOICES = 8;
 
 bool claimsAllTracks(gme_type_t type) { return type == gme_hes_type || type == gme_kss_type; }
 
@@ -117,11 +124,13 @@ public:
             int at = gme_tell(emu);
             if (!open(sampleRate) || !start(track)) return 0;
             gme_seek(emu, at);
+            followFrom(at / 1000.0);
         }
         if (gme_track_ended(emu) || ended) return 0;
         size_t channels = multi ? PAIRS * 2 : 2;
         buffer.resize(frames * channels);
         if (gme_play(emu, static_cast<int>(buffer.size()), buffer.data()) != nullptr) return 0;
+        if (view == View::SPC || view == View::FM) followVoices(static_cast<double>(frames) / rate);
         std::fill(peak.begin(), peak.end(), 0.0f);
         bool loud = false;
         for (size_t i = 0; i < frames; i++) {
@@ -163,13 +172,18 @@ public:
     void seek(double seconds) override {
         if (!ready) return;
         gme_seek(emu, static_cast<int>(std::max(0.0, seconds) * 1000.0));
+        followFrom(gme_tell(emu) / 1000.0);
         silentFor = 0.0;
         ended = false;
     }
 
     void setStereoSeparation(int) override {}
-    // Only voices the player can see on their own are offered as channels.
-    int channelCount() override { return ready && multi ? gme_voice_count(emu) : 0; }
+    // Voices the player can see on their own, or whose registers it can read, are offered as channels.
+    int channelCount() override {
+        if (!ready) return 0;
+        if (multi) return gme_voice_count(emu);
+        return view == View::NONE ? 0 : voices.size();
+    }
 
     void setChannelMute(int channel, bool mute) override {
         if (!ready || channel < 0 || channel >= channelCount()) return;
@@ -211,6 +225,7 @@ public:
     }
 
     float vu(int channel) override {
+        if (view == View::SPC || view == View::FM) return voices.vu(channel);
         if (!multi || channel < 0) return 0.0f;
         if (static_cast<size_t>(channel) < muted.size() && muted[static_cast<size_t>(channel)]) return 0.0f;
         // Voices past the eighth share the last pair. A single voice rarely goes past half of full
@@ -220,9 +235,13 @@ public:
 
     void playPosition(int &order, int &pattern, int &row) override { order = pattern = row = 0; }
     std::string patternText(int) override { return {}; }
-    bool ownScopes() override { return ready && multi; }
+    bool ownScopes() override { return ready && (multi || view != View::NONE); }
 
     void scopes(int points, float *out) override {
+        if (!multi) {
+            voices.scopes(points, out);
+            return;
+        }
         int voices = channelCount();
         for (int c = 0; c < voices; c++) {
             int pair = std::min(c, PAIRS - 1);
@@ -255,7 +274,61 @@ private:
         rate = sampleRate;
         multi = gme_multi_channel(emu) != 0;
         gme_ignore_silence(emu, 1);
+        view = View::NONE;
+        if (multi) {
+            view = View::MULTI;
+        } else if (type == gme_spc_type) {
+            view = View::SPC;
+        } else if ((type == gme_vgm_type || type == gme_vgz_type || type == gme_gym_type) && gme_voice_count(emu) == FmTrack::VOICES &&
+                   fm.load(file, type == gme_gym_type)) {
+            // Mega Drive files; Master System FM music (YM2413) has no YM2612 and is not followed.
+            view = View::FM;
+        }
+        voices.resize(view == View::SPC ? SPC_VOICES : view == View::FM ? FmTrack::VOICES : 0);
         return true;
+    }
+
+    // Reads the voices' registers after `seconds` more of playback.
+    void followVoices(double seconds) {
+        if (view == View::SPC) {
+            unsigned char regs[128];
+            if (gmeSpcDspRegisters(emu, regs)) {
+                for (int v = 0; v < SPC_VOICES; v++) {
+                    const unsigned char *r = regs + v * 0x10;
+                    int volume = std::max(std::abs(static_cast<int>(static_cast<int8_t>(r[0]))),
+                                          std::abs(static_cast<int>(static_cast<int8_t>(r[1]))));
+                    int envelope = r[8] & 0x7F;
+                    int pitch = (r[2] | r[3] << 8) & 0x3FFF;
+                    // Pitch 0x1000 plays a sample at the chip's 32 kHz; drawn as if it held a 16-sample cycle.
+                    double hz = pitch * 32000.0 / 4096.0 / 16.0;
+                    bool noise = (regs[0x3D] >> v & 1) != 0;
+                    // Envelope times volume; the square root makes quiet voices show, as a meter in decibels would.
+                    voices.set(v, std::sqrt(envelope / 127.0 * volume / 128.0), hz, noise ? VoiceView::NOISE : VoiceView::SINE);
+                }
+            }
+        } else {
+            followed += seconds;
+            fm.advanceTo(followed);
+            fm.decayPcm(seconds);
+            for (int v = 0; v < FmTrack::VOICES; v++) {
+                double loudness, hz;
+                fm.voice(v, loudness, hz);
+                VoiceView::Shape shape = v == FmTrack::PCM ? VoiceView::NOISE
+                                       : v == FmTrack::PSG ? (fm.psgNoiseLoudest() ? VoiceView::NOISE : VoiceView::SQUARE)
+                                                           : VoiceView::SINE;
+                voices.set(v, loudness, hz, shape);
+            }
+        }
+        voices.advance(seconds, muted);
+    }
+
+    // After a jump or a new start: the Mega Drive file is read again from the beginning up to `seconds`.
+    void followFrom(double seconds) {
+        voices.reset();
+        if (view != View::FM) return;
+        fm.restart();
+        followed = std::max(0.0, seconds);
+        fm.advanceTo(followed);
     }
 
     // The songs worth offering: all of them, or for HES and KSS those that make a sound.
@@ -297,6 +370,7 @@ private:
         for (size_t c = 0; c < muted.size(); c++) gme_mute_voice(emu, static_cast<int>(c), muted[c] ? 1 : 0);
         std::fill(level.begin(), level.end(), 0.0f);
         std::fill(history.begin(), history.end(), 0.0f);
+        followFrom(0.0);
         played = silentFor = 0.0;
         everLoud = ended = false;
         return true;
@@ -314,6 +388,12 @@ private:
     gme_info_t *info = nullptr;
     bool ready = false;
     bool multi = false;
+    // How the voices are seen: rendered apart, or from the registers of the SNES or Mega Drive chips.
+    enum class View { NONE, MULTI, SPC, FM };
+    View view = View::NONE;
+    VoiceView voices;
+    FmTrack fm;
+    double followed = 0.0;
     int rate = 0;
     int track = 0;            // index into tracks
     std::vector<int> tracks;  // the file's song numbers that are offered
