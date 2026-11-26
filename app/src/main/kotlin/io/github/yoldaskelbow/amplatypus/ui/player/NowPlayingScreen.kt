@@ -3,11 +3,12 @@ package io.github.yoldaskelbow.amplatypus.ui.player
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -26,8 +27,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
@@ -54,18 +53,20 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import io.github.yoldaskelbow.amplatypus.AmplatypusApplication
 import androidx.media3.common.Player
+import io.github.yoldaskelbow.amplatypus.AmplatypusApplication
 import io.github.yoldaskelbow.amplatypus.R
 import io.github.yoldaskelbow.amplatypus.audio.ModuleEngine
 import io.github.yoldaskelbow.amplatypus.playback.PlayerConnection
 import io.github.yoldaskelbow.amplatypus.radio.Radio
 import io.github.yoldaskelbow.amplatypus.source.ModuleRef
 import io.github.yoldaskelbow.amplatypus.source.amp.AmpSource
+import io.github.yoldaskelbow.amplatypus.ui.HideKeyboardOnEnter
 import io.github.yoldaskelbow.amplatypus.ui.formatTime
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -76,6 +77,8 @@ fun NowPlayingScreen(player: PlayerConnection, onClose: () -> Unit) {
     val nowPlaying by player.nowPlaying.collectAsStateWithLifecycle()
     val visual = rememberVisual()
     BackHandler(onBack = onClose)
+    // The player covers the search field: a keyboard left open from a search would cover the channels.
+    HideKeyboardOnEnter()
 
     // The library entry of the playing module, for the favourite button.
     val container = (LocalContext.current.applicationContext as AmplatypusApplication).container

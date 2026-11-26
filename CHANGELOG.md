@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Search: the keyboard closes when a result is tapped or the list is scrolled, after the search key, and when
+  the player opens; before, it stayed open and covered the channels.
 - Atari ST music: about 7,300 SNDH and SC68 files, played by sc68 in an emulated Atari ST (68000, YM-2149,
   MFP), and about 5,000 YM files, played by StSound. The YM chip's three voices show as channels with levels
   and scopes drawn from its registers; they cannot be muted. SNDH composers and titles are shown with
