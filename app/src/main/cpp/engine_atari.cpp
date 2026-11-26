@@ -9,6 +9,7 @@
 // with its older YM engine, and the better one (band-limited steps by Antti Lankila) is kept.
 // SC68 files with Amiga music (Paula) show no channels.
 #include "engine.h"
+#include "psg_view.h"
 
 #include <algorithm>
 #include <cctype>
@@ -28,7 +29,7 @@ extern "C" {
 
 namespace {
 
-constexpr int VOICES = 3;
+constexpr int VOICES = PsgView::VOICES;
 constexpr double ST_CLOCK = 2000000.0;
 // SNDH files often say nothing about their length: they end after this long, or earlier once silent.
 constexpr int DEFAULT_LENGTH_MS = 180000;
@@ -52,58 +53,6 @@ void join(std::string &text, const std::string &line) {
     if (!text.empty()) text += "\n";
     text += line;
 }
-
-// What the app shows of the YM-2149's three voices, worked out from its 16 registers.
-class ChipView {
-public:
-    void update(const uint8_t *r, double step, const bool *muted) {
-        for (int v = 0; v < VOICES; v++) {
-            bool tone = (r[7] & (1 << v)) == 0;
-            bool noise = (r[7] & (8 << v)) == 0;
-            int volume = r[8 + v] & 0x1f;
-            // Bit 4 hands the volume to the envelope generator: show it as fairly loud.
-            double target = (tone || noise) ? ((volume & 0x10) ? 0.8 : (volume & 0x0f) / 15.0) : 0.0;
-            if (muted != nullptr && muted[v]) target = 0.0;
-            level[v] = target >= level[v] ? target : std::max(target, level[v] - step * 3.0);
-            int period = r[v * 2] | ((r[v * 2 + 1] & 0x0f) << 8);
-            frequency[v] = tone && period > 0 ? ST_CLOCK / (16.0 * period) : 0.0;
-            noisy[v] = noise && !tone;
-        }
-    }
-
-    float vu(int v) const { return v >= 0 && v < VOICES ? static_cast<float>(level[v]) : 0.0f; }
-
-    // A square wave at the voice's pitch (or noise) as tall as its volume, about 20 ms of it.
-    void scopes(int points, float *out) {
-        for (int v = 0; v < VOICES; v++) {
-            double cycles = std::min(frequency[v] * 0.02, 24.0);
-            for (int i = 0; i < points; i++) {
-                double sample;
-                if (noisy[v]) {
-                    seed = seed * 1103515245u + 12345u;
-                    sample = static_cast<double>((seed >> 16) & 0x7fff) / 16384.0 - 1.0;
-                } else if (cycles > 0.0) {
-                    double t = phase[v] + cycles * i / points;
-                    sample = t - std::floor(t) < 0.5 ? 1.0 : -1.0;
-                } else {
-                    sample = 0.0;
-                }
-                out[v * points + i] = static_cast<float>(sample * level[v] * 0.3);
-            }
-            phase[v] += cycles * 0.37;
-            phase[v] -= std::floor(phase[v]);
-        }
-    }
-
-    void reset() { *this = ChipView(); }
-
-private:
-    double level[VOICES] = {};
-    double frequency[VOICES] = {};
-    double phase[VOICES] = {};
-    bool noisy[VOICES] = {};
-    uint32_t seed = 12345u;
-};
 
 // Ends a track that has fallen silent, or that never makes a sound.
 struct SilenceWatch {
@@ -225,7 +174,7 @@ private:
     int rate = 0;
     int lengthMs = DEFAULT_LENGTH_MS;
     std::vector<ymsample> buffer;
-    ChipView chip;
+    PsgView chip{ST_CLOCK};
     SilenceWatch silence;
 };
 
@@ -422,7 +371,7 @@ private:
     double seconds = 0.0;
     bool amiga = false;
     std::vector<short> buffer;
-    ChipView chip;
+    PsgView chip{ST_CLOCK};
     SilenceWatch silence;
 
 public:

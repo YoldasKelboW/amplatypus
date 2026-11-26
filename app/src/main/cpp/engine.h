@@ -79,3 +79,7 @@ Player *createGmePlayer(const void *data, size_t length, const std::string &path
 // Atari ST music: SNDH and SC68 files by sc68, YM register dumps by StSound.
 bool isAtariData(const void *data, size_t length, const std::string &path);
 Player *createAtariPlayer(const void *data, size_t length, const std::string &path);
+
+// ZX Spectrum tracker music (Pro Tracker, Sound Tracker, ASC, SQ-Tracker and others, VTX), by ZXTune.
+bool isZxData(const void *data, size_t length, const std::string &path);
+Player *createZxPlayer(const void *data, size_t length, const std::string &path);

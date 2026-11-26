@@ -6,6 +6,13 @@
   MFP), and about 5,000 YM files, played by StSound. The YM chip's three voices show as channels with levels
   and scopes drawn from its registers; they cannot be muted. SNDH composers and titles are shown with
   spaces and first names first. Part of "Consoles and home computers" in the format filter.
+- ZX Spectrum tracker music: about 22,500 modules from Modland's Spectrum folder - Pro Tracker 1, 2 and 3,
+  Sound Tracker and ST Song Compiler, ASC Sound Master, SQ-Tracker, Sound Tracker Pro, Pro Sound Creator and
+  Maker, Fast Tracker, Global Tracker and VTX files - played by ZXTune's replay routines on its emulation of
+  the AY-3-8910. The chip's three voices show as channels with levels and scopes and can be muted; position,
+  pattern and speed show in the player. Pro Tracker 3 files for two chips (TurboSound) play without channels.
+  Not yet: Chip Tracker, Flash Tracker, Fuxoft AY Language, Sound Tracker 1.1 and Vortex Tracker II text files
+  (about 200 pieces).
 
 ## 1.4.0 – 2026-11-23
 

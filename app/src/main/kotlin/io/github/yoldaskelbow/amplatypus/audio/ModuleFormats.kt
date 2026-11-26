@@ -87,7 +87,7 @@ object ModuleFormats {
     val uadeModlandFolders: Set<String> = uadeModlandPlayers.filterValues { it in uadePlayers }.keys
 
     /** Changes whenever the set of playable Modland files does, so stored indexes are rebuilt. */
-    val VERSION: Int = 7 * 31 + uadeModlandFolders.hashCode()
+    val VERSION: Int = 8 * 31 + uadeModlandFolders.hashCode()
 
     /** Commodore 64 files, played by libsidplayfp: SID tunes and Compute's Sidplayer songs. */
     val c64Extensions: Set<String> = setOf("sid", "psid", "mus", "str")
@@ -98,15 +98,26 @@ object ModuleFormats {
     /**
      * Console and home computer music. Game Music Emu plays NES, SNES, Game Boy, Mega Drive and Master
      * System, PC Engine, MSX, Atari 8-bit, ZX Spectrum and Amstrad CPC (Modland keeps AY files as
-     * ".emul"); sc68 plays Atari ST SNDH and SC68 files, StSound YM files.
+     * ".emul"); sc68 plays Atari ST SNDH and SC68 files, StSound YM files, and ZXTune the modules of the ZX
+     * Spectrum's trackers (see [zxExtensions]).
      */
     val consoleExtensions: Set<String> =
-        setOf("nsf", "nsfe", "spc", "gbs", "vgm", "vgz", "gym", "hes", "kss", "sap", "ay", "emul", "sndh", "sc68", "ym")
+        setOf("nsf", "nsfe", "spc", "gbs", "vgm", "vgz", "gym", "hes", "kss", "sap", "ay", "emul", "sndh", "sc68", "ym") +
+            setOf("pt3", "pt2", "pt1", "stc", "st13", "zxs", "asc", "sqt", "stp2", "psc", "ftc", "gtr", "vtx")
+
+    /**
+     * ZX Spectrum tracker modules, played by ZXTune: Pro Tracker 1-3, Sound Tracker (".stc", ".st13", and ".zxs"
+     * with its player), ASC Sound Master, SQ-Tracker, Sound Tracker Pro, Pro Sound Creator and Maker, Fast
+     * Tracker, Global Tracker, and VTX register dumps. ".stp" and ".psm" are also tracker formats of the Amiga and
+     * PC; the app tries ZXTune first and libopenmpt after it.
+     */
+    val zxExtensions: Set<String> =
+        setOf("pt3", "pt2", "pt1", "stc", "st13", "zxs", "asc", "sqt", "stp", "stp2", "psc", "psm", "ftc", "gtr", "vtx")
 
     /** Modland folders of console and home computer music the app plays. */
     val consoleModlandFolders: Set<String> = setOf(
         "Nintendo Sound Format", "Nintendo SPC", "Gameboy Sound System", "Video Game Music", "Megadrive GYM",
-        "HES", "KSS", "Slight Atari Player", "AY Emul", "SNDH", "SC68", "YM",
+        "HES", "KSS", "Slight Atari Player", "AY Emul", "SNDH", "SC68", "YM", "Spectrum",
     )
 
     /**
@@ -130,7 +141,8 @@ object ModuleFormats {
         if (format == "Video Game Music") return path.split('/').getOrNull(1) in vgmSystems && ext in consoleExtensions
         return ext in trackerExtensions || format in uadeModlandFolders ||
             (format in c64ModlandFolders && ext in c64Extensions) ||
-            (format in consoleModlandFolders && ext in consoleExtensions)
+            (format in consoleModlandFolders && ext in consoleExtensions) ||
+            (format == "Spectrum" && ext in zxExtensions)
     }
 
     /** The group a file belongs to by its extension (or Amiga-style prefix), for the format filter. */

@@ -56,3 +56,7 @@ sc68 (Atari ST music: SNDH, SC68) – GNU GPL 3.0 or later; Copyright (c) 1998-2
   github.com/gbraad/sc68 mirror of the SourceForge repository. The assembled trap handlers
   (app/src/main/cpp/sc68/gen/sc68/trap68.h) are taken from github.com/nsputnik/sc68-buildkit.
 StSound (Atari ST YM files) – MIT License, Copyright (c) 2021 Arnaud Carré.
+ZXTune (ZX Spectrum tracker modules and VTX files) – GNU LGPL 3.0; Copyright (c) 2009-2026 Vitamin/CAIG
+  (vitamin.caig@gmail.com); built in part from the git submodule. Bundled with it and built along:
+  lhasa (LHA unpacking) – ISC License, Copyright (c) 2011, 2012 Simon Howard; and
+  {fmt} – MIT License, Copyright (c) 2012 - present Victor Zverovich.

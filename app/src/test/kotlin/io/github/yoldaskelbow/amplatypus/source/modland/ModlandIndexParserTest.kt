@@ -64,6 +64,20 @@ class ModlandIndexParserTest {
     }
 
     @Test
+    fun spectrumComposerIsBelowTheTrackerFolder() {
+        val line = ModlandIndexParser.parse("4321\tSpectrum/Pro Tracker 3/Nik-O/heavy.pt3")!!
+        assertEquals("Spectrum", line.format)
+        assertEquals("Nik-O", line.composer)
+        assertEquals("heavy", line.title)
+        assertEquals("pt3", line.ext)
+        val coop = ModlandIndexParser.parse("4321\tSpectrum/Pro Tracker 2/Mast/coop-Nick/caravela.pt2")!!
+        assertEquals("Mast", coop.composer)
+        assertEquals("caravela", coop.title)
+        val loose = ModlandIndexParser.parse("4321\tSpectrum/Global Tracker/tune.gtr")!!
+        assertEquals("_unknown", loose.composer)
+    }
+
+    @Test
     fun titleMayContainDots() {
         val line = ModlandIndexParser.parse("102\tGameboy Sound Format/_unknown/Poke Inu/2108.000d.minigsf")!!
         assertEquals("2108.000d", line.title)
