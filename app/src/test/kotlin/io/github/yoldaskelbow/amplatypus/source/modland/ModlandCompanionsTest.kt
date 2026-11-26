@@ -57,6 +57,20 @@ class ModlandCompanionsTest {
     }
 
     @Test
+    fun `PC-98 FMP songs bring the sample banks of their own folder`() {
+        val files = listOf(
+            "FM sound driver (FMP)/Lenka/SKTF_LAM.PVI",
+            "FM sound driver (FMP)/Lenka/FMPD_V6.PVI",
+            "FM sound driver (FMP)/Lenka/Some Game/OTHER.PVI",
+            "FM sound driver (FMP)/Nekopong/DARIG.PVI",
+        )
+        val companions = ModlandCompanions.folderCompanionsOf("FM sound driver (FMP)/Lenka/Orange - Kotone of Truth.OZI", files)
+        assertEquals(files.take(2), companions.map { it.path })
+        assertTrue(ModlandCompanions.isFolderFile("FM sound driver (FMP)", files[0]))
+        assertFalse(ModlandCompanions.isFolderFile("FM sound driver (FMP)", "FM sound driver (FMP)/Lenka/Orange.OZI"))
+    }
+
+    @Test
     fun `Stereo Sidplayer songs bring their second-SID file`() {
         val companions = ModlandCompanions.companionsOf("Stereo Sidplayer/Andrew Hackard/jaws.mus")
         assertEquals(listOf("Stereo Sidplayer/Andrew Hackard/jaws.str"), companions.map { it.path })

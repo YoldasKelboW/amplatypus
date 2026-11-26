@@ -37,3 +37,7 @@
 	path = third_party/zxtune
 	url = https://github.com/vitamin-caig/zxtune.git
 	shallow = true
+[submodule "third_party/98fmplayer"]
+	path = third_party/98fmplayer
+	url = https://github.com/myon98/98fmplayer.git
+	shallow = true

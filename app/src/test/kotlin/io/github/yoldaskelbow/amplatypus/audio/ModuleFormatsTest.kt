@@ -46,6 +46,10 @@ class ModuleFormatsTest {
         assertTrue(ModuleFormats.isPlayableOnModland("SNDH", "sndh"))
         assertTrue(ModuleFormats.isPlayableOnModland("YM", "ym"))
         assertTrue(ModuleFormats.isPlayableOnModland("Spectrum", "pt3"))
+        assertTrue(ModuleFormats.isPlayableOnModland("FM sound driver (FMP)", "ozi"))
+        assertTrue(ModuleFormats.isPlayableOnModland("FM sound driver (FMP)", "pvi"))
+        assertTrue(ModuleFormats.isPlayableOnModland("PMD", "m"))
+        assertFalse(ModuleFormats.isPlayableOnModland("MDX", "mdx"))
         assertTrue(ModuleFormats.isPlayableOnModland("Spectrum", "stp"))
         // Spectrum formats ZXTune does not read (FXM, Flash Tracker), and another machine's format with a Spectrum extension.
         assertFalse(ModuleFormats.isPlayableOnModland("Spectrum", "fxm"))

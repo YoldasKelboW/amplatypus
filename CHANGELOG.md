@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- NEC PC-98 music: about 11,500 songs for the FMP driver and 1,500 for PMD, played by 98fmplayer on its
+  emulation of the YM2608. Eleven channels - FM 1-6, SSG 1-3, ADPCM and the PPZ8's PCM voices - with levels
+  and sketched waveforms from the drivers' tracks, and they can be muted. The sample banks (.PVI) of an FMP
+  song's folder are downloaded with it. Songs end after their first loop; their length is not known before.
+  Drums written for the YM2608's rhythm section stay silent: they need a ROM of Yamaha's.
 - Player: a long format name no longer squeezes the channel count next to it; the count moves to the next line.
 - More ZX Spectrum music: Chip Tracker (sampled sound, 21 pieces), Vortex Tracker II's text files of version
   2.5 and later (12) and Sound Tracker 1.1 modules in AY_Emul's container (56 of 59). Chip Tracker shows no

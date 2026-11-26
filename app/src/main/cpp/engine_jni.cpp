@@ -44,6 +44,8 @@ JNIEXPORT jlong JNICALL FN(nativeLoad)(JNIEnv *env, jclass, jbyteArray data, jst
     // ZX Spectrum tracker music, by its extension. Files that turn out to be something else (".psm" and
     // ".stp" are also PC and Amiga tracker formats) go on to the others.
     if (created == nullptr && isZxData(bytes, size, pathText)) created = createZxPlayer(bytes, size, pathText);
+    // NEC PC-98 music for the FMP and PMD drivers; the file says which one it is for.
+    if (created == nullptr && isPc98Data(bytes, size, pathText)) created = createPc98Player(bytes, size, pathText);
     if (created != nullptr) {
         // A C64 tune, console or home computer music.
     } else if (isHivelyData(bytes, size)) {

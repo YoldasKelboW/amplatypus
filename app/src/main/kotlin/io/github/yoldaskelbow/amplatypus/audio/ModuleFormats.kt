@@ -87,7 +87,7 @@ object ModuleFormats {
     val uadeModlandFolders: Set<String> = uadeModlandPlayers.filterValues { it in uadePlayers }.keys
 
     /** Changes whenever the set of playable Modland files does, so stored indexes are rebuilt. */
-    val VERSION: Int = 9 * 31 + uadeModlandFolders.hashCode()
+    val VERSION: Int = 11 * 31 + uadeModlandFolders.hashCode()
 
     /** Commodore 64 files, played by libsidplayfp: SID tunes and Compute's Sidplayer songs. */
     val c64Extensions: Set<String> = setOf("sid", "psid", "mus", "str")
@@ -103,7 +103,15 @@ object ModuleFormats {
      */
     val consoleExtensions: Set<String> =
         setOf("nsf", "nsfe", "spc", "gbs", "vgm", "vgz", "gym", "hes", "kss", "sap", "ay", "emul", "sndh", "sc68", "ym") +
-            setOf("pt3", "pt2", "pt1", "stc", "st13", "zxs", "asc", "sqt", "stp2", "psc", "ftc", "gtr", "vtx", "vt2", "st11", "chi")
+            setOf("pt3", "pt2", "pt1", "stc", "st13", "zxs", "asc", "sqt", "stp2", "psc", "ftc", "gtr", "vtx", "vt2", "st11", "chi") +
+            fmpExtensions + pmdExtensions
+
+    /** NEC PC-98 music for the FMP driver, played by 98fmplayer; songs load sample banks (.PVI) of their folder. */
+    const val FMP_FOLDER = "FM sound driver (FMP)"
+    val fmpExtensions: Set<String> get() = setOf("opi", "ovi", "ozi")
+
+    /** NEC PC-98 music for the PMD driver, played by 98fmplayer. */
+    val pmdExtensions: Set<String> get() = setOf("m", "m2", "mz")
 
     /**
      * ZX Spectrum tracker modules, played by ZXTune: Pro Tracker 1-3, Vortex Tracker II's text files, Sound
@@ -118,7 +126,7 @@ object ModuleFormats {
     /** Modland folders of console and home computer music the app plays. */
     val consoleModlandFolders: Set<String> = setOf(
         "Nintendo Sound Format", "Nintendo SPC", "Gameboy Sound System", "Video Game Music", "Megadrive GYM",
-        "HES", "KSS", "Slight Atari Player", "AY Emul", "SNDH", "SC68", "YM", "Spectrum",
+        "HES", "KSS", "Slight Atari Player", "AY Emul", "SNDH", "SC68", "YM", "Spectrum", FMP_FOLDER, "PMD",
     )
 
     /**
@@ -140,6 +148,8 @@ object ModuleFormats {
     fun isPlayableOnModland(format: String, extension: String, path: String = ""): Boolean {
         val ext = extension.lowercase()
         if (format == "Video Game Music") return path.split('/').getOrNull(1) in vgmSystems && ext in consoleExtensions
+        // The sample banks come with the songs (see ModlandCompanions).
+        if (format == FMP_FOLDER && ext == "pvi") return true
         return ext in trackerExtensions || format in uadeModlandFolders ||
             (format in c64ModlandFolders && ext in c64Extensions) ||
             (format in consoleModlandFolders && ext in consoleExtensions) ||
