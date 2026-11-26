@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -186,12 +187,14 @@ fun NowPlayingScreen(player: PlayerConnection, onClose: () -> Unit) {
                     overflow = TextOverflow.Ellipsis,
                 )
                 info?.let { module ->
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 4.dp)) {
+                    // Long format names ("ZX Spectrum (VortexTracker (Pro Tracker v3.7))") push the channel count
+                    // onto a line of its own instead of squeezing it.
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 4.dp)) {
                         if (module.type.isNotBlank()) {
                             val hasRetro = hasRetroView(module)
                             AssistChip(
                                 onClick = { if (hasRetro) showRetro = true },
-                                label = { Text(module.type, maxLines = 1) },
+                                label = { Text(module.type, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                                 // A small hint that this chip opens something.
                                 trailingIcon = if (hasRetro) {
                                     { Icon(painterResource(R.drawable.ic_retro), null, Modifier.size(AssistChipDefaults.IconSize)) }
@@ -203,7 +206,7 @@ fun NowPlayingScreen(player: PlayerConnection, onClose: () -> Unit) {
                         if (module.channels > 0) {
                             AssistChip(
                                 onClick = {},
-                                label = { Text(pluralStringResource(R.plurals.channel_count, module.channels, module.channels)) },
+                                label = { Text(pluralStringResource(R.plurals.channel_count, module.channels, module.channels), maxLines = 1) },
                             )
                         }
                     }
