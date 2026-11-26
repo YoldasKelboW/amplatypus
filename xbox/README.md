@@ -32,4 +32,5 @@ On Windows, install the certificate into *Local Machine → Trusted People* firs
 
 Visual Studio 2022 with the *Universal Windows Platform development* workload. Build
 `third_party/openmpt/build/vs2022win10uwp/libopenmpt-small.vcxproj` (ReleaseShared, x64), copy the
-resulting DLL to `xbox/native/x64/libopenmpt.dll`, then open `xbox/Amplatypus.Xbox.sln`.
+DLLs from `third_party/openmpt/bin/release/vs2022-win10uwp-shared/amd64/` to `xbox/native/x64/`, then open
+`xbox/Amplatypus.Xbox.sln`.

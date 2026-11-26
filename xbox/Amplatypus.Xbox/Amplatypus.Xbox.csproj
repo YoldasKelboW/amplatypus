@@ -23,8 +23,6 @@
     <AppxPackageSigningEnabled>false</AppxPackageSigningEnabled>
     <AppxBundle>Never</AppxBundle>
     <UapAppxPackageBuildMode>SideloadOnly</UapAppxPackageBuildMode>
-    <!-- libopenmpt.dll, built for UWP by the workflow from third_party/openmpt. -->
-    <LibOpenMptDll Condition=" '$(LibOpenMptDll)' == '' ">..\native\x64\libopenmpt.dll</LibOpenMptDll>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <DebugSymbols>true</DebugSymbols>
@@ -72,8 +70,9 @@
     <Content Include="Assets\StoreLogo.png" />
     <Content Include="Assets\Wide310x150Logo.png" />
     <Content Include="Properties\Default.rd.xml" />
-    <Content Include="$(LibOpenMptDll)">
-      <Link>libopenmpt.dll</Link>
+    <!-- libopenmpt-small.dll and its decoders' DLLs, built for UWP by the workflow from third_party/openmpt. -->
+    <Content Include="..\native\x64\*.dll">
+      <Link>%(Filename)%(Extension)</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

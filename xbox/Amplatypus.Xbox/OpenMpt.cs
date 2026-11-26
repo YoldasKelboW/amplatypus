@@ -5,10 +5,10 @@ using System.Text;
 
 namespace Amplatypus.Xbox
 {
-    /// <summary>The parts of libopenmpt's C interface the player uses (libopenmpt.dll, built for UWP).</summary>
+    /// <summary>The parts of libopenmpt's C interface the player uses (libopenmpt-small.dll, built for UWP).</summary>
     internal static class OpenMpt
     {
-        private const string Lib = "libopenmpt.dll";
+        private const string Lib = "libopenmpt-small.dll";
 
         [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
         private static extern IntPtr openmpt_module_create_from_memory2(
