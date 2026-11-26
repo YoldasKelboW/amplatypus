@@ -73,6 +73,10 @@ set(GME_ZLIB ON CACHE BOOL "" FORCE)
 # zlib (part of the NDK) unpacks VGZ files; without it Game Music Emu would quietly skip them.
 find_package(ZLIB REQUIRED)
 add_subdirectory(${GME_DIR} ${CMAKE_CURRENT_BINARY_DIR}/gme EXCLUDE_FROM_ALL)
+# Reads the SNES sound chip's registers for the channel view. Built inside Game Music Emu's target so it
+# sees the library's classes with the same options.
+target_sources(gme_static PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/gme_peek.cpp)
+target_include_directories(gme_static PRIVATE ${GME_DIR}/gme)
 
 # Atari ST: sc68 for SNDH and SC68 files, StSound for YM files.
 add_subdirectory(sc68)
