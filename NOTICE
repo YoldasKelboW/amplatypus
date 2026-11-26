@@ -52,3 +52,7 @@ Game_Music_Emu (console and home computer music: NSF, SPC, GBS, VGM/VGZ, GYM, HE
   or later; Copyright (c) 2003-2006 Shay Green (blargg) and the libgme contributors; built with the Nuked OPN2
   YM2612 emulator (GNU LGPL 2.1 or later, Copyright (c) 2017 Alexey Khokholov) and emu2413 (MIT,
   Copyright (c) 2001-2019 Mitsutaka Okazaki). See third_party/game-music-emu/license.txt.
+sc68 (Atari ST music: SNDH, SC68) – GNU GPL 3.0 or later; Copyright (c) 1998-2016 Benjamin Gerard; built from the
+  github.com/gbraad/sc68 mirror of the SourceForge repository. The assembled trap handlers
+  (app/src/main/cpp/sc68/gen/sc68/trap68.h) are taken from github.com/nsputnik/sc68-buildkit.
+StSound (Atari ST YM files) – MIT License, Copyright (c) 2021 Arnaud Carré.

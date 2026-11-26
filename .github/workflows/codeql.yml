@@ -4,11 +4,12 @@ name: CodeQL
 # keine Git-Submodule aus, dadurch scheitert der Gradle-Build (third_party/uade fehlt)
 # und Java/Kotlin wird nicht analysiert.
 
+# Läuft nicht bei Pull Requests: Die C/C++-Analyse dauert dort rund 25 Minuten.
+# Geprüft wird nach jedem Merge auf main, einmal pro Woche und auf Knopfdruck.
 on:
   push:
     branches: [main]
-  pull_request:
-    branches: [main]
+  workflow_dispatch:
   schedule:
     - cron: "27 3 * * 1"
 
@@ -43,6 +44,19 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
+
+      # Gradle-Plugins und Abhängigkeiten vorab laden, mit Wiederholung: Im autobuild-Schritt
+      # scheiterte die Plugin-Auflösung gelegentlich an Netzaussetzern ("Plugin ... was not found").
+      # Danach liegt alles im Gradle-Cache, und autobuild muss nichts mehr herunterladen.
+      - if: matrix.language == 'java-kotlin'
+        name: Gradle-Abhängigkeiten vorladen
+        run: |
+          for attempt in 1 2 3; do
+            ./gradlew --no-daemon help && exit 0
+            echo "Versuch $attempt fehlgeschlagen, neuer Versuch in 20 s"
+            sleep 20
+          done
+          exit 1
 
       # Der eingebaute Build von CodeQL (autobuild) bringt sein eigenes Gradle-Init-Skript mit.
       # Er scheiterte im Standard-Setup nur an den fehlenden Submodulen.

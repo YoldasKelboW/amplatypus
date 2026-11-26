@@ -74,9 +74,14 @@ set(GME_ZLIB ON CACHE BOOL "" FORCE)
 find_package(ZLIB REQUIRED)
 add_subdirectory(${GME_DIR} ${CMAKE_CURRENT_BINARY_DIR}/gme EXCLUDE_FROM_ALL)
 
-add_library(amplatypus SHARED engine_jni.cpp engine_openmpt.cpp engine_hively.cpp engine_uade.cpp engine_sid.cpp engine_gme.cpp)
+# Atari ST: sc68 for SNDH and SC68 files, StSound for YM files.
+add_subdirectory(sc68)
+add_subdirectory(stsound)
+
+add_library(amplatypus SHARED engine_jni.cpp engine_openmpt.cpp engine_hively.cpp engine_uade.cpp engine_sid.cpp engine_gme.cpp
+    engine_atari.cpp)
 set_source_files_properties(engine_hively.cpp PROPERTIES COMPILE_OPTIONS "-fsigned-char")
-target_link_libraries(amplatypus PRIVATE openmpt hively uade sidplayfp gme_static z m log)
+target_link_libraries(amplatypus PRIVATE openmpt hively uade sidplayfp gme_static sc68 stsound z m log)
 target_link_options(amplatypus PRIVATE -Wl,--gc-sections)
 # Nothing links against uadecore, so make sure it is built along with the library.
 add_dependencies(amplatypus uadecore)

@@ -75,3 +75,7 @@ Player *createSidPlayer(const std::string &path);
 // Console and home computer music (NSF, SPC, GBS, VGM/VGZ, GYM, HES, KSS, SAP, AY), by Game Music Emu.
 bool isGmeData(const void *data, size_t length, const std::string &path);
 Player *createGmePlayer(const void *data, size_t length, const std::string &path);
+
+// Atari ST music: SNDH and SC68 files by sc68, YM register dumps by StSound.
+bool isAtariData(const void *data, size_t length, const std::string &path);
+Player *createAtariPlayer(const void *data, size_t length, const std::string &path);

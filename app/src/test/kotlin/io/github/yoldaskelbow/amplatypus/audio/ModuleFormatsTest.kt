@@ -22,13 +22,13 @@ class ModuleFormatsTest {
     @Test
     fun `formats without a bundled replayer are not playable`() {
         assertFalse(ModuleFormats.isPlayable("minigsf"))
-        assertFalse(ModuleFormats.isPlayable("sndh"))
+        assertFalse(ModuleFormats.isPlayable("pt3"))
         assertFalse(ModuleFormats.isPlayable(""))
     }
 
     @Test
     fun `console and home computer music is playable and grouped`() {
-        for (ext in listOf("nsf", "NSFE", "spc", "gbs", "vgm", "vgz", "gym", "hes", "kss", "sap", "ay", "emul")) {
+        for (ext in listOf("nsf", "NSFE", "spc", "gbs", "vgm", "vgz", "gym", "hes", "kss", "sap", "ay", "emul", "sndh", "sc68", "ym")) {
             assertTrue(ext, ModuleFormats.isPlayable(ext))
             assertEquals(ext, FormatGroup.CONSOLE, ModuleFormats.groupOf(ext))
         }
@@ -42,6 +42,10 @@ class ModuleFormatsTest {
         assertFalse(ModuleFormats.isPlayableOnModland("Video Game Music", "vgz", "Video Game Music/Sega 32X/X/Y/01.vgz"))
         assertTrue(ModuleFormats.isPlayableOnModland("AY Emul", "emul"))
         assertTrue(ModuleFormats.isPlayableOnModland("Slight Atari Player", "sap"))
+        assertTrue(ModuleFormats.isPlayableOnModland("SNDH", "sndh"))
+        assertTrue(ModuleFormats.isPlayableOnModland("YM", "ym"))
+        // Amiga replayers for YM-ST files are another format.
+        assertFalse(ModuleFormats.isPlayableOnModland("YMST", "ymst"))
         // Same machines, other emulators the app does not bundle.
         assertFalse(ModuleFormats.isPlayableOnModland("Gameboy Sound Format", "minigsf"))
         assertFalse(ModuleFormats.isPlayableOnModland("Super Nintendo Sound Format", "minisnsf"))

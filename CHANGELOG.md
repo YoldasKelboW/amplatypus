@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Atari ST music: about 7,300 SNDH and SC68 files, played by sc68 in an emulated Atari ST (68000, YM-2149,
+  MFP), and about 5,000 YM files, played by StSound. The YM chip's three voices show as channels with levels
+  and scopes drawn from its registers; they cannot be muted. SNDH composers and titles are shown with
+  spaces and first names first. Part of "Consoles and home computers" in the format filter.
+
 ## 1.4.0 – 2026-11-23
 
 - Music from consoles and home computers, played by Game_Music_Emu: NES (NSF), Super Nintendo (SPC), Game Boy

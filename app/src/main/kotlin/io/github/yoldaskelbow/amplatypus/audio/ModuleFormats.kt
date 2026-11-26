@@ -87,7 +87,7 @@ object ModuleFormats {
     val uadeModlandFolders: Set<String> = uadeModlandPlayers.filterValues { it in uadePlayers }.keys
 
     /** Changes whenever the set of playable Modland files does, so stored indexes are rebuilt. */
-    val VERSION: Int = 6 * 31 + uadeModlandFolders.hashCode()
+    val VERSION: Int = 7 * 31 + uadeModlandFolders.hashCode()
 
     /** Commodore 64 files, played by libsidplayfp: SID tunes and Compute's Sidplayer songs. */
     val c64Extensions: Set<String> = setOf("sid", "psid", "mus", "str")
@@ -96,17 +96,17 @@ object ModuleFormats {
     val c64ModlandFolders: Set<String> = setOf("HVSC", "Sidplayer", "Stereo Sidplayer")
 
     /**
-     * Console and home computer music, played by Game Music Emu: NES, SNES, Game Boy, Mega Drive and
-     * Master System, PC Engine, MSX, Atari 8-bit, ZX Spectrum and Amstrad CPC. Modland keeps AY files
-     * as ".emul".
+     * Console and home computer music. Game Music Emu plays NES, SNES, Game Boy, Mega Drive and Master
+     * System, PC Engine, MSX, Atari 8-bit, ZX Spectrum and Amstrad CPC (Modland keeps AY files as
+     * ".emul"); sc68 plays Atari ST SNDH and SC68 files, StSound YM files.
      */
     val consoleExtensions: Set<String> =
-        setOf("nsf", "nsfe", "spc", "gbs", "vgm", "vgz", "gym", "hes", "kss", "sap", "ay", "emul")
+        setOf("nsf", "nsfe", "spc", "gbs", "vgm", "vgz", "gym", "hes", "kss", "sap", "ay", "emul", "sndh", "sc68", "ym")
 
-    /** Modland folders of console and home computer music that Game Music Emu plays. */
+    /** Modland folders of console and home computer music the app plays. */
     val consoleModlandFolders: Set<String> = setOf(
         "Nintendo Sound Format", "Nintendo SPC", "Gameboy Sound System", "Video Game Music", "Megadrive GYM",
-        "HES", "KSS", "Slight Atari Player", "AY Emul",
+        "HES", "KSS", "Slight Atari Player", "AY Emul", "SNDH", "SC68", "YM",
     )
 
     /**

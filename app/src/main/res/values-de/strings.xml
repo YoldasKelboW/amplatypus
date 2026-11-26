@@ -23,7 +23,7 @@
     <string name="filter_c64">Commodore 64</string>
     <string name="filter_c64_text">SID-Musik aus der HVSC-Sammlung und Sidplayer-Songs, abgespielt in einem nachgebildeten C64</string>
     <string name="filter_console">Konsolen und Heimcomputer</string>
-    <string name="filter_console_text">NES, SNES, Game Boy, Mega Drive und Master System, PC Engine, MSX, Atari 8-Bit, ZX Spectrum und Amstrad CPC, abgespielt mit Game Music Emu</string>
+    <string name="filter_console_text">NES, SNES, Game Boy, Mega Drive und Master System, PC Engine, MSX, Atari 8-Bit und ST, ZX Spectrum und Amstrad CPC, abgespielt mit Game Music Emu, sc68 und StSound</string>
     <string name="search_clear">Suche löschen</string>
     <string name="search_modules">Module</string>
     <string name="search_composers">Komponisten</string>
@@ -127,7 +127,7 @@
         <item quantity="other">%d Module importiert</item>
     </plurals>
     <string name="import_done_skipped">%1$d importiert, %2$d übersprungen (Format nicht unterstützt)</string>
-    <string name="scope_hint_no_mute">Dieses Format spielt ein nachgebildeter Amiga ab, Kanäle lassen sich hier nicht stummschalten.</string>
+    <string name="scope_hint_no_mute">Der Player dieses Formats kann einzelne Kanäle nicht stummschalten.</string>
     <string name="scope_hint">Kanal antippen: stumm · halten: solo</string>
     <string name="channel_name">Kanal %1$d</string>
     <string name="channel_muted">stumm</string>
