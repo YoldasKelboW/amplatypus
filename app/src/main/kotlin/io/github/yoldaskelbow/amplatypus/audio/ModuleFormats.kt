@@ -87,7 +87,7 @@ object ModuleFormats {
     val uadeModlandFolders: Set<String> = uadeModlandPlayers.filterValues { it in uadePlayers }.keys
 
     /** Changes whenever the set of playable Modland files does, so stored indexes are rebuilt. */
-    val VERSION: Int = 8 * 31 + uadeModlandFolders.hashCode()
+    val VERSION: Int = 9 * 31 + uadeModlandFolders.hashCode()
 
     /** Commodore 64 files, played by libsidplayfp: SID tunes and Compute's Sidplayer songs. */
     val c64Extensions: Set<String> = setOf("sid", "psid", "mus", "str")
@@ -103,16 +103,17 @@ object ModuleFormats {
      */
     val consoleExtensions: Set<String> =
         setOf("nsf", "nsfe", "spc", "gbs", "vgm", "vgz", "gym", "hes", "kss", "sap", "ay", "emul", "sndh", "sc68", "ym") +
-            setOf("pt3", "pt2", "pt1", "stc", "st13", "zxs", "asc", "sqt", "stp2", "psc", "ftc", "gtr", "vtx")
+            setOf("pt3", "pt2", "pt1", "stc", "st13", "zxs", "asc", "sqt", "stp2", "psc", "ftc", "gtr", "vtx", "vt2", "st11", "chi")
 
     /**
-     * ZX Spectrum tracker modules, played by ZXTune: Pro Tracker 1-3, Sound Tracker (".stc", ".st13", and ".zxs"
-     * with its player), ASC Sound Master, SQ-Tracker, Sound Tracker Pro, Pro Sound Creator and Maker, Fast
-     * Tracker, Global Tracker, and VTX register dumps. ".stp" and ".psm" are also tracker formats of the Amiga and
+     * ZX Spectrum tracker modules, played by ZXTune: Pro Tracker 1-3, Vortex Tracker II's text files, Sound
+     * Tracker (".stc", ".st13", ".zxs" with its player, and ".st11" in AY_Emul's container), ASC Sound Master,
+     * SQ-Tracker, Sound Tracker Pro, Pro Sound Creator and Maker, Fast Tracker, Global Tracker, Chip Tracker's
+     * samples, and VTX register dumps. ".stp" and ".psm" are also tracker formats of the Amiga and
      * PC; the app tries ZXTune first and libopenmpt after it.
      */
     val zxExtensions: Set<String> =
-        setOf("pt3", "pt2", "pt1", "stc", "st13", "zxs", "asc", "sqt", "stp", "stp2", "psc", "psm", "ftc", "gtr", "vtx")
+        setOf("pt3", "pt2", "pt1", "stc", "st13", "zxs", "asc", "sqt", "stp", "stp2", "psc", "psm", "ftc", "gtr", "vtx", "vt2", "st11", "chi")
 
     /** Modland folders of console and home computer music the app plays. */
     val consoleModlandFolders: Set<String> = setOf(

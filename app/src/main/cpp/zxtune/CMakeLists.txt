@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # ZXTune (LGPL-3.0) by Vitamin/CAIG: the replay routines of the ZX Spectrum trackers and its emulation of
-# the AY-3-8910, built from the git submodule. Only the part for AY music is built: no archives, no
+# the AY-3-8910, and its sample engine for Chip Tracker, built from the git submodule. Only the part for
+# Spectrum music is built: no archives, no
 # other chips, no Boost (NO_L10N leaves out the translations, which need it). LHA unpacking for VTX files
 # comes from lhasa (ISC), and string formatting from fmt (MIT), both bundled with ZXTune.
 set(ZXTUNE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../../../third_party/zxtune)
@@ -104,6 +105,17 @@ add_library(zxtune STATIC
     ${ZXTUNE_DIR}/src/tools/src/error.cpp
     ${ZXTUNE_DIR}/src/tools/src/progress_callback.cpp
     ${ZXTUNE_DIR}/src/tools/src/range_checker.cpp
+    # Chip Tracker: the sample engine (DAC) and its replay routine.
+    ${ZXTUNE_DIR}/src/devices/dac/dac.cpp
+    ${ZXTUNE_DIR}/src/devices/dac/sample.cpp
+    ${ZXTUNE_DIR}/src/formats/chiptune/digital/chiptracker.cpp
+    ${ZXTUNE_DIR}/src/formats/chiptune/digital/digital.cpp
+    ${ZXTUNE_DIR}/src/module/players/dac/chiptracker.cpp
+    ${ZXTUNE_DIR}/src/module/players/dac/dac_base.cpp
+    ${ZXTUNE_DIR}/src/module/players/dac/dac_factory.cpp
+    ${ZXTUNE_DIR}/src/module/players/dac/dac_parameters.cpp
+    ${ZXTUNE_DIR}/src/module/players/dac/dac_properties_helper.cpp
+    ${ZXTUNE_DIR}/src/module/players/dac/dac_simple.cpp
     ${ZXTUNE_DIR}/3rdparty/lhasa/lib/crc16.c
     ${ZXTUNE_DIR}/3rdparty/lhasa/lib/lha_decoder.c
     ${ZXTUNE_DIR}/3rdparty/lhasa/lib/null_decoder.c

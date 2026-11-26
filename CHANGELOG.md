@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- More ZX Spectrum music: Chip Tracker (sampled sound, 21 pieces), Vortex Tracker II's text files of version
+  2.5 and later (12) and Sound Tracker 1.1 modules in AY_Emul's container (56 of 59). Chip Tracker shows no
+  channels. Still not played: Flash Tracker and Fuxoft AY Language (about 100 pieces), which ZXTune lacks.
 - Super Nintendo (SPC) and Mega Drive FM music (VGM, VGZ, GYM) show their eight voices as channels and can
   mute them. Levels and pitch come from the sound chips' registers: the SNES chip's are read from the
   emulator, the Mega Drive's are followed in the file. The waveforms are only sketched from them.

@@ -47,9 +47,12 @@ class ModuleFormatsTest {
         assertTrue(ModuleFormats.isPlayableOnModland("YM", "ym"))
         assertTrue(ModuleFormats.isPlayableOnModland("Spectrum", "pt3"))
         assertTrue(ModuleFormats.isPlayableOnModland("Spectrum", "stp"))
-        // Spectrum formats ZXTune does not read, and another machine's format with a Spectrum extension.
+        // Spectrum formats ZXTune does not read (FXM, Flash Tracker), and another machine's format with a Spectrum extension.
         assertFalse(ModuleFormats.isPlayableOnModland("Spectrum", "fxm"))
-        assertFalse(ModuleFormats.isPlayableOnModland("Spectrum", "chi"))
+        assertTrue(ModuleFormats.isPlayableOnModland("Spectrum", "chi"))
+        assertTrue(ModuleFormats.isPlayableOnModland("Spectrum", "vt2"))
+        assertTrue(ModuleFormats.isPlayableOnModland("Spectrum", "st11"))
+        assertFalse(ModuleFormats.isPlayableOnModland("Spectrum", "fls"))
         assertFalse(ModuleFormats.isPlayableOnModland("Quartet PSG", "sqt"))
         // Amiga replayers for YM-ST files are another format.
         assertFalse(ModuleFormats.isPlayableOnModland("YMST", "ymst"))
