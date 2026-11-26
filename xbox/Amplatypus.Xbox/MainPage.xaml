@@ -1,0 +1,48 @@
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<Page
+    x:Class="Amplatypus.Xbox.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Background="#FF0B1A1C">
+    <!-- TV-safe margins: televisions may cut off the edges of the picture. -->
+    <Grid Margin="48,27,48,27">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="3*" />
+            <ColumnDefinition Width="2*" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="16" Margin="0,0,0,16">
+            <Image Source="Assets/Square44x44Logo.png" Width="44" Height="44" />
+            <TextBlock Text="Amplatypus" FontSize="32" VerticalAlignment="Center" />
+            <Button x:Name="FolderButton" Content="Choose a folder" Click="OnChooseFolder" VerticalAlignment="Center" Margin="24,0,0,0" />
+            <TextBlock x:Name="Status" VerticalAlignment="Center" Opacity="0.7" />
+        </StackPanel>
+
+        <ListView x:Name="Modules" Grid.Row="1" IsItemClickEnabled="True" ItemClick="OnModuleClick" SelectionMode="Single">
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Padding="0,6">
+                        <TextBlock Text="{Binding Name}" FontSize="20" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Text="{Binding Folder}" FontSize="14" Opacity="0.6" TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+
+        <StackPanel Grid.Row="1" Grid.Column="1" Margin="32,0,0,0" Spacing="12">
+            <TextBlock x:Name="Title" Text="Nothing playing" FontSize="28" TextWrapping="Wrap" />
+            <TextBlock x:Name="Format" FontSize="18" Opacity="0.7" TextWrapping="Wrap" />
+            <ProgressBar x:Name="Progress" Minimum="0" Maximum="1" Height="8" Margin="0,16,0,0" />
+            <TextBlock x:Name="Time" FontSize="16" Opacity="0.7" />
+            <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,16,0,0">
+                <Button Content="Previous" Click="OnPrevious" />
+                <Button x:Name="PlayButton" Content="Pause" Click="OnPlayPause" />
+                <Button Content="Next" Click="OnNext" />
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+</Page>

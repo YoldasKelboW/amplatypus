@@ -1,0 +1,7 @@
+# Build outputs of the UWP app
+native/
+bin/
+obj/
+AppPackages/
+*.user
+.vs/

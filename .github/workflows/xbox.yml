@@ -1,0 +1,73 @@
+name: Xbox
+
+# Builds Amplatypus for Xbox (and Windows) as a UWP app: libopenmpt for UWP from the submodule, then the
+# app, signed with a certificate made for the run. The package and the certificate are the artifact;
+# xbox/README.md says how to install them on an Xbox in developer mode.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["xbox/**", ".github/workflows/xbox.yml"]
+  pull_request:
+    paths: ["xbox/**", ".github/workflows/xbox.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check out libopenmpt
+        run: git submodule update --init --depth=1 third_party/openmpt
+
+      - uses: microsoft/setup-msbuild@v2
+
+      # libopenmpt-small: libopenmpt with its small built-in decoders (miniz, stb_vorbis, minimp3).
+      - name: Build libopenmpt for UWP
+        run: msbuild third_party/openmpt/build/vs2022win10uwp/libopenmpt-small.vcxproj /m /p:Configuration=ReleaseShared /p:Platform=x64
+
+      - name: Put libopenmpt.dll where the app takes it
+        shell: pwsh
+        run: |
+          $dll = Get-ChildItem third_party/openmpt -Recurse -Filter "libopenmpt*.dll" |
+            Where-Object { $_.FullName -match "x64" -and $_.FullName -match "[Rr]elease" } | Select-Object -First 1
+          if (-not $dll) { Get-ChildItem third_party/openmpt -Recurse -Filter "*.dll" | ForEach-Object { $_.FullName }; throw "libopenmpt.dll not found" }
+          Write-Host "Found $($dll.FullName)"
+          New-Item -ItemType Directory -Force xbox/native/x64 | Out-Null
+          Copy-Item $dll.FullName xbox/native/x64/libopenmpt.dll
+
+      # A certificate for this run only. Its subject must be the package's publisher (CN=Amplatypus).
+      - name: Make a signing certificate
+        id: cert
+        shell: pwsh
+        run: |
+          $cert = New-SelfSignedCertificate -Type Custom -Subject "CN=Amplatypus" -KeyUsage DigitalSignature `
+            -FriendlyName "Amplatypus sideloading" -CertStoreLocation "Cert:\CurrentUser\My" `
+            -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.3", "2.5.29.19={text}") -NotAfter (Get-Date).AddYears(2)
+          $password = [guid]::NewGuid().ToString()
+          $out = Join-Path $env:RUNNER_TEMP "cert"
+          New-Item -ItemType Directory -Force $out | Out-Null
+          Export-PfxCertificate -Cert $cert -FilePath "$out\Amplatypus.pfx" -Password (ConvertTo-SecureString $password -AsPlainText -Force) | Out-Null
+          Export-Certificate -Cert $cert -FilePath "$out\Amplatypus.cer" | Out-Null
+          "pfx=$out\Amplatypus.pfx" >> $env:GITHUB_OUTPUT
+          "cer=$out\Amplatypus.cer" >> $env:GITHUB_OUTPUT
+          "password=$password" >> $env:GITHUB_OUTPUT
+
+      - name: Build the app package
+        shell: pwsh
+        run: |
+          $packages = Join-Path $env:RUNNER_TEMP "AppPackages"
+          msbuild xbox/Amplatypus.Xbox.sln /restore /m /p:Configuration=Release /p:Platform=x64 `
+            /p:AppxPackageSigningEnabled=true /p:PackageCertificateKeyFile="${{ steps.cert.outputs.pfx }}" `
+            /p:PackageCertificatePassword="${{ steps.cert.outputs.password }}" /p:AppxPackageDir="$packages\" `
+            /p:UapAppxPackageBuildMode=SideloadOnly /p:AppxBundle=Never
+          Copy-Item "${{ steps.cert.outputs.cer }}" $packages
+          Get-ChildItem $packages -Recurse | ForEach-Object { $_.FullName }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: amplatypus-xbox
+          path: ${{ runner.temp }}/AppPackages
