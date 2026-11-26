@@ -33,3 +33,7 @@
 	path = third_party/sc68
 	url = https://github.com/gbraad/sc68.git
 	shallow = true
+[submodule "third_party/zxtune"]
+	path = third_party/zxtune
+	url = https://github.com/vitamin-caig/zxtune.git
+	shallow = true

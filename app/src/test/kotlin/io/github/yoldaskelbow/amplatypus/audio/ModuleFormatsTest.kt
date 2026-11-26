@@ -22,13 +22,14 @@ class ModuleFormatsTest {
     @Test
     fun `formats without a bundled replayer are not playable`() {
         assertFalse(ModuleFormats.isPlayable("minigsf"))
-        assertFalse(ModuleFormats.isPlayable("pt3"))
+        assertFalse(ModuleFormats.isPlayable("fxm"))
         assertFalse(ModuleFormats.isPlayable(""))
     }
 
     @Test
     fun `console and home computer music is playable and grouped`() {
-        for (ext in listOf("nsf", "NSFE", "spc", "gbs", "vgm", "vgz", "gym", "hes", "kss", "sap", "ay", "emul", "sndh", "sc68", "ym")) {
+        for (ext in listOf("nsf", "NSFE", "spc", "gbs", "vgm", "vgz", "gym", "hes", "kss", "sap", "ay", "emul", "sndh", "sc68", "ym",
+            "pt3", "PT2", "stc", "asc", "sqt", "vtx")) {
             assertTrue(ext, ModuleFormats.isPlayable(ext))
             assertEquals(ext, FormatGroup.CONSOLE, ModuleFormats.groupOf(ext))
         }
@@ -44,6 +45,12 @@ class ModuleFormatsTest {
         assertTrue(ModuleFormats.isPlayableOnModland("Slight Atari Player", "sap"))
         assertTrue(ModuleFormats.isPlayableOnModland("SNDH", "sndh"))
         assertTrue(ModuleFormats.isPlayableOnModland("YM", "ym"))
+        assertTrue(ModuleFormats.isPlayableOnModland("Spectrum", "pt3"))
+        assertTrue(ModuleFormats.isPlayableOnModland("Spectrum", "stp"))
+        // Spectrum formats ZXTune does not read, and another machine's format with a Spectrum extension.
+        assertFalse(ModuleFormats.isPlayableOnModland("Spectrum", "fxm"))
+        assertFalse(ModuleFormats.isPlayableOnModland("Spectrum", "chi"))
+        assertFalse(ModuleFormats.isPlayableOnModland("Quartet PSG", "sqt"))
         // Amiga replayers for YM-ST files are another format.
         assertFalse(ModuleFormats.isPlayableOnModland("YMST", "ymst"))
         // Same machines, other emulators the app does not bundle.

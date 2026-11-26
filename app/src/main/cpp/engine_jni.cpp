@@ -41,8 +41,11 @@ JNIEXPORT jlong JNICALL FN(nativeLoad)(JNIEnv *env, jclass, jbyteArray data, jst
     if (created == nullptr && isGmeData(bytes, size, pathText)) created = createGmePlayer(bytes, size, pathText);
     // Atari ST music: SNDH and SC68 by their header or extension, YM by its header.
     if (created == nullptr && isAtariData(bytes, size, pathText)) created = createAtariPlayer(bytes, size, pathText);
+    // ZX Spectrum tracker music, by its extension. Files that turn out to be something else (".psm" and
+    // ".stp" are also PC and Amiga tracker formats) go on to the others.
+    if (created == nullptr && isZxData(bytes, size, pathText)) created = createZxPlayer(bytes, size, pathText);
     if (created != nullptr) {
-        // A C64 tune or console music.
+        // A C64 tune, console or home computer music.
     } else if (isHivelyData(bytes, size)) {
         created = createHivelyPlayer(bytes, size);
     } else {

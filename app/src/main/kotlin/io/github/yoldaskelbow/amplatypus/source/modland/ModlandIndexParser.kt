@@ -32,6 +32,7 @@ object ModlandIndexParser {
         val dot = file.lastIndexOf('.')
         if (dot <= 0 || dot == file.length - 1) return null
         if (parts[0] == "HVSC") return hvscLine(path, parts, file.substring(0, dot), file.substring(dot + 1).lowercase(), size)
+        if (parts[0] == "Spectrum") return spectrumLine(path, parts, file.substring(0, dot), file.substring(dot + 1).lowercase(), size)
         if (parts[0] == "SNDH") return sndhLine(path, parts, file.substring(0, dot), file.substring(dot + 1).lowercase(), size)
         if (parts[0] in GAME_FOLDERS) return gameLine(path, parts, file.substring(0, dot), file.substring(dot + 1).lowercase(), size)
         return Line(
@@ -73,6 +74,13 @@ object ModlandIndexParser {
     /** SNDH names its folders like HVSC, `SNDH/Rother_Anthony/Rebirth.sndh`, with underscores for spaces. */
     private fun sndhLine(path: String, parts: List<String>, name: String, ext: String, size: Long): Line =
         Line(path, parts[0], if (parts[1] == "Unknown_Composer") "_unknown" else hvscName(parts[1]), name.replace('_', ' '), ext, size)
+
+    /**
+     * Spectrum music is filed by tracker first: `Spectrum/Pro Tracker 3/Nik-O/tune.pt3`, joint work one folder
+     * deeper (`.../Mast/coop-Nick/caravela.pt2`). A few files sit right in the tracker's folder.
+     */
+    private fun spectrumLine(path: String, parts: List<String>, name: String, ext: String, size: Long): Line =
+        Line(path, parts[0], if (parts.size >= 4) parts[2] else "_unknown", name, ext, size)
 
     const val VIDEO_GAME_MUSIC = "Video Game Music"
 

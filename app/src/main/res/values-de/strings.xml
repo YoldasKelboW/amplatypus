@@ -23,7 +23,7 @@
     <string name="filter_c64">Commodore 64</string>
     <string name="filter_c64_text">SID-Musik aus der HVSC-Sammlung und Sidplayer-Songs, abgespielt in einem nachgebildeten C64</string>
     <string name="filter_console">Konsolen und Heimcomputer</string>
-    <string name="filter_console_text">NES, SNES, Game Boy, Mega Drive und Master System, PC Engine, MSX, Atari 8-Bit und ST, ZX Spectrum und Amstrad CPC, abgespielt mit Game Music Emu, sc68 und StSound</string>
+    <string name="filter_console_text">NES, SNES, Game Boy, Mega Drive und Master System, PC Engine, MSX, Atari 8-Bit und ST, ZX Spectrum (auch Tracker-Module) und Amstrad CPC, abgespielt mit Game Music Emu, sc68, StSound und ZXTune</string>
     <string name="search_clear">Suche löschen</string>
     <string name="search_modules">Module</string>
     <string name="search_composers">Komponisten</string>
