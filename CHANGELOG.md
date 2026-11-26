@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Console music ripped as xSF files: Game Boy Advance (GSF, about 23,100 songs), Nintendo DS (2SF, 30,100),
+  Nintendo 64 (USF, 6,300), Sega Saturn (SSF, 4,400) and Dreamcast (DSF, 4,500), played by the emulators
+  ZXTune bundles (mGBA, vio2sf, lazyusf2, Highly Theoretical). The game's library file a song needs is
+  downloaded with it. Seeking runs the emulator silently up to the new place, which can take a while.
+  PlayStation music (PSF) is not played: its emulator needs Sony's BIOS, which cannot be shipped.
 - Player: a long format name no longer squeezes the channel count next to it; the count moves to the next line.
 - More ZX Spectrum music: Chip Tracker (sampled sound, 21 pieces), Vortex Tracker II's text files of version
   2.5 and later (12) and Sound Tracker 1.1 modules in AY_Emul's container (56 of 59). Chip Tracker shows no

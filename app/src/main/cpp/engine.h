@@ -83,3 +83,8 @@ Player *createAtariPlayer(const void *data, size_t length, const std::string &pa
 // ZX Spectrum tracker music (Pro Tracker, Sound Tracker, ASC, SQ-Tracker and others, VTX), by ZXTune.
 bool isZxData(const void *data, size_t length, const std::string &path);
 Player *createZxPlayer(const void *data, size_t length, const std::string &path);
+
+// Console music ripped as xSF files: Game Boy Advance, Nintendo DS, Nintendo 64, Saturn, Dreamcast. Library
+// files the song names are read from its folder.
+bool isXsfData(const void *data, size_t length, const std::string &path);
+Player *createXsfPlayer(const void *data, size_t length, const std::string &path);

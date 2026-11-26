@@ -87,7 +87,7 @@ object ModuleFormats {
     val uadeModlandFolders: Set<String> = uadeModlandPlayers.filterValues { it in uadePlayers }.keys
 
     /** Changes whenever the set of playable Modland files does, so stored indexes are rebuilt. */
-    val VERSION: Int = 9 * 31 + uadeModlandFolders.hashCode()
+    val VERSION: Int = 10 * 31 + uadeModlandFolders.hashCode()
 
     /** Commodore 64 files, played by libsidplayfp: SID tunes and Compute's Sidplayer songs. */
     val c64Extensions: Set<String> = setOf("sid", "psid", "mus", "str")
@@ -103,7 +103,17 @@ object ModuleFormats {
      */
     val consoleExtensions: Set<String> =
         setOf("nsf", "nsfe", "spc", "gbs", "vgm", "vgz", "gym", "hes", "kss", "sap", "ay", "emul", "sndh", "sc68", "ym") +
-            setOf("pt3", "pt2", "pt1", "stc", "st13", "zxs", "asc", "sqt", "stp2", "psc", "ftc", "gtr", "vtx", "vt2", "st11", "chi")
+            setOf("pt3", "pt2", "pt1", "stc", "st13", "zxs", "asc", "sqt", "stp2", "psc", "ftc", "gtr", "vtx", "vt2", "st11", "chi") +
+            xsfExtensions
+
+    /**
+     * Console music ripped as xSF files, played by the emulators ZXTune bundles: Game Boy Advance (GSF),
+     * Nintendo DS (2SF), Nintendo 64 (USF), Sega Saturn (SSF) and Dreamcast (DSF). "Mini" files hold one
+     * song and name the game's library file ("gsflib" and so on), which is fetched with them and not listed.
+     * PlayStation files (PSF) are not played: their emulator would need Sony's BIOS.
+     */
+    val xsfExtensions: Set<String>
+        get() = setOf("gsf", "minigsf", "2sf", "mini2sf", "usf", "miniusf", "ssf", "minissf", "dsf", "minidsf")
 
     /**
      * ZX Spectrum tracker modules, played by ZXTune: Pro Tracker 1-3, Vortex Tracker II's text files, Sound
@@ -119,6 +129,8 @@ object ModuleFormats {
     val consoleModlandFolders: Set<String> = setOf(
         "Nintendo Sound Format", "Nintendo SPC", "Gameboy Sound System", "Video Game Music", "Megadrive GYM",
         "HES", "KSS", "Slight Atari Player", "AY Emul", "SNDH", "SC68", "YM", "Spectrum",
+        "Gameboy Sound Format", "Nintendo DS Sound Format", "Ultra64 Sound Format", "Saturn Sound Format",
+        "Dreamcast Sound Format",
     )
 
     /**

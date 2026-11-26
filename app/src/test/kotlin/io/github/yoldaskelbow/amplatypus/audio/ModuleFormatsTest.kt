@@ -21,7 +21,7 @@ class ModuleFormatsTest {
 
     @Test
     fun `formats without a bundled replayer are not playable`() {
-        assertFalse(ModuleFormats.isPlayable("minigsf"))
+        assertFalse(ModuleFormats.isPlayable("minipsf"))
         assertFalse(ModuleFormats.isPlayable("fxm"))
         assertFalse(ModuleFormats.isPlayable(""))
     }
@@ -46,6 +46,12 @@ class ModuleFormatsTest {
         assertTrue(ModuleFormats.isPlayableOnModland("SNDH", "sndh"))
         assertTrue(ModuleFormats.isPlayableOnModland("YM", "ym"))
         assertTrue(ModuleFormats.isPlayableOnModland("Spectrum", "pt3"))
+        assertTrue(ModuleFormats.isPlayableOnModland("Gameboy Sound Format", "minigsf"))
+        assertTrue(ModuleFormats.isPlayableOnModland("Nintendo DS Sound Format", "mini2sf"))
+        assertTrue(ModuleFormats.isPlayableOnModland("Dreamcast Sound Format", "dsf"))
+        // Library files come with their songs and are not listed; PlayStation music would need Sony's BIOS.
+        assertFalse(ModuleFormats.isPlayableOnModland("Gameboy Sound Format", "gsflib"))
+        assertFalse(ModuleFormats.isPlayableOnModland("Playstation Sound Format", "minipsf"))
         assertTrue(ModuleFormats.isPlayableOnModland("Spectrum", "stp"))
         // Spectrum formats ZXTune does not read (FXM, Flash Tracker), and another machine's format with a Spectrum extension.
         assertFalse(ModuleFormats.isPlayableOnModland("Spectrum", "fxm"))
@@ -57,7 +63,6 @@ class ModuleFormatsTest {
         // Amiga replayers for YM-ST files are another format.
         assertFalse(ModuleFormats.isPlayableOnModland("YMST", "ymst"))
         // Same machines, other emulators the app does not bundle.
-        assertFalse(ModuleFormats.isPlayableOnModland("Gameboy Sound Format", "minigsf"))
         assertFalse(ModuleFormats.isPlayableOnModland("Super Nintendo Sound Format", "minisnsf"))
     }
 

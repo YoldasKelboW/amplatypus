@@ -85,8 +85,11 @@ add_subdirectory(stsound)
 # ZX Spectrum: ZXTune for the trackers' modules and VTX files.
 add_subdirectory(zxtune)
 
+# Console music in xSF files (GBA, DS, N64, Saturn, Dreamcast): emulators bundled with ZXTune.
+add_subdirectory(xsf)
+
 add_library(amplatypus SHARED engine_jni.cpp engine_openmpt.cpp engine_hively.cpp engine_uade.cpp engine_sid.cpp engine_gme.cpp
-    engine_atari.cpp engine_zx.cpp)
+    engine_atari.cpp engine_zx.cpp engine_xsf.cpp)
 set_source_files_properties(engine_hively.cpp PROPERTIES COMPILE_OPTIONS "-fsigned-char")
 target_link_libraries(amplatypus PRIVATE openmpt hively uade sidplayfp gme_static sc68 stsound zxtune z m log)
 target_link_options(amplatypus PRIVATE -Wl,--gc-sections)

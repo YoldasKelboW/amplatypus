@@ -3,6 +3,7 @@ package io.github.yoldaskelbow.amplatypus.source.modland
 
 import io.github.yoldaskelbow.amplatypus.audio.FormatFilter
 import io.github.yoldaskelbow.amplatypus.audio.ModuleFormats
+import io.github.yoldaskelbow.amplatypus.audio.XsfLibraries
 import io.github.yoldaskelbow.amplatypus.data.IndexDao
 import io.github.yoldaskelbow.amplatypus.data.IndexEntry
 import io.github.yoldaskelbow.amplatypus.net.Endpoints
@@ -87,7 +88,32 @@ class ModlandSource(
                 }
             }
             fetch(ref.key, target, onProgress)
+            fetchXsfLibraries(ref.key, target, targetDir, onProgress)
+            target
         }
+
+    /**
+     * xSF songs name the library files that hold most of their game's music; those are fetched next to the
+     * song, and the ones they name in turn. Modland keeps its file names in lower case, the tags often not.
+     * Libraries stay when a song is deleted: other songs of the game use them too.
+     */
+    private fun fetchXsfLibraries(songPath: String, song: File, targetDir: File, onProgress: (Float) -> Unit) {
+        if (songPath.substringAfterLast('.').lowercase() !in ModuleFormats.xsfExtensions) return
+        val dir = songPath.substringBeforeLast('/')
+        val queue = ArrayDeque(XsfLibraries.namesIn(song.readBytes()))
+        val seen = mutableSetOf<String>()
+        while (queue.isNotEmpty() && seen.size < MAX_XSF_LIBRARIES) {
+            val name = queue.removeFirst()
+            if (!seen.add(name.lowercase())) continue
+            val library = try {
+                fetch("$dir/$name", File(targetDir, "$dir/$name"), onProgress)
+            } catch (e: MissingFile) {
+                if (name == name.lowercase()) throw e
+                fetch("$dir/${name.lowercase()}", File(targetDir, "$dir/${name.lowercase()}"), onProgress)
+            }
+            queue.addAll(XsfLibraries.namesIn(library.readBytes()))
+        }
+    }
 
     override fun companionFiles(ref: ModuleRef, file: File): List<File> {
         val root = file.path.removeSuffix(ref.key)
@@ -163,6 +189,9 @@ class ModlandSource(
     )
 
     companion object {
+        /** More library files than any real song has; a guard against tags that name each other. */
+        private const val MAX_XSF_LIBRARIES = 16
+
         const val ID = "modland"
         const val PAGE_SIZE = 50
         private const val RANDOM_TRIES = 5
