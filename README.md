@@ -105,6 +105,7 @@ CI runs lint, unit tests and the debug build on every push.
 - [sc68](https://sourceforge.net/projects/sc68/) by Benjamin Gerard and [StSound](https://github.com/arnaud-carre/StSound)
   by Arnaud Carré – the Atari ST music.
 - [ZXTune](https://zxtune.ru) by Vitamin/CAIG – the ZX Spectrum tracker music.
+- [98fmplayer](https://github.com/myon98/98fmplayer) by Takamichi Horikawa – the NEC PC-98 music (FMP, PMD).
 - [Press Start 2P](https://fonts.google.com/specimen/Press+Start+2P) by CodeMan38 – the pixel font of the
   tracker views (SIL Open Font License).
 - This app is developed with the help of an AI coding assistant (Claude Code). See `NOTICE`.

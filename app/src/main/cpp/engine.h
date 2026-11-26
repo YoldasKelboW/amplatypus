@@ -83,3 +83,7 @@ Player *createAtariPlayer(const void *data, size_t length, const std::string &pa
 // ZX Spectrum tracker music (Pro Tracker, Sound Tracker, ASC, SQ-Tracker and others, VTX), by ZXTune.
 bool isZxData(const void *data, size_t length, const std::string &path);
 Player *createZxPlayer(const void *data, size_t length, const std::string &path);
+
+// NEC PC-98 music for the FMP and PMD sound drivers, by 98fmplayer. Reads the file and its sample banks from disk.
+bool isPc98Data(const void *data, size_t length, const std::string &path);
+Player *createPc98Player(const void *data, size_t length, const std::string &path);

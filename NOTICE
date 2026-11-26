@@ -60,3 +60,5 @@ ZXTune (ZX Spectrum tracker modules and VTX files) – GNU LGPL 3.0; Copyright (
   (vitamin.caig@gmail.com); built in part from the git submodule. Bundled with it and built along:
   lhasa (LHA unpacking) – ISC License, Copyright (c) 2011, 2012 Simon Howard; and
   {fmt} – MIT License, Copyright (c) 2012 - present Victor Zverovich.
+98fmplayer (NEC PC-98 FMP and PMD music) – BSD 2-Clause License, Copyright (c) 2016 Takamichi Horikawa;
+  built in part from the git submodule.

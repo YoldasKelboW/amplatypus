@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 package io.github.yoldaskelbow.amplatypus.source.modland
 
+import io.github.yoldaskelbow.amplatypus.audio.ModuleFormats
+
 /**
  * Some Amiga formats keep a song in two files: the notes and the samples. Modland lists both, side by
  * side in the same folder. The app shows only the song file and downloads its companion with it, into
@@ -59,11 +61,25 @@ object ModlandCompanions {
 
     private fun fileName(path: String) = path.substringAfterLast('/')
 
+    /** A format whose songs need files from their folder: everything there that is not a song. */
+    private class FolderFormat(
+        /** Extensions of the songs. */
+        val songExtensions: Set<String>,
+        /** Whether files in sub folders count too. */
+        val deep: Boolean,
+    )
+
     /**
-     * Formats whose songs need a whole folder of instrument files, with the extension of the song file.
-     * IFF-SMUS (Sonix) keeps each song next to an "Instruments" folder of .instr and .ss files.
+     * Formats whose songs need files of their folder. IFF-SMUS (Sonix) keeps each song next to an
+     * "Instruments" folder of .instr and .ss files. PC-98 FMP songs name sample banks (.PVI) that lie in
+     * the same folder; a composer's folder may hold several games, so only the song's own folder counts.
      */
-    private val folderFormats = mapOf("IFF-SMUS" to "smus")
+    private val folderFormats = mapOf(
+        "IFF-SMUS" to FolderFormat(setOf("smus"), deep = true),
+        ModuleFormats.FMP_FOLDER to FolderFormat(ModuleFormats.fmpExtensions, deep = false),
+    )
+
+    private fun extensionOf(path: String) = fileName(path).substringAfterLast('.', "").lowercase()
 
     /** True for files that belong to a song and are not listed on their own. */
     fun isCompanion(format: String, path: String): Boolean =
@@ -71,8 +87,8 @@ object ModlandCompanions {
 
     /** An instrument file of a folder format: kept aside to be fetched with its song, not listed. */
     fun isFolderFile(format: String, path: String): Boolean {
-        val songExtension = folderFormats[format] ?: return false
-        return !fileName(path).endsWith(".$songExtension", ignoreCase = true)
+        val folder = folderFormats[format] ?: return false
+        return extensionOf(path) !in folder.songExtensions
     }
 
     /**
@@ -81,10 +97,12 @@ object ModlandCompanions {
      */
     fun folderCompanionsOf(path: String, folderFiles: List<String>): List<Companion> {
         val format = path.substringBefore('/')
-        val songExtension = folderFormats[format] ?: return emptyList()
-        if (!fileName(path).endsWith(".$songExtension", ignoreCase = true)) return emptyList()
+        val folder = folderFormats[format] ?: return emptyList()
+        if (extensionOf(path) !in folder.songExtensions) return emptyList()
         val dir = path.substringBeforeLast('/') + "/"
-        return folderFiles.filter { it.startsWith(dir, ignoreCase = true) }.map { Companion(it, required = false) }
+        return folderFiles
+            .filter { it.startsWith(dir, ignoreCase = true) && (folder.deep || '/' !in it.substring(dir.length)) }
+            .map { Companion(it, required = false) }
     }
 
     /** The files to download along with the song at [path] (a Modland path, format folder first). */
