@@ -100,7 +100,8 @@ class ModlandIndexParserTest {
         val playable = parsed.filter { ModuleFormats.isPlayable(it.ext) }
         assertTrue(playable.any { it.ext == "mod" })
         assertTrue(playable.any { it.ext == "it" })
-        assertFalse(playable.any { it.ext == "minigsf" || it.ext == "am" })
+        assertTrue(playable.any { it.ext == "minigsf" })
+        assertFalse(playable.any { it.ext == "am" })
     }
 
     @Test
