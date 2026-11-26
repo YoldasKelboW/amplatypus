@@ -25,3 +25,11 @@
 	path = third_party/game-music-emu
 	url = https://github.com/libgme/game-music-emu.git
 	shallow = true
+[submodule "third_party/StSound"]
+	path = third_party/StSound
+	url = https://github.com/arnaud-carre/StSound.git
+	shallow = true
+[submodule "third_party/sc68"]
+	path = third_party/sc68
+	url = https://github.com/gbraad/sc68.git
+	shallow = true

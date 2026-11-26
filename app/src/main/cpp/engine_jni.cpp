@@ -39,6 +39,8 @@ JNIEXPORT jlong JNICALL FN(nativeLoad)(JNIEnv *env, jclass, jbyteArray data, jst
     if (isSidFile(bytes, size, pathText)) created = createSidPlayer(pathText);
     // Console and home computer music, recognised by its header (or, for AY files, the extension).
     if (created == nullptr && isGmeData(bytes, size, pathText)) created = createGmePlayer(bytes, size, pathText);
+    // Atari ST music: SNDH and SC68 by their header or extension, YM by its header.
+    if (created == nullptr && isAtariData(bytes, size, pathText)) created = createAtariPlayer(bytes, size, pathText);
     if (created != nullptr) {
         // A C64 tune or console music.
     } else if (isHivelyData(bytes, size)) {

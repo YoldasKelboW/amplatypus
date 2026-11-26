@@ -51,6 +51,19 @@ class ModlandIndexParserTest {
     }
 
     @Test
+    fun sndhNamesAreSurnameFirstWithUnderscores() {
+        val line = ModlandIndexParser.parse("1162866\tSNDH/Rother_Anthony/Rebirth.sndh")!!
+        assertEquals("Anthony Rother", line.composer)
+        assertEquals("Rebirth", line.title)
+        val grouped = ModlandIndexParser.parse("114309\tSNDH/Roggie/Who_Stood_on_Caterpillar.sndh")!!
+        assertEquals("Roggie", grouped.composer)
+        assertEquals("Who Stood on Caterpillar", grouped.title)
+        val unknown = ModlandIndexParser.parse("5329\tSNDH/Unknown_Composer/Music_Studio/Eye_Sky.sndh")!!
+        assertEquals("_unknown", unknown.composer)
+        assertEquals("Eye Sky", unknown.title)
+    }
+
+    @Test
     fun titleMayContainDots() {
         val line = ModlandIndexParser.parse("102\tGameboy Sound Format/_unknown/Poke Inu/2108.000d.minigsf")!!
         assertEquals("2108.000d", line.title)
