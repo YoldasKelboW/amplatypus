@@ -48,6 +48,34 @@ AMP_API int amp_metadata(void *handle, const char *key, char *buffer, int size) 
     return static_cast<int>(value.size());
 }
 
+AMP_API void amp_play_position(void *handle, int *order, int *pattern, int *row) {
+    int o = 0, p = 0, r = 0;
+    if (handle) player(handle)->playPosition(o, p, r);
+    if (order) *order = o;
+    if (pattern) *pattern = p;
+    if (row) *row = r;
+}
+
+AMP_API int amp_order_count(void *handle) { return handle ? player(handle)->orderCount() : 0; }
+
+AMP_API void amp_tempo(void *handle, int *speed, int *bpm) {
+    int s = 0, b = 0;
+    if (handle) player(handle)->tempo(s, b);
+    if (speed) *speed = s;
+    if (bpm) *bpm = b;
+}
+
+AMP_API int amp_pattern(void *handle, int pattern, char *buffer, int size) {
+    if (handle == nullptr) return 0;
+    std::string text = player(handle)->patternText(pattern);
+    if (buffer != nullptr && size > 0) {
+        size_t copied = std::min(text.size(), static_cast<size_t>(size - 1));
+        std::memcpy(buffer, text.data(), copied);
+        buffer[copied] = '\0';
+    }
+    return static_cast<int>(text.size());
+}
+
 AMP_API const char *amp_extensions(void) {
     return "nsf;nsfe;spc;gbs;vgm;vgz;gym;hes;kss;sap;ay;emul;ahx;hvl";
 }

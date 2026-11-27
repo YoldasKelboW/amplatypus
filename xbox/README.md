@@ -17,6 +17,12 @@ of it yet.
 Everything works with the controller: LB and RB switch between Modland and this Xbox, the stick or D-pad
 moves between the lists and the buttons, A plays the module under the focus.
 
+**Y** opens the tracker view of the playing module, as in the Android app: panels with position, pattern,
+length, tempo and speed, a level bar per channel and the scrolling pattern, in the look of the tracker the
+format comes from (ProTracker, FastTracker 2, Impulse Tracker, Scream Tracker 3, HivelyTracker, OctaMED).
+Left and right move along the channels, B goes back. Formats without patterns show the levels only. The
+pixel font is Press Start 2P (SIL Open Font License 1.1, see `docs/licenses/OFL-PressStart2P.txt`).
+
 ## Getting the package
 
 The [Xbox workflow](../.github/workflows/xbox.yml) builds it on GitHub (Actions → Xbox → Run workflow,

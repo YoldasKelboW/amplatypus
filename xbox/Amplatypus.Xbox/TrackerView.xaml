@@ -1,0 +1,48 @@
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<!--
+  A player view in the style of the classic trackers, as in the Android app: bevelled panels with
+  readouts, a level bar per channel and the pattern with the playing row in a bar. Drawn from the app's
+  own data in the pixel font Press Start 2P (SIL Open Font License); no graphics, fonts or logos of the
+  original programs are used.
+-->
+<UserControl
+    x:Class="Amplatypus.Xbox.TrackerView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    IsTabStop="True">
+    <Grid x:Name="Root" Padding="48,27,48,27">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Border x:Name="TopPanel" BorderThickness="3" Padding="12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel x:Name="Readouts" Orientation="Horizontal" Spacing="20" />
+                <TextBlock x:Name="SongTitle" Grid.Column="1" VerticalAlignment="Center" FontSize="14" />
+            </Grid>
+        </Border>
+
+        <Border x:Name="LevelPanel" Grid.Row="1" BorderThickness="3" Padding="12" Margin="0,8,0,0" Height="120">
+            <Grid x:Name="Levels" />
+        </Border>
+
+        <Border x:Name="Screen" Grid.Row="2" BorderThickness="3" Margin="0,8,0,0" Padding="8">
+            <Grid>
+                <Rectangle x:Name="RowBar" VerticalAlignment="Top" />
+                <StackPanel x:Name="Lines" />
+                <TextBlock x:Name="NoPattern" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="14"
+                           TextAlignment="Center" Text="This format has no patterns." />
+            </Grid>
+        </Border>
+
+        <TextBlock x:Name="Hint" Grid.Row="3" Margin="0,8,0,0" FontSize="12" Opacity="0.8"
+                   Text="B: back   Left/Right: channels" />
+    </Grid>
+</UserControl>

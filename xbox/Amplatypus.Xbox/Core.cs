@@ -32,6 +32,24 @@ namespace Amplatypus.Xbox
         internal static extern void amp_seek(IntPtr player, double seconds);
 
         [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int amp_channels(IntPtr player);
+
+        [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern float amp_level(IntPtr player, int channel);
+
+        [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern void amp_play_position(IntPtr player, out int order, out int pattern, out int row);
+
+        [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int amp_order_count(IntPtr player);
+
+        [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern void amp_tempo(IntPtr player, out int speed, out int bpm);
+
+        [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
+        private static extern int amp_pattern(IntPtr player, int pattern, byte[] buffer, int size);
+
+        [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
         private static extern int amp_metadata(IntPtr player, byte[] key, byte[] buffer, int size);
 
         [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
@@ -48,6 +66,20 @@ namespace Amplatypus.Xbox
             byte[] buffer = new byte[length + 1];
             amp_metadata(player, keyBytes, buffer, buffer.Length);
             return Encoding.UTF8.GetString(buffer, 0, length);
+        }
+
+        /// <summary>A pattern's rows, each split into its channels' cells; empty for formats without patterns.</summary>
+        internal static string[][] Pattern(IntPtr player, int pattern)
+        {
+            int length = amp_pattern(player, pattern, null, 0);
+            if (length <= 0) return new string[0][];
+            byte[] buffer = new byte[length + 1];
+            amp_pattern(player, pattern, buffer, buffer.Length);
+            string text = Encoding.UTF8.GetString(buffer, 0, length);
+            string[] rows = text.Split('\n');
+            var result = new string[rows.Length][];
+            for (int i = 0; i < rows.Length; i++) result[i] = rows[i].Split('|');
+            return result;
         }
 
         /// <summary>File extensions the players here take, without the dot.</summary>

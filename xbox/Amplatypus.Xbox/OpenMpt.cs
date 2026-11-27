@@ -35,6 +35,36 @@ namespace Amplatypus.Xbox
         internal static extern int openmpt_module_set_repeat_count(IntPtr module, int count);
 
         [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int openmpt_module_get_num_channels(IntPtr module);
+
+        [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int openmpt_module_get_num_orders(IntPtr module);
+
+        [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int openmpt_module_get_current_order(IntPtr module);
+
+        [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int openmpt_module_get_current_pattern(IntPtr module);
+
+        [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int openmpt_module_get_current_row(IntPtr module);
+
+        [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int openmpt_module_get_current_speed(IntPtr module);
+
+        [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern double openmpt_module_get_current_tempo2(IntPtr module);
+
+        [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int openmpt_module_get_pattern_num_rows(IntPtr module, int pattern);
+
+        [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern float openmpt_module_get_current_channel_vu_mono(IntPtr module, int channel);
+
+        [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr openmpt_module_format_pattern_row_channel(IntPtr module, int pattern, int row, int channel, UIntPtr width, int pad);
+
+        [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
         private static extern IntPtr openmpt_module_get_metadata(IntPtr module, [MarshalAs(UnmanagedType.LPStr)] string key);
 
         [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
@@ -58,6 +88,10 @@ namespace Amplatypus.Xbox
 
         /// <summary>A metadata value: "title", "artist", "type_long", "tracker", "message".</summary>
         internal static string Metadata(IntPtr module, string key) => TakeString(openmpt_module_get_metadata(module, key));
+
+        /// <summary>A pattern cell as libopenmpt writes it, "C-5 01 v64 A0F".</summary>
+        internal static string Cell(IntPtr module, int pattern, int row, int channel) =>
+            TakeString(openmpt_module_format_pattern_row_channel(module, pattern, row, channel, UIntPtr.Zero, 1));
 
         /// <summary>File extensions libopenmpt plays, without the dot.</summary>
         internal static string[] SupportedExtensions() =>

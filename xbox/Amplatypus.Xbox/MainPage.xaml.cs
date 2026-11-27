@@ -49,6 +49,8 @@ namespace Amplatypus.Xbox
         private ObservableCollection<object> playingList;
         private int current = -1;
         private int loading;
+        private string playingType = string.Empty;
+        private string playingTitle = string.Empty;
 
         public MainPage()
         {
@@ -57,6 +59,7 @@ namespace Amplatypus.Xbox
             LocalList.ItemsSource = localItems;
             player.Ended += (sender, args) => _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => PlayAt(playingList, current + 1));
             clock.Tick += (sender, args) => ShowProgress();
+            Tracker.Closed += (sender, args) => TrackerButton.Focus(FocusState.Programmatic);
         }
 
         protected override async void OnNavigatedTo(NavigationEventArgs e)
@@ -204,6 +207,8 @@ namespace Amplatypus.Xbox
                     Title.Text = !string.IsNullOrWhiteSpace(title) ? title : entry?.Title ?? ((ModuleEntry)item).Name;
                     Composer.Text = entry?.Composer ?? string.Empty;
                     Format.Text = type;
+                    playingType = type;
+                    playingTitle = Title.Text;
                     PlayButton.Content = "Pause";
                     return;
                 }
@@ -246,6 +251,25 @@ namespace Amplatypus.Xbox
             }
             player.TogglePause();
             PlayButton.Content = player.IsPlaying ? "Pause" : "Play";
+        }
+
+        // ---- Tracker view ----
+
+        private void OnTrackerView(object sender, RoutedEventArgs e) => OpenTracker();
+
+        private void OnPageKeyDown(object sender, KeyRoutedEventArgs e)
+        {
+            if (e.Key == VirtualKey.GamepadY && Tracker.Visibility != Visibility.Visible)
+            {
+                e.Handled = true;
+                OpenTracker();
+            }
+        }
+
+        private void OpenTracker()
+        {
+            if (current < 0) return;
+            Tracker.Show(player, playingType, playingTitle);
         }
 
         private void ShowProgress()

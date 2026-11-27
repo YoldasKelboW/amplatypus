@@ -29,5 +29,13 @@ AMP_API int amp_select_subsong(void *player, int index);
 // Copies the UTF-8 value of `key` ("title", "artist", "type_long", "message_raw") into `buffer`;
 // returns its full length in bytes.
 AMP_API int amp_metadata(void *player, const char *key, char *buffer, int size);
+// Where the module is: order (position), pattern and row; zeros for formats without patterns.
+AMP_API void amp_play_position(void *player, int *order, int *pattern, int *row);
+AMP_API int amp_order_count(void *player);
+// Ticks per row and beats per minute; zeros where the format has no such idea.
+AMP_API void amp_tempo(void *player, int *speed, int *bpm);
+// Copies a pattern's rows (separated by '\n', channels by '|', cells like "C-5 01 A0F") into `buffer`;
+// returns the full length in bytes, 0 for formats without patterns.
+AMP_API int amp_pattern(void *player, int pattern, char *buffer, int size);
 // Extensions (lower case, ';'-separated) the players here take.
 AMP_API const char *amp_extensions(void);
