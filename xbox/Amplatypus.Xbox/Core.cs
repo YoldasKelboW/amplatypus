@@ -6,8 +6,8 @@ using System.Text;
 namespace Amplatypus.Xbox
 {
     /// <summary>
-    /// The Android app's players built for UWP (amplatypus_core.dll, from xbox/core): console and home
-    /// computer music through Game Music Emu, AHX and HivelyTracker modules.
+    /// The Android app's players built for UWP (amplatypus_core.dll, from xbox/core): tracker modules through
+    /// libopenmpt, console and home computer music through Game Music Emu, AHX and HivelyTracker modules.
     /// </summary>
     internal static class Core
     {
@@ -38,6 +38,33 @@ namespace Amplatypus.Xbox
         internal static extern float amp_level(IntPtr player, int channel);
 
         [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern void amp_mute(IntPtr player, int channel, int mute);
+
+        [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int amp_can_mute(IntPtr player);
+
+        [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int amp_own_scopes(IntPtr player);
+
+        [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern unsafe void amp_player_scopes(IntPtr player, int points, float* output);
+
+        [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern IntPtr amp_scopes_create(byte[] data, int length, int channels);
+
+        [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern void amp_scopes_free(IntPtr scopes);
+
+        [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int amp_scopes_channels(IntPtr scopes);
+
+        [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern void amp_scopes_seek(IntPtr scopes, double seconds);
+
+        [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
+        internal static extern unsafe void amp_scopes_render(IntPtr scopes, int sampleRate, int frames, float* output, int points);
+
+        [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
         internal static extern void amp_play_position(IntPtr player, out int order, out int pattern, out int row);
 
         [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
@@ -54,6 +81,9 @@ namespace Amplatypus.Xbox
 
         [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
         private static extern IntPtr amp_extensions();
+
+        [DllImport(Lib, CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr amp_tracker_extensions();
 
         /// <summary>A player for the module, or IntPtr.Zero if none here knows it.</summary>
         internal static IntPtr Load(byte[] data, string fileName) => amp_load(data, data.Length, Utf8(fileName));
@@ -82,9 +112,14 @@ namespace Amplatypus.Xbox
             return result;
         }
 
-        /// <summary>File extensions the players here take, without the dot.</summary>
-        internal static string[] SupportedExtensions() =>
-            (Marshal.PtrToStringAnsi(amp_extensions()) ?? string.Empty).Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+        /// <summary>Extensions of the console and home computer players, without the dot.</summary>
+        internal static string[] SupportedExtensions() => Split(amp_extensions());
+
+        /// <summary>Extensions of the tracker formats (libopenmpt), without the dot.</summary>
+        internal static string[] TrackerExtensions() => Split(amp_tracker_extensions());
+
+        private static string[] Split(IntPtr list) =>
+            (Marshal.PtrToStringAnsi(list) ?? string.Empty).Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
 
         private static byte[] Utf8(string text)
         {

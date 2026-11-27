@@ -37,5 +37,22 @@ AMP_API void amp_tempo(void *player, int *speed, int *bpm);
 // Copies a pattern's rows (separated by '\n', channels by '|', cells like "C-5 01 A0F") into `buffer`;
 // returns the full length in bytes, 0 for formats without patterns.
 AMP_API int amp_pattern(void *player, int pattern, char *buffer, int size);
+// Scopes: `points` samples per channel of what was rendered last, channel after channel, into `out`.
+// Players that draw their own (consoles) answer amp_own_scopes with 1 and fill them with amp_player_scopes.
+// For the others a scope set runs a copy of the module per channel in step with playback: create it from
+// the same bytes, seek it where the player is, and render it with the same frame counts.
+AMP_API int amp_own_scopes(void *player);
+AMP_API void amp_player_scopes(void *player, int points, float *out);
+AMP_API void *amp_scopes_create(const void *data, int length, int channels);
+AMP_API void amp_scopes_free(void *scopes);
+// How many channels amp_scopes_render writes.
+AMP_API int amp_scopes_channels(void *scopes);
+AMP_API void amp_scopes_seek(void *scopes, double seconds);
+AMP_API void amp_scopes_render(void *scopes, int sample_rate, int frames, float *out, int points);
+// Whether amp_mute works while the song plays.
+AMP_API int amp_can_mute(void *player);
+// Extensions (lower case, ';'-separated) of the console and home computer players, which Modland files in
+// their own folders, and of the tracker formats libopenmpt takes.
+AMP_API const char *amp_tracker_extensions(void);
 // Extensions (lower case, ';'-separated) the players here take.
 AMP_API const char *amp_extensions(void);

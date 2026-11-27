@@ -18,8 +18,7 @@ namespace Amplatypus.Xbox
         void GetBuffer(out byte* buffer, out uint capacity);
     }
 
-    /// <summary>A loaded module, from libopenmpt or from the core players.</summary>
-    /// <summary>Where a module is and how loud its channels are, for the tracker view.</summary>
+    /// <summary>Where a module is, how loud its channels are and what they play, for the tracker view.</summary>
     internal sealed class TrackerState
     {
         public int Order, Pattern, Row, Orders, Speed, Tempo;
@@ -28,102 +27,38 @@ namespace Amplatypus.Xbox
         public float[] Levels = new float[0];
         /// <summary>The playing pattern's rows, split into cells; empty for formats without patterns.</summary>
         public string[][] Rows = new string[0][];
-    }
-
-    internal unsafe interface IModule : IDisposable
-    {
-        int Read(int sampleRate, int frames, float* output);
-        double Position { get; }
-        double Duration { get; }
-        void Seek(double seconds);
-        /// <summary>Fills in position, tempo and levels; the rows only when the pattern changed.</summary>
-        void Fill(TrackerState state);
-    }
-
-    internal sealed class OpenMptModule : IModule
-    {
-        private IntPtr handle;
-        public OpenMptModule(IntPtr handle) { this.handle = handle; }
-        public unsafe int Read(int sampleRate, int frames, float* output) =>
-            (int)OpenMpt.openmpt_module_read_interleaved_float_stereo(handle, sampleRate, (UIntPtr)frames, output);
-        public double Position => OpenMpt.openmpt_module_get_position_seconds(handle);
-        public double Duration => OpenMpt.openmpt_module_get_duration_seconds(handle);
-        public void Seek(double seconds) => OpenMpt.openmpt_module_set_position_seconds(handle, seconds);
-
-        public void Fill(TrackerState state)
-        {
-            int pattern = OpenMpt.openmpt_module_get_current_pattern(handle);
-            int channels = OpenMpt.openmpt_module_get_num_channels(handle);
-            if (pattern != state.Pattern || state.Rows.Length == 0)
-            {
-                int rows = Math.Max(0, OpenMpt.openmpt_module_get_pattern_num_rows(handle, pattern));
-                state.Rows = new string[rows][];
-                for (int row = 0; row < rows; row++)
-                {
-                    var cells = new string[channels];
-                    for (int channel = 0; channel < channels; channel++) cells[channel] = OpenMpt.Cell(handle, pattern, row, channel);
-                    state.Rows[row] = cells;
-                }
-            }
-            state.Pattern = pattern;
-            state.Order = OpenMpt.openmpt_module_get_current_order(handle);
-            state.Row = OpenMpt.openmpt_module_get_current_row(handle);
-            state.Orders = OpenMpt.openmpt_module_get_num_orders(handle);
-            state.Speed = OpenMpt.openmpt_module_get_current_speed(handle);
-            state.Tempo = (int)Math.Round(OpenMpt.openmpt_module_get_current_tempo2(handle));
-            if (state.Levels.Length != channels) state.Levels = new float[channels];
-            for (int channel = 0; channel < channels; channel++) state.Levels[channel] = OpenMpt.openmpt_module_get_current_channel_vu_mono(handle, channel);
-        }
-
-        public void Dispose()
-        {
-            if (handle != IntPtr.Zero) OpenMpt.openmpt_module_destroy(handle);
-            handle = IntPtr.Zero;
-        }
-    }
-
-    internal sealed class CoreModule : IModule
-    {
-        private IntPtr handle;
-        public CoreModule(IntPtr handle) { this.handle = handle; }
-        public unsafe int Read(int sampleRate, int frames, float* output) => Core.amp_read(handle, sampleRate, frames, output);
-        public double Position => Core.amp_position(handle);
-        public double Duration => Core.amp_duration(handle);
-        public void Seek(double seconds) => Core.amp_seek(handle, seconds);
-
-        public void Fill(TrackerState state)
-        {
-            Core.amp_play_position(handle, out int order, out int pattern, out int row);
-            if (pattern != state.Pattern || state.Rows.Length == 0) state.Rows = Core.Pattern(handle, pattern);
-            state.Order = order;
-            state.Pattern = pattern;
-            state.Row = row;
-            state.Orders = Core.amp_order_count(handle);
-            Core.amp_tempo(handle, out int speed, out int bpm);
-            state.Speed = speed;
-            state.Tempo = bpm;
-            int channels = Core.amp_channels(handle);
-            if (state.Levels.Length != channels) state.Levels = new float[channels];
-            for (int channel = 0; channel < channels; channel++) state.Levels[channel] = Core.amp_level(handle, channel);
-        }
-
-        public void Dispose()
-        {
-            if (handle != IntPtr.Zero) Core.amp_free(handle);
-            handle = IntPtr.Zero;
-        }
+        /// <summary>Each channel's waveform, ScopePoints values after another; empty when there are none.</summary>
+        public float[] Scopes = new float[0];
+        public const int ScopePoints = 128;
+        public bool[] Muted = new bool[0];
+        public bool CanMute;
     }
 
     /// <summary>
-    /// Plays one module at a time through an AudioGraph: the graph asks for each quantum of sound, and
-    /// libopenmpt renders it straight into the frame's buffer.
+    /// Plays one module at a time through an AudioGraph: the graph asks for each quantum of sound, and the
+    /// core players render it straight into the frame's buffer. The channel waveforms are rendered with
+    /// each quantum too and kept in a ring, from which the tracker view takes the latest.
     /// </summary>
     internal sealed class ModulePlayer : IDisposable
     {
+        // The span of a scope: about 43 ms at 48 kHz, enough for a bass note's waves.
+        private const int ScopeSpan = 2048;
+        private const int RingSize = 4096;
+
         private readonly object gate = new object();
         private AudioGraph graph;
         private AudioFrameInputNode input;
-        private IModule module;
+        private IntPtr module;
+        private IntPtr scopes;
+        private bool ownScopes;
+        private int channels;
+        // How many channels the scope source writes; the ring keeps the first `channels` of them.
+        private int scopeChannels;
+        private bool canMute;
+        private bool[] muted = new bool[0];
+        private float[] ring = new float[0];
+        private int ringWrite;
+        private float[] scratch = new float[0];
         private int generation;
         private int sampleRate;
         private bool playing;
@@ -131,7 +66,7 @@ namespace Amplatypus.Xbox
         /// <summary>Raised on the audio thread when the module has played to its end.</summary>
         public event EventHandler Ended;
 
-        public bool IsPlaying { get { lock (gate) return playing && module != null; } }
+        public bool IsPlaying { get { lock (gate) return playing && module != IntPtr.Zero; } }
 
         public async Task<bool> StartAsync()
         {
@@ -152,37 +87,42 @@ namespace Amplatypus.Xbox
         }
 
         /// <summary>
-        /// Loads and starts a module from its bytes; false if no player knows it. The core players go first,
-        /// as on Android: some console formats would otherwise be taken for something else.
+        /// Loads and starts a module from its bytes; false if no player knows it. The console players go
+        /// first and libopenmpt last, as on Android: some console formats would otherwise be taken for
+        /// something else.
         /// </summary>
         public bool Play(byte[] data, string fileName, out string title, out string type)
         {
             title = type = string.Empty;
-            IModule next = null;
-            IntPtr core = Core.Load(data, fileName);
-            if (core != IntPtr.Zero)
-            {
-                title = Core.Metadata(core, "title");
-                type = Core.Metadata(core, "type_long");
-                next = new CoreModule(core);
-            }
-            else
-            {
-                IntPtr mpt = OpenMpt.Load(data);
-                if (mpt == IntPtr.Zero) return false;
-                title = OpenMpt.Metadata(mpt, "title");
-                type = OpenMpt.Metadata(mpt, "type_long");
-                next = new OpenMptModule(mpt);
-            }
-            IModule old;
+            IntPtr next = Core.Load(data, fileName);
+            if (next == IntPtr.Zero) return false;
+            title = Core.Metadata(next, "title");
+            type = Core.Metadata(next, "type_long");
+            int nextChannels = Math.Max(0, Core.amp_channels(next));
+            bool nextOwn = Core.amp_own_scopes(next) != 0;
+            // The others' waveforms come from a copy of the module per channel, made here and not on the
+            // audio thread.
+            IntPtr nextScopes = nextOwn || nextChannels == 0 ? IntPtr.Zero : Core.amp_scopes_create(data, data.Length, nextChannels);
+            int nextScopeChannels = nextOwn ? nextChannels : (nextScopes != IntPtr.Zero ? Core.amp_scopes_channels(nextScopes) : 0);
+            IntPtr oldModule, oldScopes;
             lock (gate)
             {
-                old = module;
+                oldModule = module;
+                oldScopes = scopes;
                 module = next;
+                scopes = nextScopes;
+                ownScopes = nextOwn;
+                channels = nextChannels;
+                scopeChannels = nextScopeChannels;
+                canMute = Core.amp_can_mute(next) != 0;
+                muted = new bool[nextChannels];
+                ring = new float[nextChannels * RingSize];
+                ringWrite = 0;
                 generation++;
                 playing = true;
             }
-            old?.Dispose();
+            if (oldScopes != IntPtr.Zero) Core.amp_scopes_free(oldScopes);
+            if (oldModule != IntPtr.Zero) Core.amp_free(oldModule);
             return true;
         }
 
@@ -191,22 +131,85 @@ namespace Amplatypus.Xbox
             lock (gate) playing = !playing;
         }
 
-        public double Position { get { lock (gate) return module?.Position ?? 0; } }
-        public double Duration { get { lock (gate) return module?.Duration ?? 0; } }
+        public double Position { get { lock (gate) return module != IntPtr.Zero ? Core.amp_position(module) : 0; } }
+        public double Duration { get { lock (gate) return module != IntPtr.Zero ? Core.amp_duration(module) : 0; } }
+
+        /// <summary>Mutes or unmutes one channel.</summary>
+        public void ToggleMute(int channel)
+        {
+            lock (gate)
+            {
+                if (!canMute || channel < 0 || channel >= channels) return;
+                SetMute(channel, !muted[channel]);
+            }
+        }
+
+        /// <summary>Plays only this channel; again on the only channel playing, plays all of them.</summary>
+        public void Solo(int channel)
+        {
+            lock (gate)
+            {
+                if (!canMute || channel < 0 || channel >= channels) return;
+                bool alone = !muted[channel];
+                for (int c = 0; c < channels && alone; c++) if (c != channel && !muted[c]) alone = false;
+                for (int c = 0; c < channels; c++) SetMute(c, alone ? false : c != channel);
+            }
+        }
+
+        // Under the lock.
+        private void SetMute(int channel, bool mute)
+        {
+            if (muted[channel] == mute) return;
+            muted[channel] = mute;
+            Core.amp_mute(module, channel, mute ? 1 : 0);
+        }
 
         /// <summary>Updates [state] from the playing module; false when nothing plays.</summary>
         public bool Fill(TrackerState state)
         {
             lock (gate)
             {
-                if (module == null) return false;
+                if (module == IntPtr.Zero) return false;
                 if (state.Generation != generation)
                 {
                     state.Generation = generation;
                     state.Rows = new string[0][];
                 }
-                module.Fill(state);
+                Core.amp_play_position(module, out int order, out int pattern, out int row);
+                if (pattern != state.Pattern || state.Rows.Length == 0) state.Rows = Core.Pattern(module, pattern);
+                state.Order = order;
+                state.Pattern = pattern;
+                state.Row = row;
+                state.Orders = Core.amp_order_count(module);
+                Core.amp_tempo(module, out int speed, out int bpm);
+                state.Speed = speed;
+                state.Tempo = bpm;
+                if (state.Levels.Length != channels) state.Levels = new float[channels];
+                for (int c = 0; c < channels; c++) state.Levels[c] = Core.amp_level(module, c);
+                if (state.Muted.Length != channels) state.Muted = new bool[channels];
+                Array.Copy(muted, state.Muted, channels);
+                state.CanMute = canMute;
+                FillScopes(state);
                 return true;
+            }
+        }
+
+        // The latest ScopeSpan samples of each channel, thinned out to ScopePoints.
+        private void FillScopes(TrackerState state)
+        {
+            bool any = ownScopes || scopes != IntPtr.Zero;
+            int size = any ? channels * TrackerState.ScopePoints : 0;
+            if (state.Scopes.Length != size) state.Scopes = new float[size];
+            if (!any) return;
+            int step = ScopeSpan / TrackerState.ScopePoints;
+            int start = ringWrite - ScopeSpan + RingSize;
+            for (int c = 0; c < channels; c++)
+            {
+                int offset = c * RingSize;
+                for (int i = 0; i < TrackerState.ScopePoints; i++)
+                {
+                    state.Scopes[c * TrackerState.ScopePoints + i] = ring[offset + (start + i * step) % RingSize];
+                }
             }
         }
 
@@ -214,8 +217,31 @@ namespace Amplatypus.Xbox
         {
             lock (gate)
             {
-                module?.Seek(Math.Max(0, seconds));
+                if (module == IntPtr.Zero) return;
+                seconds = Math.Max(0, seconds);
+                Core.amp_seek(module, seconds);
+                // The scope copies follow to where the player actually is.
+                if (scopes != IntPtr.Zero) Core.amp_scopes_seek(scopes, Core.amp_position(module));
             }
+        }
+
+        // Under the lock: the channel waveforms of the frames just rendered, into the ring.
+        private unsafe void RenderScopes(int frames)
+        {
+            if (scopeChannels == 0 || frames <= 0 || (!ownScopes && scopes == IntPtr.Zero)) return;
+            if (scratch.Length < scopeChannels * frames) scratch = new float[scopeChannels * frames];
+            fixed (float* output = scratch)
+            {
+                // One point per frame: the ring gets every sample, and the view thins them out.
+                if (ownScopes) Core.amp_player_scopes(module, frames, output);
+                else Core.amp_scopes_render(scopes, sampleRate, frames, output, frames);
+            }
+            for (int c = 0; c < Math.Min(channels, scopeChannels); c++)
+            {
+                int offset = c * RingSize;
+                for (int i = 0; i < frames; i++) ring[offset + (ringWrite + i) % RingSize] = scratch[c * frames + i];
+            }
+            ringWrite = (ringWrite + frames) % RingSize;
         }
 
         private unsafe void OnQuantumStarted(AudioFrameInputNode sender, FrameInputNodeQuantumStartedEventArgs args)
@@ -232,14 +258,15 @@ namespace Amplatypus.Xbox
                 int rendered = 0;
                 lock (gate)
                 {
-                    if (playing && module != null)
+                    if (playing && module != IntPtr.Zero)
                     {
-                        rendered = module.Read(sampleRate, frames, samples);
+                        rendered = Core.amp_read(module, sampleRate, frames, samples);
                         if (rendered == 0)
                         {
                             playing = false;
                             ended = true;
                         }
+                        RenderScopes(rendered);
                     }
                 }
                 for (int i = rendered * 2; i < frames * 2; i++) samples[i] = 0f;
@@ -254,8 +281,9 @@ namespace Amplatypus.Xbox
             graph?.Dispose();
             lock (gate)
             {
-                module?.Dispose();
-                module = null;
+                if (scopes != IntPtr.Zero) Core.amp_scopes_free(scopes);
+                if (module != IntPtr.Zero) Core.amp_free(module);
+                scopes = module = IntPtr.Zero;
             }
         }
     }

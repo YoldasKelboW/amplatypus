@@ -5,8 +5,10 @@ using System.Linq;
 using Windows.System;
 using Windows.UI;
 using Windows.UI.Text;
+using Windows.Foundation;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Documents;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Shapes;
@@ -89,7 +91,10 @@ namespace Amplatypus.Xbox
         }
     }
 
-    /// <summary>The tracker view over the player: B closes it, left and right move along the channels.</summary>
+    /// <summary>
+    /// The tracker view over the player: B closes it, left and right move the channel cursor, A mutes the
+    /// channel under it and X plays it alone.
+    /// </summary>
     public sealed partial class TrackerView : UserControl
     {
         private const int VisibleLines = 21;
@@ -101,7 +106,13 @@ namespace Amplatypus.Xbox
         private readonly TrackerState state = new TrackerState();
         private readonly List<TextBlock> lines = new List<TextBlock>();
         private readonly List<TextBlock> values = new List<TextBlock>();
+        // One cell per channel shown: its frame (the cursor), level bar, waveform and number.
+        private readonly List<Border> cells = new List<Border>();
         private readonly List<Rectangle> bars = new List<Rectangle>();
+        private readonly List<Polyline> waves = new List<Polyline>();
+        private readonly List<TextBlock> labels = new List<TextBlock>();
+        private int cellsFirst = -1, cellsCount = -1;
+        private int cursor;
         private ModulePlayer player;
         private TrackerTheme theme = TrackerTheme.ProTracker;
         private int firstChannel;
@@ -134,6 +145,7 @@ namespace Amplatypus.Xbox
             player = source;
             theme = TrackerTheme.For(type);
             firstChannel = 0;
+            cursor = 0;
             ApplyTheme();
             SongTitle.Text = title ?? string.Empty;
             Visibility = Visibility.Visible;
@@ -183,9 +195,18 @@ namespace Amplatypus.Xbox
                     },
                 });
             }
+            ClearCells();
+        }
+
+        private void ClearCells()
+        {
+            cells.Clear();
             bars.Clear();
+            waves.Clear();
+            labels.Clear();
             Levels.Children.Clear();
             Levels.ColumnDefinitions.Clear();
+            cellsFirst = cellsCount = -1;
         }
 
         private void Refresh()
@@ -196,29 +217,72 @@ namespace Amplatypus.Xbox
             values[2].Text = state.Orders.ToString(theme.DecimalRows ? "000" : "X2");
             values[3].Text = state.Tempo.ToString();
             values[4].Text = state.Speed.ToString();
-            RefreshLevels();
+            int channels = state.Levels.Length;
+            cursor = Math.Max(0, Math.Min(cursor, channels - 1));
             RefreshPattern();
+            RefreshChannels();
         }
 
-        private void RefreshLevels()
+        // The scopes and level bars of the channels in the pattern window, or of all for formats without one.
+        private void RefreshChannels()
         {
             int channels = state.Levels.Length;
-            if (bars.Count != channels)
+            bool hasPattern = state.Rows.Length > 0;
+            int first = hasPattern ? firstChannel : 0;
+            int count = hasPattern ? Math.Min(visibleChannels, Math.Max(0, channels - first)) : channels;
+            if (first != cellsFirst || count != cellsCount)
             {
-                bars.Clear();
-                Levels.Children.Clear();
-                Levels.ColumnDefinitions.Clear();
-                for (int c = 0; c < channels; c++)
+                ClearCells();
+                cellsFirst = first;
+                cellsCount = count;
+                for (int i = 0; i < count; i++)
                 {
                     Levels.ColumnDefinitions.Add(new ColumnDefinition());
-                    var bar = new Rectangle { Fill = new SolidColorBrush(theme.Level), VerticalAlignment = VerticalAlignment.Bottom, Margin = new Thickness(2, 0, 2, 0) };
-                    Grid.SetColumn(bar, c);
+                    var bar = new Rectangle { Fill = new SolidColorBrush(theme.Level), Opacity = 0.35, VerticalAlignment = VerticalAlignment.Bottom };
+                    var wave = new Polyline { Stroke = new SolidColorBrush(theme.Pattern), StrokeThickness = 2 };
+                    var label = new TextBlock
+                    {
+                        FontFamily = Pixel, FontSize = 10, Foreground = new SolidColorBrush(theme.Pattern), Margin = new Thickness(4),
+                        HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Top,
+                    };
+                    var cell = new Border
+                    {
+                        Background = new SolidColorBrush(theme.Screen), BorderThickness = new Thickness(2), Margin = new Thickness(2, 0, 2, 0),
+                        Child = new Grid { Children = { bar, wave, label } },
+                    };
+                    Grid.SetColumn(cell, i);
+                    cells.Add(cell);
                     bars.Add(bar);
-                    Levels.Children.Add(bar);
+                    waves.Add(wave);
+                    labels.Add(label);
+                    Levels.Children.Add(cell);
                 }
             }
-            double height = Math.Max(0, LevelPanel.ActualHeight - 30);
-            for (int c = 0; c < channels; c++) bars[c].Height = Math.Min(1.0, Math.Max(0.0, state.Levels[c])) * height;
+            var cursorBrush = new SolidColorBrush(theme.Light);
+            var plainBrush = new SolidColorBrush(theme.Shadow);
+            int points = TrackerState.ScopePoints;
+            bool hasScopes = state.Scopes.Length >= channels * points;
+            for (int i = 0; i < count; i++)
+            {
+                int channel = first + i;
+                bool muted = channel < state.Muted.Length && state.Muted[channel];
+                cells[i].BorderBrush = channel == cursor ? cursorBrush : plainBrush;
+                cells[i].Opacity = muted ? 0.4 : 1.0;
+                labels[i].Text = (channel + 1).ToString() + (muted ? " M" : string.Empty);
+                double width = Math.Max(0, cells[i].ActualWidth - 4), height = Math.Max(0, cells[i].ActualHeight - 4);
+                bars[i].Height = Math.Min(1.0, Math.Max(0.0, state.Levels[channel])) * height;
+                var line = new PointCollection();
+                if (hasScopes && width > 0)
+                {
+                    double middle = height / 2;
+                    for (int x = 0; x < points; x++)
+                    {
+                        double value = Math.Max(-1.0, Math.Min(1.0, state.Scopes[channel * points + x] * 1.5));
+                        line.Add(new Point(x * width / (points - 1), middle - value * middle * 0.9));
+                    }
+                }
+                waves[i].Points = line;
+            }
         }
 
         private void RefreshPattern()
@@ -228,7 +292,7 @@ namespace Amplatypus.Xbox
             RowBar.Visibility = hasPattern ? Visibility.Visible : Visibility.Collapsed;
             if (!hasPattern)
             {
-                foreach (var line in lines) line.Text = string.Empty;
+                foreach (var line in lines) line.Inlines.Clear();
                 return;
             }
             int channels = state.Rows[0].Length;
@@ -246,14 +310,34 @@ namespace Amplatypus.Xbox
                 var line = lines[i];
                 if (row < 0 || row >= state.Rows.Length)
                 {
-                    line.Text = string.Empty;
+                    line.Inlines.Clear();
                     continue;
                 }
                 string number = theme.DecimalRows ? row.ToString("00") : row.ToString("X2");
-                var cells = state.Rows[row].Skip(firstChannel).Take(visibleChannels);
-                line.Text = number + " " + string.Join("|", cells);
-                line.Foreground = i == VisibleLines / 2 ? current : (row % 4 == 0 ? pattern : dim);
+                var brush = i == VisibleLines / 2 ? current : (row % 4 == 0 ? pattern : dim);
+                var faint = new SolidColorBrush(Color.FromArgb(0x50, brush.Color.R, brush.Color.G, brush.Color.B));
+                line.Inlines.Clear();
+                line.Inlines.Add(new Run { Text = number + " ", Foreground = brush });
+                string[] cellsOfRow = state.Rows[row];
+                int last = Math.Min(cellsOfRow.Length, firstChannel + visibleChannels);
+                for (int channel = firstChannel; channel < last; channel++)
+                {
+                    bool muted = channel < state.Muted.Length && state.Muted[channel];
+                    if (channel > firstChannel) line.Inlines.Add(new Run { Text = "|", Foreground = brush });
+                    line.Inlines.Add(new Run { Text = cellsOfRow[channel], Foreground = muted ? faint : brush });
+                }
             }
+        }
+
+        // Moves the cursor a channel along and the pattern window with it.
+        private void MoveCursor(int delta)
+        {
+            int channels = state.Levels.Length;
+            if (channels == 0) return;
+            cursor = Math.Max(0, Math.Min(channels - 1, cursor + delta));
+            if (cursor < firstChannel) firstChannel = cursor;
+            if (cursor >= firstChannel + visibleChannels) firstChannel = cursor - visibleChannels + 1;
+            Refresh();
         }
 
         private void OnKeyDown(object sender, KeyRoutedEventArgs e)
@@ -270,13 +354,27 @@ namespace Amplatypus.Xbox
                 case VirtualKey.GamepadLeftThumbstickLeft:
                 case VirtualKey.Left:
                     e.Handled = true;
-                    firstChannel = Math.Max(0, firstChannel - 1);
+                    MoveCursor(-1);
                     break;
                 case VirtualKey.GamepadDPadRight:
                 case VirtualKey.GamepadLeftThumbstickRight:
                 case VirtualKey.Right:
                     e.Handled = true;
-                    firstChannel++;
+                    MoveCursor(1);
+                    break;
+                case VirtualKey.GamepadA:
+                case VirtualKey.Enter:
+                case VirtualKey.Space:
+                case VirtualKey.M:
+                    e.Handled = true;
+                    player?.ToggleMute(cursor);
+                    Refresh();
+                    break;
+                case VirtualKey.GamepadX:
+                case VirtualKey.S:
+                    e.Handled = true;
+                    player?.Solo(cursor);
+                    Refresh();
                     break;
             }
         }

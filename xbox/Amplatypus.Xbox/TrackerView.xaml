@@ -1,7 +1,7 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 <!--
   A player view in the style of the classic trackers, as in the Android app: bevelled panels with
-  readouts, a level bar per channel and the pattern with the playing row in a bar. Drawn from the app's
+  readouts, a scope and level bar per channel and the pattern with the playing row in a bar. Drawn from the app's
   own data in the pixel font Press Start 2P (SIL Open Font License); no graphics, fonts or logos of the
   original programs are used.
 -->
@@ -29,7 +29,7 @@
             </Grid>
         </Border>
 
-        <Border x:Name="LevelPanel" Grid.Row="1" BorderThickness="3" Padding="12" Margin="0,8,0,0" Height="120">
+        <Border x:Name="LevelPanel" Grid.Row="1" BorderThickness="3" Padding="12" Margin="0,8,0,0" Height="150">
             <Grid x:Name="Levels" />
         </Border>
 
@@ -43,6 +43,6 @@
         </Border>
 
         <TextBlock x:Name="Hint" Grid.Row="3" Margin="0,8,0,0" FontSize="12" Opacity="0.8"
-                   Text="B: back   Left/Right: channels" />
+                   Text="B: back   Left/Right: channel   A: mute   X: solo" />
     </Grid>
 </UserControl>

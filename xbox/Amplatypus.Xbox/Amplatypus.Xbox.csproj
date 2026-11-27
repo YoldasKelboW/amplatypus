@@ -57,7 +57,6 @@
     <Compile Include="Core.cs" />
     <Compile Include="ModlandCatalog.cs" />
     <Compile Include="ModulePlayer.cs" />
-    <Compile Include="OpenMpt.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TrackerView.xaml.cs">
       <DependentUpon>TrackerView.xaml</DependentUpon>
@@ -76,7 +75,7 @@
     <Content Include="Assets\StoreLogo.png" />
     <Content Include="Assets\Wide310x150Logo.png" />
     <Content Include="Properties\Default.rd.xml" />
-    <!-- libopenmpt-small.dll and its decoders' DLLs, built for UWP by the workflow from third_party/openmpt. -->
+    <!-- amplatypus_core.dll, built for UWP by the workflow from xbox/core. -->
     <Content Include="..\native\x64\*.dll">
       <Link>%(Filename)%(Extension)</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -102,7 +101,7 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <!-- libopenmpt.dll needs the C++ runtime for UWP apps, which comes as a framework package. -->
+    <!-- amplatypus_core.dll needs the C++ runtime for UWP apps, which comes as a framework package. -->
     <SDKReference Include="Microsoft.VCLibs, Version=14.0">
       <Name>Visual C++ 2015-2022 UWP Desktop Runtime for native apps</Name>
     </SDKReference>

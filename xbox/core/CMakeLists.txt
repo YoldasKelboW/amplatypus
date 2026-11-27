@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # The Android app's players, built for UWP as one DLL (amplatypus_core.dll) with a small C interface
-# (core_api.h) that the Xbox app calls through P/Invoke. libopenmpt comes as its own DLL.
+# (core_api.h) that the Xbox app calls through P/Invoke: libopenmpt, Game Music Emu, HivelyTracker.
 #
 # Configure for UWP: cmake -G "Visual Studio 17 2022" -A x64 -DCMAKE_SYSTEM_NAME=WindowsStore
 #                          -DCMAKE_SYSTEM_VERSION=10.0 xbox/core
@@ -44,6 +44,25 @@ add_subdirectory(${REPO}/third_party/game-music-emu ${CMAKE_CURRENT_BINARY_DIR}/
 target_sources(gme_static PRIVATE ${ENGINES}/gme_peek.cpp)
 target_include_directories(gme_static PRIVATE ${REPO}/third_party/game-music-emu/gme)
 
+# libopenmpt from source, with the source list the Android build reads from upstream's Android.mk, so that
+# engine_openmpt.cpp (muting through the interactive interface, scopes) works as on Android.
+set(OPENMPT_DIR ${REPO}/third_party/openmpt)
+file(READ ${OPENMPT_DIR}/build/android_ndk/Android.mk OPENMPT_MK)
+string(REGEX MATCHALL "(common|libopenmpt|soundlib|sounddsp)/[A-Za-z0-9_/]+\\.cpp" OPENMPT_RELATIVE "${OPENMPT_MK}")
+list(REMOVE_DUPLICATES OPENMPT_RELATIVE)
+list(TRANSFORM OPENMPT_RELATIVE PREPEND ${OPENMPT_DIR}/)
+add_library(openmpt STATIC ${OPENMPT_RELATIVE} ${OPENMPT_DIR}/include/minimp3/minimp3.c ${OPENMPT_DIR}/include/stb_vorbis/stb_vorbis.c)
+target_include_directories(openmpt PUBLIC ${OPENMPT_DIR} PRIVATE ${OPENMPT_DIR}/src ${OPENMPT_DIR}/common ${OPENMPT_DIR}/include)
+target_compile_definitions(openmpt PRIVATE LIBOPENMPT_BUILD MPT_WITH_ZLIB MPT_WITH_MINIMP3 MPT_WITH_STBVORBIS)
+target_link_libraries(openmpt PRIVATE amp_zlib)
+if(MSVC)
+    # As in libopenmpt's own Visual Studio projects for UWP.
+    target_compile_definitions(openmpt PRIVATE MPT_BUILD_MSVC WIN32 NOMINMAX _WIN32_WINNT=0x0A00 NTDDI_VERSION=0x0A000008)
+    target_compile_options(openmpt PRIVATE /bigobj /Zc:__cplusplus /permissive- /utf-8)
+else()
+    target_compile_options(openmpt PRIVATE -w)
+endif()
+
 # HivelyTracker replayer (AHX, HVL).
 set(HIVELY_DIR ${REPO}/third_party/hivelytracker/Replayer_Windows)
 add_library(hively STATIC ${HIVELY_DIR}/hvl_replay.c ${HIVELY_DIR}/hvl_tables.c)
@@ -58,8 +77,9 @@ endif()
 add_library(amplatypus_core SHARED
     core_api.cpp
     ${ENGINES}/engine_gme.cpp
-    ${ENGINES}/engine_hively.cpp)
+    ${ENGINES}/engine_hively.cpp
+    ${ENGINES}/engine_openmpt.cpp)
 target_include_directories(amplatypus_core PRIVATE ${ENGINES})
 # M_PI and friends.
 target_compile_definitions(amplatypus_core PRIVATE _USE_MATH_DEFINES _CRT_SECURE_NO_WARNINGS AMP_CORE_EXPORTS)
-target_link_libraries(amplatypus_core PRIVATE gme_static hively amp_zlib)
+target_link_libraries(amplatypus_core PRIVATE gme_static hively openmpt amp_zlib)

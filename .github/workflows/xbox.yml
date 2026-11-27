@@ -1,6 +1,6 @@
 name: Xbox
 
-# Builds Amplatypus for Xbox (and Windows) as a UWP app: libopenmpt for UWP from the submodule, then the
+# Builds Amplatypus for Xbox (and Windows) as a UWP app: the players (xbox/core) for UWP from the submodules, then the
 # app, signed with a certificate made for the run. The package and the certificate are the artifact;
 # xbox/README.md says how to install them on an Xbox in developer mode.
 
@@ -25,21 +25,7 @@ jobs:
 
       - uses: microsoft/setup-msbuild@v2
 
-      # libopenmpt-small: libopenmpt with its small built-in decoders (miniz, stb_vorbis, minimp3).
-      - name: Build libopenmpt for UWP
-        run: msbuild third_party/openmpt/build/vs2022win10uwp/libopenmpt-small.vcxproj /m /p:Configuration=ReleaseShared /p:Platform=x64
-
-      # libopenmpt-small.dll and the DLLs of its decoders (openmpt-miniz.dll and others), which it loads.
-      - name: Put the libopenmpt DLLs where the app takes them
-        shell: pwsh
-        run: |
-          $dir = "third_party/openmpt/bin/release/vs2022-win10uwp-shared/amd64"
-          if (-not (Test-Path "$dir/libopenmpt-small.dll")) { Get-ChildItem third_party/openmpt/bin -Recurse -Filter "*.dll" | ForEach-Object { $_.FullName }; throw "libopenmpt-small.dll not found" }
-          New-Item -ItemType Directory -Force xbox/native/x64 | Out-Null
-          Copy-Item "$dir/*.dll" xbox/native/x64/
-          Get-ChildItem xbox/native/x64 | ForEach-Object { $_.Name }
-
-      # The Android app's other players (Game Music Emu, HivelyTracker) as one DLL with a C interface.
+      # The Android app's players (libopenmpt, Game Music Emu, HivelyTracker) as one DLL with a C interface.
       - name: Build the core players for UWP
         shell: pwsh
         run: |
@@ -48,6 +34,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "CMake could not configure xbox/core" }
           cmake --build build-core --config Release --target amplatypus_core
           if ($LASTEXITCODE -ne 0) { throw "amplatypus_core did not build" }
+          New-Item -ItemType Directory -Force xbox/native/x64 | Out-Null
           Copy-Item build-core/Release/amplatypus_core.dll xbox/native/x64/
 
       # A certificate for this run only. Its subject must be the package's publisher (CN=Amplatypus).

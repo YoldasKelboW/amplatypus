@@ -71,7 +71,7 @@ namespace Amplatypus.Xbox
                 return;
             }
             clock.Start();
-            extensions = OpenMpt.SupportedExtensions().Concat(Core.SupportedExtensions()).Distinct().ToArray();
+            extensions = Core.TrackerExtensions().Concat(Core.SupportedExtensions()).Distinct().ToArray();
             await LoadLocalAsync();
             await LoadModlandAsync();
         }
@@ -80,7 +80,7 @@ namespace Amplatypus.Xbox
 
         private async Task LoadModlandAsync()
         {
-            modland = new ModlandCatalog(OpenMpt.SupportedExtensions(), Core.SupportedExtensions());
+            modland = new ModlandCatalog(Core.TrackerExtensions(), Core.SupportedExtensions());
             try
             {
                 await modland.LoadAsync(text => _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => Status.Text = text));
