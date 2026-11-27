@@ -10,6 +10,12 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # The static libraries end up in a DLL.
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+# UWP projects treat MSVC's "unsafe CRT function" warnings as errors (/sdl); the players' C code uses
+# fopen, strncpy and friends as the C standard has them.
+if(MSVC)
+    add_compile_definitions(_CRT_SECURE_NO_WARNINGS _CRT_NONSTDC_NO_DEPRECATE)
+    add_compile_options(/sdl-)
+endif()
 
 set(REPO ${CMAKE_CURRENT_SOURCE_DIR}/../..)
 set(ENGINES ${REPO}/app/src/main/cpp)
