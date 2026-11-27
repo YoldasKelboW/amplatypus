@@ -1,0 +1,71 @@
+name: Xbox
+
+# Builds Amplatypus for Xbox (and Windows) as a UWP app: the players (xbox/core) for UWP from the submodules, then the
+# app, signed with a certificate made for the run. The package and the certificate are the artifact;
+# xbox/README.md says how to install them on an Xbox in developer mode.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["xbox/**", ".github/workflows/xbox.yml"]
+  pull_request:
+    paths: ["xbox/**", ".github/workflows/xbox.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check out the players' sources
+        run: git submodule update --init --depth=1 third_party/openmpt third_party/game-music-emu third_party/hivelytracker
+
+      - uses: microsoft/setup-msbuild@v2
+
+      # The Android app's players (libopenmpt, Game Music Emu, HivelyTracker) as one DLL with a C interface.
+      - name: Build the core players for UWP
+        shell: pwsh
+        run: |
+          # Quoted: PowerShell would pass 10.0 on as 10.
+          cmake -S xbox/core -B build-core -G "Visual Studio 17 2022" -A x64 "-DCMAKE_SYSTEM_NAME=WindowsStore" "-DCMAKE_SYSTEM_VERSION=10.0"
+          if ($LASTEXITCODE -ne 0) { throw "CMake could not configure xbox/core" }
+          cmake --build build-core --config Release --target amplatypus_core
+          if ($LASTEXITCODE -ne 0) { throw "amplatypus_core did not build" }
+          New-Item -ItemType Directory -Force xbox/native/x64 | Out-Null
+          Copy-Item build-core/Release/amplatypus_core.dll xbox/native/x64/
+
+      # A certificate for this run only. Its subject must be the package's publisher (CN=Amplatypus).
+      - name: Make a signing certificate
+        id: cert
+        shell: pwsh
+        run: |
+          $cert = New-SelfSignedCertificate -Type Custom -Subject "CN=Amplatypus" -KeyUsage DigitalSignature `
+            -FriendlyName "Amplatypus sideloading" -CertStoreLocation "Cert:\CurrentUser\My" `
+            -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.3", "2.5.29.19={text}") -NotAfter (Get-Date).AddYears(2)
+          $password = [guid]::NewGuid().ToString()
+          $out = Join-Path $env:RUNNER_TEMP "cert"
+          New-Item -ItemType Directory -Force $out | Out-Null
+          Export-PfxCertificate -Cert $cert -FilePath "$out\Amplatypus.pfx" -Password (ConvertTo-SecureString $password -AsPlainText -Force) | Out-Null
+          Export-Certificate -Cert $cert -FilePath "$out\Amplatypus.cer" | Out-Null
+          "pfx=$out\Amplatypus.pfx" >> $env:GITHUB_OUTPUT
+          "cer=$out\Amplatypus.cer" >> $env:GITHUB_OUTPUT
+          "password=$password" >> $env:GITHUB_OUTPUT
+
+      - name: Build the app package
+        shell: pwsh
+        run: |
+          $packages = Join-Path $env:RUNNER_TEMP "AppPackages"
+          msbuild xbox/Amplatypus.Xbox.sln /restore /m /p:Configuration=Release /p:Platform=x64 `
+            /p:AppxPackageSigningEnabled=true /p:PackageCertificateKeyFile="${{ steps.cert.outputs.pfx }}" `
+            /p:PackageCertificatePassword="${{ steps.cert.outputs.password }}" /p:AppxPackageDir="$packages\" `
+            /p:UapAppxPackageBuildMode=SideloadOnly /p:AppxBundle=Never
+          Copy-Item "${{ steps.cert.outputs.cer }}" $packages
+          Get-ChildItem $packages -Recurse | ForEach-Object { $_.FullName }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: amplatypus-xbox
+          path: ${{ runner.temp }}/AppPackages
