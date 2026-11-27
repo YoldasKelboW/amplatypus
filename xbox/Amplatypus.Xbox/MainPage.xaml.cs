@@ -68,7 +68,7 @@ namespace Amplatypus.Xbox
                 return;
             }
             clock.Start();
-            extensions = OpenMpt.SupportedExtensions();
+            extensions = OpenMpt.SupportedExtensions().Concat(Core.SupportedExtensions()).Distinct().ToArray();
             await LoadLocalAsync();
             await LoadModlandAsync();
         }
@@ -77,7 +77,7 @@ namespace Amplatypus.Xbox
 
         private async Task LoadModlandAsync()
         {
-            modland = new ModlandCatalog(extensions);
+            modland = new ModlandCatalog(OpenMpt.SupportedExtensions(), Core.SupportedExtensions());
             try
             {
                 await modland.LoadAsync(text => _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => Status.Text = text));
@@ -194,7 +194,8 @@ namespace Amplatypus.Xbox
                 byte[] data = await ReadAsync(item);
                 // Another module was asked for in the meantime.
                 if (request != loading) return;
-                if (data != null && player.Play(data, out string title, out string type))
+                string fileName = item is ModlandEntry named ? named.Path.Substring(named.Path.LastIndexOf('/') + 1) : ((ModuleEntry)item).Name;
+                if (data != null && player.Play(data, fileName, out string title, out string type))
                 {
                     playingList = list;
                     current = index;

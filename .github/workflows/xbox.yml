@@ -20,8 +20,8 @@ jobs:
     runs-on: windows-2022
     steps:
       - uses: actions/checkout@v4
-      - name: Check out libopenmpt
-        run: git submodule update --init --depth=1 third_party/openmpt
+      - name: Check out the players' sources
+        run: git submodule update --init --depth=1 third_party/openmpt third_party/game-music-emu third_party/hivelytracker
 
       - uses: microsoft/setup-msbuild@v2
 
@@ -38,6 +38,14 @@ jobs:
           New-Item -ItemType Directory -Force xbox/native/x64 | Out-Null
           Copy-Item "$dir/*.dll" xbox/native/x64/
           Get-ChildItem xbox/native/x64 | ForEach-Object { $_.Name }
+
+      # The Android app's other players (Game Music Emu, HivelyTracker) as one DLL with a C interface.
+      - name: Build the core players for UWP
+        shell: pwsh
+        run: |
+          cmake -S xbox/core -B build-core -G "Visual Studio 17 2022" -A x64 -DCMAKE_SYSTEM_NAME=WindowsStore -DCMAKE_SYSTEM_VERSION=10.0
+          cmake --build build-core --config Release --target amplatypus_core
+          Copy-Item build-core/Release/amplatypus_core.dll xbox/native/x64/
 
       # A certificate for this run only. Its subject must be the package's publisher (CN=Amplatypus).
       - name: Make a signing certificate

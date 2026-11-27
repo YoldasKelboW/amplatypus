@@ -18,6 +18,46 @@ namespace Amplatypus.Xbox
         void GetBuffer(out byte* buffer, out uint capacity);
     }
 
+    /// <summary>A loaded module, from libopenmpt or from the core players.</summary>
+    internal unsafe interface IModule : IDisposable
+    {
+        int Read(int sampleRate, int frames, float* output);
+        double Position { get; }
+        double Duration { get; }
+        void Seek(double seconds);
+    }
+
+    internal sealed class OpenMptModule : IModule
+    {
+        private IntPtr handle;
+        public OpenMptModule(IntPtr handle) { this.handle = handle; }
+        public unsafe int Read(int sampleRate, int frames, float* output) =>
+            (int)OpenMpt.openmpt_module_read_interleaved_float_stereo(handle, sampleRate, (UIntPtr)frames, output);
+        public double Position => OpenMpt.openmpt_module_get_position_seconds(handle);
+        public double Duration => OpenMpt.openmpt_module_get_duration_seconds(handle);
+        public void Seek(double seconds) => OpenMpt.openmpt_module_set_position_seconds(handle, seconds);
+        public void Dispose()
+        {
+            if (handle != IntPtr.Zero) OpenMpt.openmpt_module_destroy(handle);
+            handle = IntPtr.Zero;
+        }
+    }
+
+    internal sealed class CoreModule : IModule
+    {
+        private IntPtr handle;
+        public CoreModule(IntPtr handle) { this.handle = handle; }
+        public unsafe int Read(int sampleRate, int frames, float* output) => Core.amp_read(handle, sampleRate, frames, output);
+        public double Position => Core.amp_position(handle);
+        public double Duration => Core.amp_duration(handle);
+        public void Seek(double seconds) => Core.amp_seek(handle, seconds);
+        public void Dispose()
+        {
+            if (handle != IntPtr.Zero) Core.amp_free(handle);
+            handle = IntPtr.Zero;
+        }
+    }
+
     /// <summary>
     /// Plays one module at a time through an AudioGraph: the graph asks for each quantum of sound, and
     /// libopenmpt renders it straight into the frame's buffer.
@@ -27,14 +67,14 @@ namespace Amplatypus.Xbox
         private readonly object gate = new object();
         private AudioGraph graph;
         private AudioFrameInputNode input;
-        private IntPtr module = IntPtr.Zero;
+        private IModule module;
         private int sampleRate;
         private bool playing;
 
         /// <summary>Raised on the audio thread when the module has played to its end.</summary>
         public event EventHandler Ended;
 
-        public bool IsPlaying { get { lock (gate) return playing && module != IntPtr.Zero; } }
+        public bool IsPlaying { get { lock (gate) return playing && module != null; } }
 
         public async Task<bool> StartAsync()
         {
@@ -54,20 +94,37 @@ namespace Amplatypus.Xbox
             return true;
         }
 
-        /// <summary>Loads and starts a module from its bytes; false if libopenmpt cannot play it.</summary>
-        public bool Play(byte[] data, out string title, out string type)
+        /// <summary>
+        /// Loads and starts a module from its bytes; false if no player knows it. The core players go first,
+        /// as on Android: some console formats would otherwise be taken for something else.
+        /// </summary>
+        public bool Play(byte[] data, string fileName, out string title, out string type)
         {
             title = type = string.Empty;
-            IntPtr next = OpenMpt.Load(data);
-            if (next == IntPtr.Zero) return false;
-            title = OpenMpt.Metadata(next, "title");
-            type = OpenMpt.Metadata(next, "type_long");
+            IModule next = null;
+            IntPtr core = Core.Load(data, fileName);
+            if (core != IntPtr.Zero)
+            {
+                title = Core.Metadata(core, "title");
+                type = Core.Metadata(core, "type_long");
+                next = new CoreModule(core);
+            }
+            else
+            {
+                IntPtr mpt = OpenMpt.Load(data);
+                if (mpt == IntPtr.Zero) return false;
+                title = OpenMpt.Metadata(mpt, "title");
+                type = OpenMpt.Metadata(mpt, "type_long");
+                next = new OpenMptModule(mpt);
+            }
+            IModule old;
             lock (gate)
             {
-                if (module != IntPtr.Zero) OpenMpt.openmpt_module_destroy(module);
+                old = module;
                 module = next;
                 playing = true;
             }
+            old?.Dispose();
             return true;
         }
 
@@ -76,14 +133,14 @@ namespace Amplatypus.Xbox
             lock (gate) playing = !playing;
         }
 
-        public double Position { get { lock (gate) return module == IntPtr.Zero ? 0 : OpenMpt.openmpt_module_get_position_seconds(module); } }
-        public double Duration { get { lock (gate) return module == IntPtr.Zero ? 0 : OpenMpt.openmpt_module_get_duration_seconds(module); } }
+        public double Position { get { lock (gate) return module?.Position ?? 0; } }
+        public double Duration { get { lock (gate) return module?.Duration ?? 0; } }
 
         public void Seek(double seconds)
         {
             lock (gate)
             {
-                if (module != IntPtr.Zero) OpenMpt.openmpt_module_set_position_seconds(module, Math.Max(0, seconds));
+                module?.Seek(Math.Max(0, seconds));
             }
         }
 
@@ -101,9 +158,9 @@ namespace Amplatypus.Xbox
                 int rendered = 0;
                 lock (gate)
                 {
-                    if (playing && module != IntPtr.Zero)
+                    if (playing && module != null)
                     {
-                        rendered = (int)OpenMpt.openmpt_module_read_interleaved_float_stereo(module, sampleRate, (UIntPtr)frames, samples);
+                        rendered = module.Read(sampleRate, frames, samples);
                         if (rendered == 0)
                         {
                             playing = false;
@@ -123,8 +180,8 @@ namespace Amplatypus.Xbox
             graph?.Dispose();
             lock (gate)
             {
-                if (module != IntPtr.Zero) OpenMpt.openmpt_module_destroy(module);
-                module = IntPtr.Zero;
+                module?.Dispose();
+                module = null;
             }
         }
     }

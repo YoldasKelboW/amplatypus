@@ -8,8 +8,11 @@ modules through libopenmpt (MOD, XM, S3M, IT, MED and the other formats libopenm
   pick. Modules are fetched from Modland's mirrors when played and kept in the app's cache.
 - from **this Xbox**: the music library, or a folder you choose.
 
-The Android app's other players (UADE, C64, consoles, Atari, Spectrum, PC-98), AMP and the radio are not
-part of it yet.
+Besides libopenmpt it has two of the Android app's players, built for UWP as `amplatypus_core.dll`
+(`xbox/core`): Game Music Emu for console and home computer music (NES, SNES, Game Boy, Mega Drive and Master
+System, PC Engine, MSX, Atari 8-bit, ZX Spectrum/Amstrad CPC AY files) and the HivelyTracker replayer (AHX,
+HVL). The other players (UADE, C64, Atari ST, Spectrum trackers, PC-98, xSF), AMP and the radio are not part
+of it yet.
 
 Everything works with the controller: LB and RB switch between Modland and this Xbox, the stick or D-pad
 moves between the lists and the buttons, A plays the module under the focus.
@@ -39,4 +42,6 @@ On Windows, install the certificate into *Local Machine → Trusted People* firs
 Visual Studio 2022 with the *Universal Windows Platform development* workload. Build
 `third_party/openmpt/build/vs2022win10uwp/libopenmpt-small.vcxproj` (ReleaseShared, x64), copy the
 DLLs from `third_party/openmpt/bin/release/vs2022-win10uwp-shared/amd64/` to `xbox/native/x64/`, then open
-`xbox/Amplatypus.Xbox.sln`.
+`xbox/Amplatypus.Xbox.sln`. The core players: configure `xbox/core` with CMake for UWP
+(`-G "Visual Studio 17 2022" -A x64 -DCMAKE_SYSTEM_NAME=WindowsStore -DCMAKE_SYSTEM_VERSION=10.0`), build
+`amplatypus_core` in Release and copy the DLL to `xbox/native/x64/` as well.

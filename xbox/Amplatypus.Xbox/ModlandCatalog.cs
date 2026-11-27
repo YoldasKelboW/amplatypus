@@ -63,13 +63,29 @@ namespace Amplatypus.Xbox
         private const string UserAgent = "AMPlatypus/0.1.0 (Xbox; +https://github.com/YoldasKelboW/amplatypus)";
 
         private readonly HttpClient http;
-        private readonly HashSet<string> playable;
+        private readonly HashSet<string> trackerExtensions;
+        private readonly HashSet<string> coreExtensions;
+
+        // The core players' formats (console and home computer music, AHX/HVL) only from these folders,
+        // as in the Android app, since other formats use the same extensions.
+        private static readonly HashSet<string> CoreFolders = new HashSet<string>
+        {
+            "Nintendo Sound Format", "Nintendo SPC", "Gameboy Sound System", "Video Game Music", "Megadrive GYM",
+            "HES", "KSS", "Slight Atari Player", "AY Emul", "AHX", "HivelyTracker",
+        };
+
+        // Video Game Music is filed by system; Game Music Emu has the sound chips of these.
+        private static readonly HashSet<string> VgmSystems = new HashSet<string>
+        {
+            "Sega Megadrive", "Sega Master System", "Sega Game Gear", "Sega SG-1000", "Sega SC-3000", "BBC Micro", "Colecovision",
+        };
         private readonly Random random = new Random();
         private List<ModlandEntry> entries = new List<ModlandEntry>();
 
-        public ModlandCatalog(IEnumerable<string> playableExtensions)
+        public ModlandCatalog(IEnumerable<string> trackerExtensions, IEnumerable<string> coreExtensions)
         {
-            playable = new HashSet<string>(playableExtensions.Select(ext => ext.ToLowerInvariant()));
+            this.trackerExtensions = new HashSet<string>(trackerExtensions.Select(ext => ext.ToLowerInvariant()));
+            this.coreExtensions = new HashSet<string>(coreExtensions.Select(ext => ext.ToLowerInvariant()));
             http = new HttpClient();
             http.DefaultRequestHeaders.UserAgent.ParseAdd(UserAgent);
         }
@@ -137,8 +153,11 @@ namespace Amplatypus.Xbox
             if (parts.Length < 3 || parts.Any(part => part.Length == 0)) return null;
             int dot = path.LastIndexOf('.');
             if (dot < 0 || dot < path.LastIndexOf('/')) return null;
-            if (!playable.Contains(path.Substring(dot + 1).ToLowerInvariant())) return null;
-            return new ModlandEntry(path, size);
+            string ext = path.Substring(dot + 1).ToLowerInvariant();
+            bool playable = trackerExtensions.Contains(ext) ||
+                (coreExtensions.Contains(ext) && CoreFolders.Contains(parts[0]) &&
+                 (parts[0] != "Video Game Music" || VgmSystems.Contains(parts[1])));
+            return playable ? new ModlandEntry(path, size) : null;
         }
 
         /// <summary>Modules whose title or composer contain every word of the query.</summary>
